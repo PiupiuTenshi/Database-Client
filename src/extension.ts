@@ -1,9 +1,30 @@
 import * as vscode from "vscode";
 import { registerCommands } from "./commands/registerCommands";
-import { EXTENSION_DISPLAY_NAME } from "./core/constants";
+import { EXTENSION_DISPLAY_NAME, VIEWS } from "./core/constants";
+import { ConnectionService } from "./services/ConnectionService";
+import { DatabaseTreeProvider } from "./views/databaseExplorer/DatabaseTreeProvider";
+import { registerStatusBar } from "./views/statusBar";
 
 export function activate(context: vscode.ExtensionContext): void {
-  registerCommands(context);
+  const connectionService = new ConnectionService();
+  context.subscriptions.push(connectionService);
+  connectionService.seedMockProfiles();
+
+  const treeProvider = new DatabaseTreeProvider(connectionService);
+  context.subscriptions.push(treeProvider);
+
+  const treeView = vscode.window.createTreeView(VIEWS.connections, {
+    treeDataProvider: treeProvider,
+    showCollapseAll: true
+  });
+  context.subscriptions.push(treeView);
+
+  // Đồng bộ TreeView mỗi khi danh sách connection thay đổi.
+  context.subscriptions.push(connectionService.onDidChangeProfiles(() => treeProvider.refresh()));
+
+  registerStatusBar(context, connectionService);
+  registerCommands(context, { connectionService, treeProvider });
+
   console.log(`${EXTENSION_DISPLAY_NAME} activated.`);
 }
 

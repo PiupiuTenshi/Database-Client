@@ -2,7 +2,7 @@
   "name": "open-db-nexus",
   "displayName": "Open DB Nexus",
   "description": "A VS Code multi-database client extension with schema explorer, query runner, and dependency graph tooling.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "piupiutenshi",
   "license": "MIT",
   "private": true,
@@ -12,17 +12,74 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onCommand:openDbNexus.helloWorld"
-  ],
+  "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "openDbNexus",
+          "title": "Open DB Nexus",
+          "icon": "resources/db-nexus.svg"
+        }
+      ]
+    },
+    "views": {
+      "openDbNexus": [
+        {
+          "id": "openDbNexus.connections",
+          "name": "Connections"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "openDbNexus.connections",
+        "contents": "No database connections yet.\n[Add Connection](command:openDbNexus.addConnection)"
+      }
+    ],
     "commands": [
       {
         "command": "openDbNexus.helloWorld",
         "title": "Open DB Nexus: Hello World"
+      },
+      {
+        "command": "openDbNexus.addConnection",
+        "title": "Open DB Nexus: Add Connection",
+        "icon": "$(add)"
+      },
+      {
+        "command": "openDbNexus.refreshConnections",
+        "title": "Open DB Nexus: Refresh Connections",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "openDbNexus.removeConnection",
+        "title": "Open DB Nexus: Remove Connection",
+        "icon": "$(trash)"
       }
-    ]
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "openDbNexus.addConnection",
+          "when": "view == openDbNexus.connections",
+          "group": "navigation@1"
+        },
+        {
+          "command": "openDbNexus.refreshConnections",
+          "when": "view == openDbNexus.connections",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "openDbNexus.removeConnection",
+          "when": "view == openDbNexus.connections && viewItem == connection",
+          "group": "inline"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
