@@ -1,0 +1,14 @@
+# Redis test instance cho Open DB Nexus (chỉ dùng local/manual).
+# Chạy:   docker compose -f test/docker/docker-compose.redis.yml up -d
+# Dừng:   docker compose -f test/docker/docker-compose.redis.yml down -v
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: open-db-nexus-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10

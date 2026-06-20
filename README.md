@@ -12,7 +12,7 @@ A VS Code multi-database client with a schema explorer, SQL query runner, result
 ## Features
 
 - **Unlimited connection profiles** — no artificial limit on how many databases you can save.
-- **Multi-database via an adapter architecture** — SQLite, PostgreSQL, MySQL/MariaDB, and SQL Server.
+- **Multi-database via an adapter architecture** — SQLite, PostgreSQL, MySQL/MariaDB, SQL Server, and Redis.
 - **Connection manager** — create / edit / delete / test connections. Passwords are stored in VS Code `SecretStorage`, never in plaintext.
 - **Schema explorer** — Connections → (Schema) → Tables / Views → Columns / Indexes / Foreign Keys.
 - **Query editor** — open a SQL document bound to a connection, run the selection or the current statement (`Ctrl+Enter`) or the whole file (`Ctrl+Shift+Enter`), with a result grid and query history.
@@ -22,13 +22,16 @@ A VS Code multi-database client with a schema explorer, SQL query runner, result
 
 ## Supported databases
 
-| Engine          | Driver           | Status  |
-| --------------- | ---------------- | ------- |
-| SQLite          | `better-sqlite3` | ✅      |
-| PostgreSQL      | `pg`             | ✅      |
-| MySQL / MariaDB | `mysql2`         | ✅      |
-| SQL Server      | `mssql`          | ✅      |
-| MongoDB / Redis | —                | planned |
+| Engine          | Driver           | Status                      |
+| --------------- | ---------------- | --------------------------- |
+| SQLite          | `better-sqlite3` | ✅                          |
+| PostgreSQL      | `pg`             | ✅                          |
+| MySQL / MariaDB | `mysql2`         | ✅                          |
+| SQL Server      | `mssql`          | ✅                          |
+| Redis           | `redis`          | ✅ (keys + command console) |
+| MongoDB         | —                | planned                     |
+
+> **Redis** is a key-value store, not SQL: use the **Query Editor** to run commands (`SET`, `GET`, `KEYS *`, …); keys are listed under "Tables". SQL-only features (paginated table viewer, dependency graph) do not apply to Redis.
 
 ## Getting started
 

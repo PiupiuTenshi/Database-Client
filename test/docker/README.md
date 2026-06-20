@@ -66,3 +66,15 @@ Tạo connection trong extension với:
 | Database | app_db          |
 
 Adapter mặc định bật `trustServerCertificate` để chấp nhận cert tự ký của Docker.
+
+## Redis
+
+```bash
+docker compose -f test/docker/docker-compose.redis.yml up -d   # khởi động
+docker compose -f test/docker/docker-compose.redis.yml down -v # xóa sạch
+```
+
+Tạo connection với Database = **Redis**, Host `localhost`, Port `6379`.
+Redis là key-value: dùng **Query Editor** để chạy lệnh (vd `SET foo bar`, `GET foo`,
+`KEYS *`); cây sẽ liệt kê keys dưới mục "Tables". Các tính năng SQL (table viewer
+phân trang, dependency graph) không áp dụng cho Redis.

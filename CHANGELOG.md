@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.0] - 2026-06-20
+
+### Added
+
+- **Redis adapter** (`redis`): connect + PING test, list keys (SCAN) as tree nodes, and run Redis commands through the Query Editor (`GET`, `SET`, `KEYS *`, …).
+- `utils/commandTokenizer` (quote-aware) for parsing Redis commands.
+- Docker Compose for a local Redis instance.
+- `docs/12-future-features.md` — prioritized future roadmap (engines, Redis depth, schema/query/graph enhancements, generators, security, UX).
+- Tests for the Redis adapter and command tokenizer.
+
+### Notes
+
+- Redis is a key-value store: SQL-only features (paginated table viewer, dependency graph) do not apply. Use the Query Editor as a command console.
+
 ## [1.0.0] - 2026-06-20
 
 ### Added
