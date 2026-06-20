@@ -1,0 +1,20 @@
+# Loại trừ khỏi gói .vsix. dist/ + node_modules (runtime deps) được giữ lại.
+.vscode/**
+.github/**
+src/**
+test/**
+docs/**
+.editorconfig
+.gitignore
+.prettierignore
+.prettierrc.json
+eslint.config.mjs
+tsconfig.json
+vitest.config.ts
+esbuild.js
+**/*.ts
+**/*.map
+**/tsconfig.json
+*.vsix
+.vscode-test/**
+coverage/**

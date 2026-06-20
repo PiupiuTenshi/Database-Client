@@ -1,39 +1,80 @@
 # Open DB Nexus
 
-Open DB Nexus is a VS Code multi-database client extension project. The goal is to provide a schema explorer, SQL query runner, result grid, and dependency graph tooling for database objects.
+![CI](https://github.com/PiupiuTenshi/Database-Client/actions/workflows/ci.yml/badge.svg)
+![License](https://img.shields.io/github/license/PiupiuTenshi/Database-Client)
+![Last Commit](https://img.shields.io/github/last-commit/PiupiuTenshi/Database-Client)
 
-This repository is currently at Phase 0: project setup.
+A VS Code multi-database client with a schema explorer, SQL query runner, result grid, table viewer, and an interactive **dependency graph** for database objects.
 
-## Current Features
+> Open DB Nexus is an original open-source database client extension for VS Code.
+> It is not affiliated with, derived from, or intended to bypass licensing of any existing database client extension.
 
-- VS Code extension scaffold in TypeScript.
-- Command palette command: `Open DB Nexus: Hello World`.
-- esbuild bundling.
-- TypeScript type checking.
-- ESLint and Prettier setup.
-- Vitest unit test setup.
-- GitHub Actions CI workflow.
-- Design documents under [`docs/`](docs/README.md).
+## Features
+
+- **Unlimited connection profiles** — no artificial limit on how many databases you can save.
+- **Multi-database via an adapter architecture** — SQLite, PostgreSQL, MySQL/MariaDB, and SQL Server.
+- **Connection manager** — create / edit / delete / test connections. Passwords are stored in VS Code `SecretStorage`, never in plaintext.
+- **Schema explorer** — Connections → (Schema) → Tables / Views → Columns / Indexes / Foreign Keys.
+- **Query editor** — open a SQL document bound to a connection, run the selection or the current statement (`Ctrl+Enter`) or the whole file (`Ctrl+Shift+Enter`), with a result grid and query history.
+- **Table data viewer** — paginated browsing of any table.
+- **Dependency Graph** — visualize foreign-key relationships between tables (inbound / outbound / both, depth 1/2/3/all), search nodes, open a table from the graph, and export the graph as JSON or SVG.
+- **Advanced dependency analysis** — view dependencies (PostgreSQL / SQL Server), circular-dependency detection, and a Markdown impact report.
+
+## Supported databases
+
+| Engine          | Driver           | Status  |
+| --------------- | ---------------- | ------- |
+| SQLite          | `better-sqlite3` | ✅      |
+| PostgreSQL      | `pg`             | ✅      |
+| MySQL / MariaDB | `mysql2`         | ✅      |
+| SQL Server      | `mssql`          | ✅      |
+| MongoDB / Redis | —                | planned |
+
+## Getting started
+
+1. Open the **Open DB Nexus** view from the Activity Bar.
+2. Click **＋ Add Connection**, fill in the form, and **Test Connection**.
+3. Expand the connection to browse the schema; right-click a table for **Open Table Data**, **Open Dependency Graph**, or **Open Dependency Report**.
+4. Right-click a connection → **Open Query Editor**, write SQL, and press `Ctrl+Enter`.
+
+### Keyboard shortcuts
+
+| Shortcut           | Action                             |
+| ------------------ | ---------------------------------- |
+| `Ctrl+Enter`       | Run selection or current statement |
+| `Ctrl+Shift+Enter` | Run the whole SQL file             |
+
+## Security
+
+- Passwords are stored only in VS Code `SecretStorage` — never in `globalState`, settings, files, logs, webviews, or query history.
+- Secrets are masked before any logging (`utils/maskSecret`).
+- Webviews use a strict Content-Security-Policy with a per-render nonce and receive no secrets.
+
+See [`SECURITY.md`](SECURITY.md) and [`docs/07-security-license-and-ethics.md`](docs/07-security-license-and-ethics.md).
 
 ## Development
 
-Install dependencies:
-
 ```bash
 npm install
+npm run check        # compile + lint + test + bundle (same as CI)
 ```
 
-Run the full local check:
+Press `F5` in VS Code to launch the Extension Development Host.
+
+> **Native modules:** `better-sqlite3` is a native module. If you hit a `NODE_MODULE_VERSION` error in the Extension Development Host, rebuild it for VS Code's Electron runtime:
+>
+> ```bash
+> npx @electron/rebuild -f -w better-sqlite3
+> ```
+
+Local test databases (Docker) for PostgreSQL / MySQL / SQL Server are in [`test/docker/`](test/docker/README.md).
+
+### Build a VSIX
 
 ```bash
-npm run check
+npm run package:vsix   # produces open-db-nexus-<version>.vsix
+code --install-extension open-db-nexus-<version>.vsix
 ```
-
-Start the extension in VS Code:
-
-1. Open this folder in VS Code.
-2. Press `F5`.
-3. Run `Open DB Nexus: Hello World` from the command palette.
 
 ## Scripts
 
@@ -41,18 +82,16 @@ Start the extension in VS Code:
 npm run compile      Type-check TypeScript.
 npm run lint         Run ESLint.
 npm test             Run Vitest tests.
-npm run package      Build production extension bundle.
+npm run package      Build the production extension bundle.
+npm run package:vsix Build a .vsix package.
 npm run format       Format files with Prettier.
+npm run check        compile + lint + test + package.
 ```
 
 ## Documentation
 
-The product and architecture docs live in [`docs/`](docs/README.md).
-
-## Security
-
-Future connection secrets must be stored with VS Code `SecretStorage`. Secrets must not be written to plaintext settings, files, logs, webviews, or query history.
+Product and architecture docs live in [`docs/`](docs/README.md).
 
 ## License
 
-MIT
+[MIT](LICENSE)

@@ -2,10 +2,14 @@
   "name": "open-db-nexus",
   "displayName": "Open DB Nexus",
   "description": "A VS Code multi-database client extension with schema explorer, query runner, and dependency graph tooling.",
-  "version": "0.0.10",
+  "version": "1.0.0",
   "publisher": "piupiutenshi",
   "license": "MIT",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PiupiuTenshi/Database-Client.git"
+  },
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -215,6 +219,7 @@
     "bundle": "node esbuild.js",
     "bundle:watch": "node esbuild.js --watch",
     "package": "node esbuild.js --production",
+    "package:vsix": "vsce package",
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -229,6 +234,7 @@
     "@types/pg": "^8.20.0",
     "@types/vscode": "^1.90.0",
     "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.9.2",
     "esbuild": "^0.28.1",
     "eslint": "^9.29.0",
     "prettier": "^3.5.3",

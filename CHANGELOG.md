@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.0.0] - 2026-06-20
+
+### Added
+
+- Phase 10 — first stable release.
+- Comprehensive README (features, usage, security, ethical positioning, dev/VSIX guide).
+- `THIRD_PARTY_NOTICES.md` listing bundled runtime drivers and licenses.
+- VSIX packaging: `.vscodeignore`, `repository` metadata, and `npm run package:vsix` (`@vscode/vsce`).
+
+### Highlights (since 0.0.1)
+
+- Multi-database connection manager with secrets in VS Code SecretStorage.
+- SQLite, PostgreSQL, MySQL/MariaDB, and SQL Server adapters.
+- SQL query editor + result grid + query history.
+- Table data viewer with pagination.
+- Foreign-key dependency graph with view dependencies, cycle detection, and Markdown impact reports.
+
+### Notes
+
+- Demo GIF/screenshots and Marketplace publishing are pending (require a manual capture and a publisher token).
+- Procedure/function/trigger dependency and PNG graph export remain deferred.
+
 ## [0.0.10] - 2026-06-20
 
 ### Added
