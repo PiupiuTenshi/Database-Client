@@ -5,13 +5,16 @@ import { registerCommands } from "./commands/registerCommands";
 import { EXTENSION_DISPLAY_NAME, VIEWS } from "./core/constants";
 import { ConnectionService } from "./services/ConnectionService";
 import { LogService } from "./services/LogService";
+import { QueryDocumentService } from "./services/QueryDocumentService";
+import { QueryRunner } from "./services/QueryRunner";
 import { QueryService } from "./services/QueryService";
 import { SchemaService } from "./services/SchemaService";
 import { SessionManager } from "./services/SessionManager";
 import { ProfileStore } from "./storage/ProfileStore";
+import { QueryHistoryStore } from "./storage/QueryHistoryStore";
 import { SecretStore } from "./storage/SecretStore";
 import { DatabaseTreeProvider } from "./views/databaseExplorer/DatabaseTreeProvider";
-import { registerStatusBar } from "./views/statusBar";
+import { registerQueryStatusBar, registerStatusBar } from "./views/statusBar";
 
 export function activate(context: vscode.ExtensionContext): void {
   const logService = new LogService();
@@ -29,6 +32,11 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(sessionManager);
   const schemaService = new SchemaService(sessionManager);
   const queryService = new QueryService(sessionManager);
+
+  const historyStore = new QueryHistoryStore(context.globalState);
+  const queryDocs = new QueryDocumentService(connectionService);
+  context.subscriptions.push(queryDocs);
+  const queryRunner = new QueryRunner(queryService, historyStore, logService);
 
   const treeProvider = new DatabaseTreeProvider(connectionService, schemaService, sessionManager);
   context.subscriptions.push(treeProvider);
@@ -48,12 +56,16 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   registerStatusBar(context, connectionService);
+  registerQueryStatusBar(context, queryDocs);
   registerCommands(context, {
     connectionService,
     treeProvider,
     sessionManager,
     queryService,
-    logService
+    logService,
+    queryDocs,
+    queryRunner,
+    historyStore
   });
 
   logService.info(`${EXTENSION_DISPLAY_NAME} activated.`);

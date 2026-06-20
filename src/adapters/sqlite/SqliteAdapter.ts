@@ -163,6 +163,9 @@ export class SqliteAdapter implements DatabaseAdapter {
     options?: QueryOptions
   ): Promise<QueryResult> {
     const db = this.getDb(session);
+    if (options?.signal?.aborted) {
+      throw new Error("Query cancelled.");
+    }
     const started = Date.now();
     const statement = db.prepare(sql);
 

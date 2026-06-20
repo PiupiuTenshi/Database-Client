@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.0.5] - 2026-06-20
+
+### Added
+
+- Phase 4 — Query Editor.
+- Open Query command (creates a SQL document bound to a connection); also from a connection's context menu.
+- Run Query (Ctrl+Enter — selection or current statement) and Run All (Ctrl+Shift+Enter).
+- Reusable Query Result grid webview (rows, duration, truncation, error state).
+- Query history (globalState-backed) with a "Show Query History" picker to reopen past queries.
+- Error normalization (`adapters/common/normalizeError`) — concise message + code.
+- Basic query cancellation via progress notification + AbortSignal.
+- Status bar item showing the SQL editor's bound connection (click to change).
+- `utils/statementSplitter` (string/comment-aware) for selecting the statement to run.
+- Tests for statementSplitter, normalizeError, QueryHistoryStore.
+
 ## [0.0.4] - 2026-06-20
 
 ### Added

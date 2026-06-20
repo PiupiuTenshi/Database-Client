@@ -18,7 +18,12 @@ export const COMMANDS = {
   deleteConnection: "openDbNexus.deleteConnection",
   testConnection: "openDbNexus.testConnection",
   refreshConnections: "openDbNexus.refreshConnections",
-  openTableData: "openDbNexus.openTableData"
+  openTableData: "openDbNexus.openTableData",
+  openQuery: "openDbNexus.openQuery",
+  runQuery: "openDbNexus.runQuery",
+  runAllQueries: "openDbNexus.runAllQueries",
+  changeQueryConnection: "openDbNexus.changeQueryConnection",
+  showQueryHistory: "openDbNexus.showQueryHistory"
 } as const;
 
 /** contextValue gắn lên TreeItem để điều khiển hiển thị context menu (when: viewItem == ...). */

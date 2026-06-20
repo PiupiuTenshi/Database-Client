@@ -124,4 +124,27 @@ export interface QueryResult {
 
 export interface QueryOptions {
   maxRows?: number;
+  signal?: AbortSignal;
+}
+
+/** Lỗi DB đã chuẩn hóa (docs/04 §10). Không lộ stack dài cho user. */
+export interface DbError {
+  message: string;
+  code?: string;
+  detail?: string;
+}
+
+export type QueryStatus = "success" | "error" | "cancelled";
+
+/** Một dòng lịch sử query (docs/06 §11). */
+export interface QueryHistoryItem {
+  id: string;
+  connectionId: string;
+  connectionName: string;
+  sql: string;
+  status: QueryStatus;
+  durationMs?: number;
+  rowCount?: number;
+  errorMessage?: string;
+  createdAt: string;
 }

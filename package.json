@@ -2,7 +2,7 @@
   "name": "open-db-nexus",
   "displayName": "Open DB Nexus",
   "description": "A VS Code multi-database client extension with schema explorer, query runner, and dependency graph tooling.",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "publisher": "piupiutenshi",
   "license": "MIT",
   "private": true,
@@ -72,6 +72,27 @@
         "command": "openDbNexus.openTableData",
         "title": "Open DB Nexus: Open Table Data",
         "icon": "$(table)"
+      },
+      {
+        "command": "openDbNexus.openQuery",
+        "title": "Open DB Nexus: Open Query Editor",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "openDbNexus.runQuery",
+        "title": "Open DB Nexus: Run Query (selected or current statement)"
+      },
+      {
+        "command": "openDbNexus.runAllQueries",
+        "title": "Open DB Nexus: Run All Queries"
+      },
+      {
+        "command": "openDbNexus.changeQueryConnection",
+        "title": "Open DB Nexus: Change Query Connection"
+      },
+      {
+        "command": "openDbNexus.showQueryHistory",
+        "title": "Open DB Nexus: Show Query History"
       }
     ],
     "menus": {
@@ -88,6 +109,11 @@
         }
       ],
       "view/item/context": [
+        {
+          "command": "openDbNexus.openQuery",
+          "when": "view == openDbNexus.connections && viewItem == connection",
+          "group": "inline@0"
+        },
         {
           "command": "openDbNexus.testConnection",
           "when": "view == openDbNexus.connections && viewItem == connection",
@@ -130,6 +156,18 @@
         }
       ]
     },
+    "keybindings": [
+      {
+        "command": "openDbNexus.runQuery",
+        "key": "ctrl+enter",
+        "when": "editorTextFocus && editorLangId == sql"
+      },
+      {
+        "command": "openDbNexus.runAllQueries",
+        "key": "ctrl+shift+enter",
+        "when": "editorTextFocus && editorLangId == sql"
+      }
+    ],
     "configuration": {
       "title": "Open DB Nexus",
       "properties": {
