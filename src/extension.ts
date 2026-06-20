@@ -10,6 +10,8 @@ import { EXTENSION_DISPLAY_NAME, VIEWS } from "./core/constants";
 import { ConnectionService } from "./services/ConnectionService";
 import { DataEditService } from "./services/DataEditService";
 import { DependencyGraphService } from "./services/DependencyGraphService";
+import { ExportService } from "./services/ExportService";
+import { ImportService } from "./services/ImportService";
 import { LogService } from "./services/LogService";
 import { QueryDocumentService } from "./services/QueryDocumentService";
 import { QueryRunner } from "./services/QueryRunner";
@@ -44,9 +46,13 @@ export function activate(context: vscode.ExtensionContext): void {
   const schemaService = new SchemaService(sessionManager);
   const queryService = new QueryService(sessionManager);
   const dataEditService = new DataEditService(sessionManager);
+  const exportService = new ExportService(queryService, sessionManager);
+  const importService = new ImportService(dataEditService);
   const graphService = new DependencyGraphService(schemaService);
 
-  const historyStore = new QueryHistoryStore(context.globalState);
+  const historyStore = new QueryHistoryStore(context.globalState, () =>
+    vscode.workspace.getConfiguration("openDbNexus").get<number>("history.maxItems", 200)
+  );
   const queryDocs = new QueryDocumentService(connectionService);
   context.subscriptions.push(queryDocs);
   const queryRunner = new QueryRunner(queryService, historyStore, logService);
@@ -77,6 +83,8 @@ export function activate(context: vscode.ExtensionContext): void {
     queryService,
     schemaService,
     dataEditService,
+    exportService,
+    importService,
     logService,
     queryDocs,
     queryRunner,

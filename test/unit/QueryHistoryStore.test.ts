@@ -43,4 +43,37 @@ describe("QueryHistoryStore", () => {
     await store.clear();
     expect(store.list()).toEqual([]);
   });
+
+  it("toggles and searches favorites", async () => {
+    await store.add(item("1"));
+    await store.add(item("2"));
+    await store.toggleFavorite("1");
+    expect(store.search(undefined, true).map((e) => e.id)).toEqual(["1"]);
+    expect(store.search("SELECT 2").map((e) => e.id)).toEqual(["2"]);
+  });
+
+  it("keeps favorites beyond the retention limit", async () => {
+    const small = new QueryHistoryStore(new FakeMemento(), () => 2);
+    await small.add(item("1"));
+    await small.toggleFavorite("1");
+    await small.add(item("2"));
+    await small.add(item("3"));
+    await small.add(item("4"));
+    // limit 2 non-favorites (4,3) + favorite (1) survive; 2 is dropped
+    expect(
+      small
+        .list()
+        .map((e) => e.id)
+        .sort()
+    ).toEqual(["1", "3", "4"]);
+  });
+
+  it("removes one item and clears by connection", async () => {
+    await store.add({ ...item("1"), connectionId: "a" });
+    await store.add({ ...item("2"), connectionId: "b" });
+    await store.remove("1");
+    expect(store.list().map((e) => e.id)).toEqual(["2"]);
+    await store.clearForConnection("b");
+    expect(store.list()).toEqual([]);
+  });
 });

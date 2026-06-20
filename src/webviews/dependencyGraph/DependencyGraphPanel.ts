@@ -7,12 +7,9 @@ import type {
   GraphDirection,
   ObjectRef
 } from "../../core/types";
-import type { DataEditService } from "../../services/DataEditService";
 import type { DependencyGraphService } from "../../services/DependencyGraphService";
-import type { QueryService } from "../../services/QueryService";
-import type { SchemaService } from "../../services/SchemaService";
 import { detectCycles } from "../../services/graphBuilder";
-import { TableDataPanel } from "../tableViewer/TableDataPanel";
+import { TableDataPanel, type ObjectPanelDeps } from "../tableViewer/TableDataPanel";
 import { buildCsp, getNonce } from "../WebviewBase";
 
 interface IncomingMessage {
@@ -24,11 +21,8 @@ interface IncomingMessage {
   svg?: string;
 }
 
-export interface DependencyGraphDeps {
+export interface DependencyGraphDeps extends ObjectPanelDeps {
   graphService: DependencyGraphService;
-  queryService: QueryService;
-  schemaService: SchemaService;
-  dataEditService: DataEditService;
 }
 
 /** Webview vẽ dependency graph (FK) cho một bảng. */
@@ -84,15 +78,10 @@ export class DependencyGraphPanel {
         return;
       case "openTable":
         if (message.table) {
-          TableDataPanel.show(
-            {
-              queryService: this.deps.queryService,
-              schemaService: this.deps.schemaService,
-              dataEditService: this.deps.dataEditService
-            },
-            this.profile,
-            { schema: message.schema, name: message.table }
-          );
+          TableDataPanel.show(this.deps, this.profile, {
+            schema: message.schema,
+            name: message.table
+          });
         }
         return;
       case "export":

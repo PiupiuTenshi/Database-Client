@@ -222,4 +222,6 @@ export interface QueryHistoryItem {
   rowCount?: number;
   errorMessage?: string;
   createdAt: string;
+  /** Đánh dấu favorite — không bị xóa khi quá retention limit. */
+  favorite?: boolean;
 }

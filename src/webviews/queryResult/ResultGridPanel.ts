@@ -1,7 +1,9 @@
 import * as vscode from "vscode";
 import { EXTENSION_DISPLAY_NAME } from "../../core/constants";
 import type { DbError, QueryResult } from "../../core/types";
+import { buildExport, extensionFor, type ExportFormat } from "../../utils/exporters";
 import { buildCsp, getNonce } from "../WebviewBase";
+import { commonStyles } from "../webviewStyles";
 
 interface ResultPayload {
   kind: "result";
@@ -21,13 +23,14 @@ interface ErrorPayload {
 
 type GridPayload = ResultPayload | ErrorPayload;
 
-/** Webview hiển thị kết quả query (dùng lại một panel duy nhất). */
+/** Webview hiển thị kết quả query (dùng lại một panel duy nhất), có export. */
 export class ResultGridPanel {
   private static instance: ResultGridPanel | undefined;
 
   private readonly disposables: vscode.Disposable[] = [];
   private ready = false;
   private pending: GridPayload | undefined;
+  private lastResult: ResultPayload | undefined;
 
   static showResult(result: QueryResult): void {
     const payload: ResultPayload = {
@@ -68,12 +71,14 @@ export class ResultGridPanel {
   private constructor(private readonly panel: vscode.WebviewPanel) {
     this.panel.webview.html = this.buildHtml(this.panel.webview);
     this.panel.webview.onDidReceiveMessage(
-      (message: { type: string }) => {
+      (message: { type: string; format?: ExportFormat }) => {
         if (message.type === "ready") {
           this.ready = true;
           if (this.pending) {
             this.send(this.pending);
           }
+        } else if (message.type === "export" && message.format) {
+          void this.exportResult(message.format);
         }
       },
       undefined,
@@ -84,6 +89,9 @@ export class ResultGridPanel {
 
   private post(payload: GridPayload): void {
     this.pending = payload;
+    if (payload.kind === "result") {
+      this.lastResult = payload;
+    }
     if (this.ready) {
       this.send(payload);
     }
@@ -91,6 +99,31 @@ export class ResultGridPanel {
 
   private send(payload: GridPayload): void {
     void this.panel.webview.postMessage(payload);
+  }
+
+  private async exportResult(format: ExportFormat): Promise<void> {
+    const result = this.lastResult;
+    if (!result || result.columns.length === 0) {
+      void vscode.window.showInformationMessage("No query result to export.");
+      return;
+    }
+    const content = buildExport(
+      format,
+      { name: "query_result" },
+      result.columns,
+      result.rows,
+      (id) => `"${id.replace(/"/g, '""')}"`
+    );
+    const target = await vscode.window.showSaveDialog({
+      filters: { [format.toUpperCase()]: [extensionFor(format)] },
+      saveLabel: "Export",
+      defaultUri: vscode.Uri.file(`query_result.${extensionFor(format)}`)
+    });
+    if (!target) {
+      return;
+    }
+    await vscode.workspace.fs.writeFile(target, Buffer.from(content, "utf8"));
+    void vscode.window.showInformationMessage(`Exported ${result.rows.length} row(s).`);
   }
 
   private buildHtml(webview: vscode.Webview): string {
@@ -103,22 +136,20 @@ export class ResultGridPanel {
 <meta http-equiv="Content-Security-Policy" content="${csp}" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>${EXTENSION_DISPLAY_NAME}</title>
-<style nonce="${nonce}">
-  body { font-family: var(--vscode-font-family); color: var(--vscode-foreground); margin: 0; }
-  .bar { padding: 6px 12px; border-bottom: 1px solid var(--vscode-panel-border); font-size: 12px; position: sticky; top: 0; background: var(--vscode-editor-background); }
-  .wrap { overflow: auto; }
-  table { border-collapse: collapse; width: 100%; font-size: 12px; }
-  th, td { border: 1px solid var(--vscode-panel-border); padding: 4px 8px; text-align: left; white-space: nowrap; }
-  th { position: sticky; top: 0; background: var(--vscode-editorWidget-background); }
-  tr:nth-child(even) td { background: var(--vscode-list-hoverBackground); }
-  .null { color: var(--vscode-descriptionForeground); font-style: italic; }
-  .msg { padding: 16px; color: var(--vscode-descriptionForeground); }
-  .err { padding: 16px; color: var(--vscode-errorForeground); white-space: pre-wrap; }
-</style>
+${commonStyles(nonce)}
 </head>
 <body>
-  <div class="bar" id="bar">Run a query to see results.</div>
-  <div class="wrap"><div id="grid"></div></div>
+  <div class="toolbar">
+    <span class="title" id="bar">Run a query to see results.</span>
+    <span class="spacer"></span>
+    <select id="exportFmt" title="Export format">
+      <option value="csv">CSV</option>
+      <option value="json">JSON</option>
+      <option value="sql">SQL Insert</option>
+    </select>
+    <button class="btn" id="exportBtn">⭳ Export</button>
+  </div>
+  <div class="grid-wrap"><div id="grid" class="msg"></div></div>
 <script nonce="${nonce}">
   const vscode = acquireVsCodeApi();
   const $ = (id) => document.getElementById(id);
@@ -128,6 +159,7 @@ export class ResultGridPanel {
     if (typeof v === "object") return "<td>" + esc(JSON.stringify(v)) + "</td>";
     return "<td>" + esc(v) + "</td>";
   }
+  $("exportBtn").addEventListener("click", () => vscode.postMessage({ type:"export", format: $("exportFmt").value }));
   window.addEventListener("message", (event) => {
     const p = event.data;
     if (p.kind === "error") {

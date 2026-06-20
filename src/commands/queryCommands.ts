@@ -74,26 +74,89 @@ export function registerQueryCommands(
     }),
 
     vscode.commands.registerCommand(COMMANDS.showQueryHistory, async () => {
-      const items = historyStore.list();
-      if (items.length === 0) {
-        void vscode.window.showInformationMessage("No query history yet.");
-        return;
-      }
-      const picked = await vscode.window.showQuickPick(
-        items.map((item) => ({
-          label: item.sql.replace(/\s+/g, " ").slice(0, 80),
-          description: `${item.connectionName} · ${item.status}`,
-          detail: item.createdAt,
-          item
-        })),
-        { placeHolder: "Query history — pick to open in a new editor" }
-      );
-      if (!picked) {
-        return;
-      }
-      await openHistoryQuery(queryDocs, picked.item.connectionId, picked.item.sql);
+      await showHistory(queryDocs, historyStore);
     })
   );
+}
+
+interface HistoryQuickItem extends vscode.QuickPickItem {
+  itemId: string;
+  connectionId: string;
+  sql: string;
+}
+
+const STAR = "$(star-full)";
+const STAR_EMPTY = "$(star-empty)";
+
+/** QuickPick lịch sử có favorite, xóa một mục và xóa toàn bộ; lọc bằng ô tìm kiếm. */
+async function showHistory(
+  queryDocs: QueryDocumentService,
+  historyStore: QueryHistoryStore
+): Promise<void> {
+  const favoriteButton: vscode.QuickInputButton = {
+    iconPath: new vscode.ThemeIcon("star-full"),
+    tooltip: "Toggle favorite"
+  };
+  const removeButton: vscode.QuickInputButton = {
+    iconPath: new vscode.ThemeIcon("trash"),
+    tooltip: "Remove from history"
+  };
+  const clearAllButton: vscode.QuickInputButton = {
+    iconPath: new vscode.ThemeIcon("clear-all"),
+    tooltip: "Clear all history"
+  };
+
+  const pick = vscode.window.createQuickPick<HistoryQuickItem>();
+  pick.title = "Query History";
+  pick.placeholder = "Type to filter · ⭐ toggle favorite · 🗑 remove";
+  pick.matchOnDescription = true;
+  pick.buttons = [clearAllButton];
+
+  const refresh = (): void => {
+    const items = historyStore.list();
+    if (items.length === 0) {
+      pick.items = [];
+    }
+    pick.items = items.map((item) => ({
+      label: `${item.favorite ? STAR : STAR_EMPTY} ${item.sql.replace(/\s+/g, " ").slice(0, 80)}`,
+      description: `${item.connectionName} · ${item.status}${
+        item.rowCount === undefined ? "" : ` · ${item.rowCount} rows`
+      }`,
+      detail: item.createdAt,
+      buttons: [favoriteButton, removeButton],
+      itemId: item.id,
+      connectionId: item.connectionId,
+      sql: item.sql
+    }));
+  };
+  refresh();
+
+  pick.onDidTriggerItemButton(async (event) => {
+    if (event.button === favoriteButton) {
+      await historyStore.toggleFavorite(event.item.itemId);
+    } else if (event.button === removeButton) {
+      await historyStore.remove(event.item.itemId);
+    }
+    refresh();
+  });
+
+  pick.onDidTriggerButton(async (button) => {
+    if (button === clearAllButton) {
+      await historyStore.clear();
+      refresh();
+    }
+  });
+
+  pick.onDidAccept(() => {
+    const selected = pick.selectedItems[0];
+    pick.hide();
+    if (selected) {
+      void openHistoryQuery(queryDocs, selected.connectionId, selected.sql);
+    }
+  });
+
+  pick.onDidHide(() => pick.dispose());
+  pick.show();
 }
 
 async function openBoundQuery(

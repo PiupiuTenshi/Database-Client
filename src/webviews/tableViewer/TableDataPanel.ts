@@ -2,8 +2,11 @@ import * as vscode from "vscode";
 import { EXTENSION_DISPLAY_NAME } from "../../core/constants";
 import type { ConnectionProfile, ObjectRef } from "../../core/types";
 import type { DataEditService } from "../../services/DataEditService";
+import type { ExportService } from "../../services/ExportService";
+import type { ImportService } from "../../services/ImportService";
 import type { QueryService } from "../../services/QueryService";
 import type { SchemaService } from "../../services/SchemaService";
+import { buildExport, extensionFor, type ExportFormat } from "../../utils/exporters";
 import type { ColumnValue } from "../../utils/rowMutation";
 import {
   isProduction,
@@ -15,11 +18,13 @@ import { commonStyles } from "../webviewStyles";
 
 const DEFAULT_PAGE_SIZE = 100;
 
-/** Dependency cho Object panel (data + properties + edit). */
+/** Dependency cho Object panel (data + properties + edit + import/export). */
 export interface ObjectPanelDeps {
   queryService: QueryService;
   schemaService: SchemaService;
   dataEditService: DataEditService;
+  exportService: ExportService;
+  importService: ImportService;
 }
 
 interface IncomingMessage {
@@ -32,7 +37,9 @@ interface IncomingMessage {
     | "deleteRow"
     | "previewAddColumn"
     | "previewDropColumn"
-    | "applyDdl";
+    | "applyDdl"
+    | "export"
+    | "import";
   offset?: number;
   pageSize?: number;
   keys?: ColumnValue[];
@@ -42,6 +49,8 @@ interface IncomingMessage {
   def?: { name: string; dataType: string; nullable: boolean; defaultValue?: string };
   sql?: string;
   action?: WriteAction;
+  format?: ExportFormat;
+  all?: boolean;
 }
 
 /**
@@ -149,6 +158,12 @@ export class TableDataPanel {
             });
           }
           break;
+        case "export":
+          await this.exportData(message.format ?? "csv", message.all ?? false);
+          break;
+        case "import":
+          await this.importCsv();
+          break;
       }
     } catch (error) {
       this.post({ type: "error", payload: { message: toMessage(error) } });
@@ -216,6 +231,77 @@ export class TableDataPanel {
     });
   }
 
+  private async exportData(format: ExportFormat, all: boolean): Promise<void> {
+    const fetched = all
+      ? await this.deps.exportService.fetchAll(this.profile, this.ref)
+      : await this.deps.exportService.fetchPage(this.profile, this.ref, this.pageSize, this.offset);
+    const quote = await this.deps.exportService.quoteFn(this.profile);
+    const content = buildExport(format, this.ref, fetched.columns, fetched.rows, quote);
+    const target = await vscode.window.showSaveDialog({
+      filters: { [format.toUpperCase()]: [extensionFor(format)] },
+      saveLabel: "Export",
+      defaultUri: vscode.Uri.file(`${this.ref.name}.${extensionFor(format)}`)
+    });
+    if (!target) {
+      return;
+    }
+    await vscode.workspace.fs.writeFile(target, Buffer.from(content, "utf8"));
+    const note = fetched.truncated ? " (capped at 50k rows)" : "";
+    this.post({
+      type: "writeResult",
+      payload: { ok: true, message: `Exported ${fetched.rows.length} row(s)${note}.` }
+    });
+  }
+
+  private async importCsv(): Promise<void> {
+    const picked = await vscode.window.showOpenDialog({
+      canSelectMany: false,
+      filters: { CSV: ["csv"] },
+      openLabel: "Import"
+    });
+    if (!picked || picked.length === 0) {
+      return;
+    }
+    const bytes = await vscode.workspace.fs.readFile(picked[0]);
+    const text = Buffer.from(bytes).toString("utf8");
+    const columns = await this.deps.schemaService.listColumns(this.profile, this.ref);
+    const plan = this.deps.importService.plan(
+      text,
+      columns.map((column) => column.name)
+    );
+    const mapped = plan.mapping.filter((m) => m.column !== null);
+    if (mapped.length === 0) {
+      this.post({
+        type: "writeResult",
+        payload: { ok: false, message: "No CSV headers match this table's columns." }
+      });
+      return;
+    }
+    const warning = productionWriteWarning(this.profile, "insert");
+    const confirmText =
+      (warning ? `${warning}\n\n` : "") +
+      `Import ${plan.rowCount} row(s) into ${this.ref.name}? Mapped columns: ${mapped
+        .map((m) => m.column)
+        .join(", ")}.`;
+    const choice = await vscode.window.showWarningMessage(confirmText, { modal: true }, "Import");
+    if (choice !== "Import") {
+      return;
+    }
+    const result = await this.deps.importService.run(
+      this.profile,
+      this.ref,
+      plan.headers,
+      plan.rows,
+      plan.mapping
+    );
+    const errorNote = result.errors.length ? ` · ${result.errors.length} error(s)` : "";
+    this.post({
+      type: "writeResult",
+      payload: { ok: true, message: `Imported ${result.inserted} row(s)${errorNote}.` }
+    });
+    await this.loadData();
+  }
+
   private post(message: unknown): void {
     void this.panel.webview.postMessage(message);
   }
@@ -261,6 +347,14 @@ ${commonStyles(nonce)}
       <button class="btn" id="reloadData" title="Reload">⟳ Reload</button>
       <button class="btn primary" id="addRow">＋ Add row</button>
       <span class="spacer"></span>
+      <select id="exportFmt" title="Export format">
+        <option value="csv">CSV</option>
+        <option value="json">JSON</option>
+        <option value="sql">SQL Insert</option>
+      </select>
+      <label class="subtle"><input type="checkbox" id="exportAll" /> all rows</label>
+      <button class="btn" id="exportBtn" title="Export to file">⭳ Export</button>
+      <button class="btn" id="importBtn" title="Import CSV">⭱ Import CSV</button>
       <span class="subtle" id="dataInfo"></span>
     </div>
     <div class="grid-wrap"><div id="dataGrid" class="msg">Loading…</div></div>
@@ -353,6 +447,8 @@ ${this.clientScript()}
   $("reloadData").addEventListener("click", load);
   $("pageSize").addEventListener("change", () => { state.pageSize = Number($("pageSize").value); state.offset = 0; load(); });
   $("addRow").addEventListener("click", showAddRow);
+  $("exportBtn").addEventListener("click", ()=>vscode.postMessage({ type:"export", format: $("exportFmt").value, all: $("exportAll").checked }));
+  $("importBtn").addEventListener("click", ()=>vscode.postMessage({ type:"import" }));
   function load(){ vscode.postMessage({ type:"loadData", offset: state.offset, pageSize: state.pageSize }); }
 
   function cellHtml(col, v, rowIndex){
