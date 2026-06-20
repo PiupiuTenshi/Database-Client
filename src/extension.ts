@@ -11,6 +11,7 @@ import { ConnectionService } from "./services/ConnectionService";
 import { DataEditService } from "./services/DataEditService";
 import { DependencyGraphService } from "./services/DependencyGraphService";
 import { ExportService } from "./services/ExportService";
+import { GeneratorService } from "./services/GeneratorService";
 import { ImportService } from "./services/ImportService";
 import { LogService } from "./services/LogService";
 import { QueryDocumentService } from "./services/QueryDocumentService";
@@ -48,6 +49,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const dataEditService = new DataEditService(sessionManager);
   const exportService = new ExportService(queryService, sessionManager);
   const importService = new ImportService(dataEditService);
+  const generatorService = new GeneratorService(schemaService, dataEditService, sessionManager);
   const graphService = new DependencyGraphService(schemaService);
 
   const historyStore = new QueryHistoryStore(context.globalState, () =>
@@ -85,6 +87,7 @@ export function activate(context: vscode.ExtensionContext): void {
     dataEditService,
     exportService,
     importService,
+    generatorService,
     logService,
     queryDocs,
     queryRunner,
