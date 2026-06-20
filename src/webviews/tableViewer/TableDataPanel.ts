@@ -4,6 +4,7 @@ import type { ConnectionProfile, ObjectRef } from "../../core/types";
 import type { DataEditService } from "../../services/DataEditService";
 import type { ExportService } from "../../services/ExportService";
 import type { ImportService } from "../../services/ImportService";
+import type { PolicyService } from "../../services/PolicyService";
 import type { QueryService } from "../../services/QueryService";
 import type { SchemaService } from "../../services/SchemaService";
 import { buildExport, extensionFor, type ExportFormat } from "../../utils/exporters";
@@ -25,6 +26,7 @@ export interface ObjectPanelDeps {
   dataEditService: DataEditService;
   exportService: ExportService;
   importService: ImportService;
+  policyService: PolicyService;
 }
 
 interface IncomingMessage {
@@ -176,6 +178,16 @@ export class TableDataPanel {
     run: () => Promise<{ affectedRows?: number }>,
     options: { reloadProperties?: boolean } = {}
   ): Promise<void> {
+    if (this.deps.policyService.isWriteBlocked(this.profile)) {
+      this.post({
+        type: "writeResult",
+        payload: {
+          ok: false,
+          message: "Blocked by policy: writes are disabled on this production connection."
+        }
+      });
+      return;
+    }
     const warning = productionWriteWarning(this.profile, action);
     if (warning) {
       const choice = await vscode.window.showWarningMessage(warning, { modal: true }, "Run anyway");
@@ -232,6 +244,16 @@ export class TableDataPanel {
   }
 
   private async exportData(format: ExportFormat, all: boolean): Promise<void> {
+    if (this.deps.policyService.isExportBlocked(this.profile)) {
+      this.post({
+        type: "writeResult",
+        payload: {
+          ok: false,
+          message: "Blocked by policy: exports are disabled on this production connection."
+        }
+      });
+      return;
+    }
     const fetched = all
       ? await this.deps.exportService.fetchAll(this.profile, this.ref)
       : await this.deps.exportService.fetchPage(this.profile, this.ref, this.pageSize, this.offset);

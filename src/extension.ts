@@ -10,9 +10,12 @@ import { EXTENSION_DISPLAY_NAME, VIEWS } from "./core/constants";
 import { ConnectionService } from "./services/ConnectionService";
 import { DataEditService } from "./services/DataEditService";
 import { DependencyGraphService } from "./services/DependencyGraphService";
+import { BackupService } from "./services/BackupService";
+import { DashboardService } from "./services/DashboardService";
 import { ExportService } from "./services/ExportService";
 import { GeneratorService } from "./services/GeneratorService";
 import { ImportService } from "./services/ImportService";
+import { PolicyService } from "./services/PolicyService";
 import { LogService } from "./services/LogService";
 import { QueryDocumentService } from "./services/QueryDocumentService";
 import { QueryRunner } from "./services/QueryRunner";
@@ -50,6 +53,16 @@ export function activate(context: vscode.ExtensionContext): void {
   const exportService = new ExportService(queryService, sessionManager);
   const importService = new ImportService(dataEditService);
   const generatorService = new GeneratorService(schemaService, dataEditService, sessionManager);
+  const backupService = new BackupService(schemaService, exportService);
+  const dashboardService = new DashboardService(schemaService, queryService);
+  const policyService = new PolicyService(() => {
+    const config = vscode.workspace.getConfiguration("openDbNexus");
+    return {
+      disableWriteOnProduction: config.get<boolean>("security.disableWriteOnProduction", false),
+      disableExportOnProduction: config.get<boolean>("security.disableExportOnProduction", false),
+      maxRows: config.get<number>("query.maxRows", 1000)
+    };
+  });
   const graphService = new DependencyGraphService(schemaService);
 
   const historyStore = new QueryHistoryStore(context.globalState, () =>
@@ -88,6 +101,9 @@ export function activate(context: vscode.ExtensionContext): void {
     exportService,
     importService,
     generatorService,
+    backupService,
+    dashboardService,
+    policyService,
     logService,
     queryDocs,
     queryRunner,

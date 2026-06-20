@@ -1,15 +1,20 @@
 import * as vscode from "vscode";
 import { COMMANDS } from "../core/constants";
+import type { BackupService } from "../services/BackupService";
+import type { DashboardService } from "../services/DashboardService";
 import type { DataEditService } from "../services/DataEditService";
 import type { DependencyGraphService } from "../services/DependencyGraphService";
 import type { ExportService } from "../services/ExportService";
 import type { GeneratorService } from "../services/GeneratorService";
 import type { ImportService } from "../services/ImportService";
+import type { PolicyService } from "../services/PolicyService";
 import type { QueryService } from "../services/QueryService";
 import type { SchemaService } from "../services/SchemaService";
 import { type CodeTarget } from "../utils/codeGen";
 import { productionWriteWarning } from "../utils/productionGuard";
+import { ConnectionNode } from "../views/databaseExplorer/nodes/ConnectionNode";
 import { TableNode } from "../views/databaseExplorer/nodes/tableNodes";
+import { DashboardPanel } from "../webviews/dashboard/DashboardPanel";
 import { DependencyGraphPanel } from "../webviews/dependencyGraph/DependencyGraphPanel";
 import { TableDataPanel, type ObjectPanelDeps } from "../webviews/tableViewer/TableDataPanel";
 
@@ -20,7 +25,8 @@ function toObjectPanelDeps(deps: SchemaCommandDeps): ObjectPanelDeps {
     schemaService: deps.schemaService,
     dataEditService: deps.dataEditService,
     exportService: deps.exportService,
-    importService: deps.importService
+    importService: deps.importService,
+    policyService: deps.policyService
   };
 }
 
@@ -31,6 +37,9 @@ export interface SchemaCommandDeps {
   exportService: ExportService;
   importService: ImportService;
   generatorService: GeneratorService;
+  backupService: BackupService;
+  dashboardService: DashboardService;
+  policyService: PolicyService;
   graphService: DependencyGraphService;
 }
 
@@ -104,6 +113,46 @@ export function registerSchemaCommands(
       void vscode.window.showInformationMessage(
         `Inserted ${result.inserted} mock row(s) into ${node.ref.name}${errorNote}.`
       );
+    }),
+
+    vscode.commands.registerCommand(COMMANDS.openDashboard, (node?: ConnectionNode) => {
+      if (node instanceof ConnectionNode) {
+        DashboardPanel.show(deps.dashboardService, node.profile, node.profile.database);
+      }
+    }),
+
+    vscode.commands.registerCommand(COMMANDS.backupConnection, async (node?: ConnectionNode) => {
+      if (!(node instanceof ConnectionNode)) {
+        return;
+      }
+      const profile = node.profile;
+      try {
+        deps.policyService.assertExportAllowed(profile);
+      } catch (error) {
+        void vscode.window.showErrorMessage(error instanceof Error ? error.message : String(error));
+        return;
+      }
+      const target = await vscode.window.showSaveDialog({
+        filters: { SQL: ["sql"] },
+        saveLabel: "Backup",
+        defaultUri: vscode.Uri.file(`${profile.name}-backup.sql`)
+      });
+      if (!target) {
+        return;
+      }
+      await vscode.window.withProgress(
+        { location: vscode.ProgressLocation.Notification, title: `Backing up ${profile.name}…` },
+        async (progress) => {
+          const sql = await deps.backupService.backup(profile, profile.database, (p) => {
+            progress.report({
+              message: `${p.current}/${p.total} · ${p.table}`,
+              increment: 100 / Math.max(1, p.total)
+            });
+          });
+          await vscode.workspace.fs.writeFile(target, Buffer.from(sql, "utf8"));
+        }
+      );
+      void vscode.window.showInformationMessage(`Backup written to ${target.fsPath}.`);
     }),
 
     vscode.commands.registerCommand(COMMANDS.openDependencyGraph, (node?: TableNode) => {
