@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.3.0] - 2026-06-21
+
+### Added
+
+- **Export** — export the current page or the whole table (capped at 50k rows) to CSV, JSON or SQL Insert from the Data tab; the Query Result panel can export its rows too.
+- **CSV import** — import a CSV file into the open table: headers auto-map to columns (case-insensitive), empty cells become `NULL`, each row is a parameterized insert, and per-row errors are reported without aborting the rest. Capped at 10k rows per run.
+- **Enhanced query history** — searchable history with favorites (kept beyond the retention limit), remove-one and clear-all actions, and a configurable retention limit (`openDbNexus.history.maxItems`).
+- **Refreshed Query Result panel** — now uses the shared UI kit and gains the export toolbar.
+
+### Notes
+
+- XLSX import/export is intentionally deferred to avoid bundling a heavy spreadsheet dependency; CSV/JSON/SQL cover the common cases with zero new runtime deps.
+
 ## [1.2.0] - 2026-06-21
 
 ### Added
