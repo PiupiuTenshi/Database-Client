@@ -239,6 +239,10 @@ export class ConnectionFormPanel {
         <input id="password" type="password" placeholder="••••••••" />
       </div>
     </div>
+    <div class="field" style="flex-direction: row; align-items: center; gap: 8px">
+      <input id="ssl" type="checkbox" style="width: auto" />
+      <label for="ssl" style="margin: 0">Use SSL/TLS (allow self-signed)</label>
+    </div>
   </div>
 
   <div class="field">
@@ -269,6 +273,7 @@ export class ConnectionFormPanel {
       database: $("database").value,
       username: $("username").value,
       filePath: $("filePath").value,
+      ssl: $("ssl").checked,
       tags: $("tags").value.split(",").map((t) => t.trim()).filter(Boolean)
     };
   }
@@ -308,6 +313,7 @@ export class ConnectionFormPanel {
         $("database").value = p.database ?? "";
         $("username").value = p.username ?? "";
         $("filePath").value = p.filePath ?? "";
+        $("ssl").checked = Boolean(p.ssl);
         $("tags").value = (p.tags ?? []).join(", ");
         $("password").placeholder = "Leave blank to keep existing";
       }

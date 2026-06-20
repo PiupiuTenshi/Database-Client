@@ -133,7 +133,8 @@ function normalizeDraft(
     database: emptyToUndefined(draft.database),
     filePath: emptyToUndefined(draft.filePath),
     environment: draft.environment,
-    tags: draft.tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0)
+    tags: draft.tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0),
+    ssl: draft.ssl ?? false
   };
 }
 

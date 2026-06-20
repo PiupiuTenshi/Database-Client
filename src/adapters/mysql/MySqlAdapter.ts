@@ -41,6 +41,7 @@ export interface MySqlConnectionConfig {
   user?: string;
   password?: string;
   database?: string;
+  ssl?: { rejectUnauthorized: boolean };
 }
 
 export type MySqlClientFactory = (config: MySqlConnectionConfig) => Promise<MySqlClient>;
@@ -284,7 +285,8 @@ function toConfig(profile: RuntimeConnectionProfile): MySqlConnectionConfig {
     port: profile.port ?? 3306,
     user: profile.username,
     password: profile.password,
-    database: profile.database
+    database: profile.database,
+    ssl: profile.ssl ? { rejectUnauthorized: false } : undefined
   };
 }
 

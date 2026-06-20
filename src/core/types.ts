@@ -33,6 +33,8 @@ export interface ConnectionProfile {
   environment: ConnectionEnvironment;
   tags: string[];
   color?: string;
+  /** Bật TLS/SSL khi kết nối (Postgres/MySQL). SQL Server đã luôn trust cert. */
+  ssl?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -53,6 +55,7 @@ export interface ConnectionDraft {
   filePath?: string;
   environment: ConnectionEnvironment;
   tags: string[];
+  ssl?: boolean;
 }
 
 export interface TestConnectionResult {

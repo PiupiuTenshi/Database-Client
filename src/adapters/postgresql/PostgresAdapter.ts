@@ -45,6 +45,7 @@ export interface PgConnectionConfig {
   user?: string;
   password?: string;
   database?: string;
+  ssl?: { rejectUnauthorized: boolean };
 }
 
 export type PgClientFactory = (config: PgConnectionConfig) => PgClient;
@@ -281,7 +282,8 @@ function toConfig(profile: RuntimeConnectionProfile): PgConnectionConfig {
     port: profile.port ?? 5432,
     user: profile.username,
     password: profile.password,
-    database: profile.database ?? "postgres"
+    database: profile.database ?? "postgres",
+    ssl: profile.ssl ? { rejectUnauthorized: false } : undefined
   };
 }
 
