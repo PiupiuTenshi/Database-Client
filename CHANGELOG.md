@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.7.0] - 2026-06-21
+
+### Added
+
+- **Adapter contract test** — a shared suite asserts every adapter (SQLite, PostgreSQL, MySQL, MariaDB, SQL Server, Redis) declares a valid `dbType`, pagination/placeholder style, and implements the full `DatabaseAdapter` method set. Adding a new adapter that misses a method now fails the build.
+- **Per-connection SSL/TLS** — the connection form has a "Use SSL/TLS" toggle (allowing self-signed certs), threaded into the PostgreSQL and MySQL/MariaDB drivers.
+
+### Notes
+
+- New engine adapters (MongoDB, DuckDB, Oracle), SSH tunnels and Marketplace publishing remain on the backlog: they pull in native/heavy dependencies that can't be verified in this environment and each deserves its own focused release (use the `db-adapter-builder` agent).
+
 ## [1.6.0] - 2026-06-21
 
 ### Added
