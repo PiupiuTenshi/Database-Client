@@ -7,3 +7,23 @@ coverage/
 *.log
 .env
 .env.*
+
+# Secrets & credentials (phòng ngừa — không commit kể cả khi lỡ tạo)
+*.pem
+*.key
+*.pfx
+*.p12
+*.crt
+id_rsa
+id_rsa.*
+secrets.json
+*.secret
+*.secrets
+.vscode/settings.json
+
+# Database dumps / local data
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.bak
