@@ -3,9 +3,9 @@ import { COMMANDS } from "../core/constants";
 import { getHelloWorldMessage } from "../core/messages";
 import { registerConnectionCommands, type CommandDeps } from "./connectionCommands";
 import { registerQueryCommands, type QueryCommandDeps } from "./queryCommands";
-import { registerSchemaCommands } from "./schemaCommands";
+import { registerSchemaCommands, type SchemaCommandDeps } from "./schemaCommands";
 
-export type AllCommandDeps = CommandDeps & QueryCommandDeps;
+export type AllCommandDeps = CommandDeps & QueryCommandDeps & SchemaCommandDeps;
 
 export function registerCommands(context: vscode.ExtensionContext, deps: AllCommandDeps): void {
   const helloWorld = vscode.commands.registerCommand(COMMANDS.helloWorld, () => {
@@ -14,6 +14,6 @@ export function registerCommands(context: vscode.ExtensionContext, deps: AllComm
   context.subscriptions.push(helloWorld);
 
   registerConnectionCommands(context, deps);
-  registerSchemaCommands(context, deps.queryService);
+  registerSchemaCommands(context, deps);
   registerQueryCommands(context, deps);
 }

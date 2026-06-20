@@ -2,7 +2,7 @@
   "name": "open-db-nexus",
   "displayName": "Open DB Nexus",
   "description": "A VS Code multi-database client extension with schema explorer, query runner, and dependency graph tooling.",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "publisher": "piupiutenshi",
   "license": "MIT",
   "private": true,
@@ -72,6 +72,11 @@
         "command": "openDbNexus.openTableData",
         "title": "Open DB Nexus: Open Table Data",
         "icon": "$(table)"
+      },
+      {
+        "command": "openDbNexus.openDependencyGraph",
+        "title": "Open DB Nexus: Open Dependency Graph",
+        "icon": "$(type-hierarchy)"
       },
       {
         "command": "openDbNexus.openQuery",
@@ -147,12 +152,22 @@
         {
           "command": "openDbNexus.openTableData",
           "when": "view == openDbNexus.connections && viewItem == table",
-          "group": "inline"
+          "group": "inline@1"
+        },
+        {
+          "command": "openDbNexus.openDependencyGraph",
+          "when": "view == openDbNexus.connections && viewItem == table",
+          "group": "inline@2"
         },
         {
           "command": "openDbNexus.openTableData",
           "when": "view == openDbNexus.connections && viewItem == table",
           "group": "1_view@1"
+        },
+        {
+          "command": "openDbNexus.openDependencyGraph",
+          "when": "view == openDbNexus.connections && viewItem == table",
+          "group": "1_view@2"
         }
       ]
     },

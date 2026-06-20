@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.0.9] - 2026-06-20
+
+### Added
+
+- Phase 8 — Dependency Graph MVP (the product's key differentiator).
+- `graphBuilder` (pure): build a full FK graph and extract a subgraph by center/direction/depth (docs/05 §8–§9).
+- `DependencyGraphService`: assembles the schema-wide FK graph via the adapters.
+- Dependency Graph webview (self-contained SVG — no external libraries, CSP-safe): radial layout, pan/zoom, search, double-click a node to open table data, Export JSON.
+- Direction (inbound/outbound/both) and depth (1/2/3/all) controls; large-graph warning (>300 nodes).
+- "Open Dependency Graph" command on a table's context menu.
+- Tests for graphBuilder and DependencyGraphService.
+
 ## [0.0.8] - 2026-06-20
 
 ### Added

@@ -142,6 +142,39 @@ export interface DbError {
 
 export type QueryStatus = "success" | "error" | "cancelled";
 
+// ---------------------------------------------------------------------------
+// Dependency graph (docs/05)
+// ---------------------------------------------------------------------------
+
+export type GraphDirection = "inbound" | "outbound" | "both";
+export type GraphDepth = 1 | 2 | 3 | "all";
+
+export interface GraphNode {
+  id: string;
+  label: string;
+  type: "table" | "view";
+  schema?: string;
+  objectName: string;
+}
+
+export interface GraphEdge {
+  id: string;
+  source: string;
+  target: string;
+  type: "foreign_key";
+  label?: string;
+  sourceColumns?: string[];
+  targetColumns?: string[];
+}
+
+/** "source depends on target" (docs/05 §4). FK: child -> parent. */
+export interface DependencyGraph {
+  center?: string;
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  warnings?: string[];
+}
+
 /** Một dòng lịch sử query (docs/06 §11). */
 export interface QueryHistoryItem {
   id: string;
