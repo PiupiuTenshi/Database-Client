@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.0.8] - 2026-06-20
+
+### Added
+
+- Phase 7 — SQL Server adapter (mssql/tedious).
+- `SqlServerAdapter`: connect, test, list schemas/tables/views/columns/indexes/foreign keys, DDL, execute query.
+- `trustServerCertificate` enabled by default so local Docker (self-signed cert) works out of the box.
+- Per-adapter pagination style: SQL Server uses `OFFSET … FETCH` (with `ORDER BY (SELECT NULL)`); others use `LIMIT … OFFSET`.
+- Bracket identifier quoting (`[name]`) for SQL Server.
+- Docker Compose + seed for a local SQL Server test database.
+- Tests for SQL Server metadata mapping and offset-fetch pagination.
+
+### Changed
+
+- `DatabaseAdapter` gains a `paginationStyle` field; `buildSelectAll` honours it.
+- `mssql` (and `tslib`) added as runtime dependencies (mssql externalized from the bundle).
+
 ## [0.0.7] - 2026-06-20
 
 ### Added

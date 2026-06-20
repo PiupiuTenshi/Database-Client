@@ -1,4 +1,4 @@
-import { Client } from "pg";
+import sql from "mssql";
 import type {
   ColumnInfo,
   DbType,
@@ -14,29 +14,27 @@ import type {
   TestConnectionResult
 } from "../../core/types";
 import { newId } from "../../utils/objectId";
-import { qualify, quoteIdentifier } from "../../utils/sqlSafety";
+import { quoteBracket } from "../../utils/sqlSafety";
 import type { PaginationStyle } from "../common/pagination";
 import type { DatabaseAdapter, DbSession } from "../DatabaseAdapter";
-import * as Q from "./postgresMetadataQueries";
+import * as Q from "./sqlServerMetadataQueries";
 
-const DEFAULT_SCHEMA = "public";
+const DEFAULT_SCHEMA = "dbo";
 
-/** Kết quả query tối giản mà adapter cần (tương thích pg.QueryResult). */
-export interface PgQueryResult {
+/** Kết quả query tối giản mà adapter cần. */
+export interface MssqlQueryResult {
   rows: Record<string, unknown>[];
-  fields: { name: string }[];
-  rowCount: number | null;
-  command: string;
+  columns: string[];
+  rowsAffected: number;
 }
 
-/** Client tối giản (tương thích pg.Client) — cho phép inject mock khi test. */
-export interface PgClient {
-  connect(): Promise<void>;
-  query(text: string, values?: unknown[]): Promise<PgQueryResult>;
+/** Client tối giản (bọc mssql) — cho phép inject mock khi test. */
+export interface MssqlClient {
+  query(sql: string): Promise<MssqlQueryResult>;
   end(): Promise<void>;
 }
 
-export interface PgConnectionConfig {
+export interface MssqlConnectionConfig {
   host?: string;
   port?: number;
   user?: string;
@@ -44,41 +42,70 @@ export interface PgConnectionConfig {
   database?: string;
 }
 
-export type PgClientFactory = (config: PgConnectionConfig) => PgClient;
+export type MssqlClientFactory = (config: MssqlConnectionConfig) => Promise<MssqlClient>;
 
-const defaultFactory: PgClientFactory = (config) => new Client(config) as unknown as PgClient;
+const defaultFactory: MssqlClientFactory = async (config) => {
+  const pool = new sql.ConnectionPool({
+    server: config.host ?? "localhost",
+    port: config.port ?? 1433,
+    user: config.user,
+    password: config.password,
+    database: config.database,
+    // Trust server certificate cho SQL Server local/Docker (self-signed cert).
+    options: { trustServerCertificate: true, encrypt: true }
+  });
+  await pool.connect();
+  return {
+    query: async (text) => {
+      const result = await pool.request().query(text);
+      const recordset = result.recordset as
+        | (Record<string, unknown>[] & { columns?: object })
+        | undefined;
+      const rows = recordset ?? [];
+      const columns = recordset?.columns
+        ? Object.keys(recordset.columns)
+        : rows[0]
+          ? Object.keys(rows[0])
+          : [];
+      const rowsAffected = (result.rowsAffected ?? []).reduce((sum, n) => sum + n, 0);
+      return { rows, columns, rowsAffected };
+    },
+    end: () => pool.close()
+  };
+};
 
-/** Adapter PostgreSQL (async) dùng node-postgres. */
-export class PostgresAdapter implements DatabaseAdapter {
-  readonly dbType: DbType = "postgresql";
-  readonly paginationStyle: PaginationStyle = "limit-offset";
+/** Adapter SQL Server (async) dùng mssql/tedious. */
+export class SqlServerAdapter implements DatabaseAdapter {
+  readonly dbType: DbType = "sqlserver";
+  readonly paginationStyle: PaginationStyle = "offset-fetch";
 
-  private readonly sessions = new Map<string, PgClient>();
+  private readonly sessions = new Map<string, MssqlClient>();
 
-  constructor(private readonly factory: PgClientFactory = defaultFactory) {}
+  constructor(private readonly factory: MssqlClientFactory = defaultFactory) {}
 
   quoteIdentifier(name: string): string {
-    return quoteIdentifier(name);
+    return quoteBracket(name);
   }
 
   async connect(profile: RuntimeConnectionProfile): Promise<DbSession> {
-    const client = this.factory(toConfig(profile));
-    await client.connect();
+    const client = await this.factory(toConfig(profile));
     const id = newId();
     this.sessions.set(id, client);
     return { id, dbType: this.dbType };
   }
 
   async testConnection(profile: RuntimeConnectionProfile): Promise<TestConnectionResult> {
-    const client = this.factory(toConfig(profile));
+    let client: MssqlClient | undefined;
     try {
-      await client.connect();
-      await client.query("SELECT 1");
-      return { ok: true, message: "Connected to PostgreSQL successfully." };
+      client = await this.factory(toConfig(profile));
+      await client.query("SELECT 1 AS ok");
+      return { ok: true, message: "Connected to SQL Server successfully." };
     } catch (error) {
       return { ok: false, message: toErrorMessage(error) };
     } finally {
-      await safeEnd(client);
+      if (client) {
+        await safeEnd(client);
+      }
     }
   }
 
@@ -93,35 +120,27 @@ export class PostgresAdapter implements DatabaseAdapter {
   async listSchemas(session: DbSession): Promise<SchemaInfo[]> {
     const result = await this.client(session).query(Q.LIST_SCHEMAS);
     return result.rows.map((row) => ({
-      name: String(row.schema_name),
-      isDefault: row.schema_name === DEFAULT_SCHEMA
+      name: String(row.name),
+      isDefault: row.name === DEFAULT_SCHEMA
     }));
   }
 
   async listTables(session: DbSession, schema = DEFAULT_SCHEMA): Promise<TableInfo[]> {
-    const result = await this.client(session).query(Q.LIST_TABLES, [schema]);
-    return result.rows.map((row) => ({
-      name: String(row.table_name),
-      schema,
-      type: "base_table"
-    }));
+    const result = await this.client(session).query(Q.listTablesSql(schema));
+    return result.rows.map((row) => ({ name: String(row.name), schema, type: "base_table" }));
   }
 
   async listViews(session: DbSession, schema = DEFAULT_SCHEMA): Promise<TableInfo[]> {
-    const result = await this.client(session).query(Q.LIST_VIEWS, [schema]);
-    return result.rows.map((row) => ({
-      name: String(row.table_name),
-      schema,
-      type: "view"
-    }));
+    const result = await this.client(session).query(Q.listViewsSql(schema));
+    return result.rows.map((row) => ({ name: String(row.name), schema, type: "view" }));
   }
 
   async listColumns(session: DbSession, ref: ObjectRef): Promise<ColumnInfo[]> {
     const schema = ref.schema ?? DEFAULT_SCHEMA;
     const client = this.client(session);
     const [columns, pks] = await Promise.all([
-      client.query(Q.LIST_COLUMNS, [schema, ref.name]),
-      client.query(Q.LIST_PRIMARY_KEYS, [schema, ref.name])
+      client.query(Q.listColumnsSql(schema, ref.name)),
+      client.query(Q.listPrimaryKeysSql(schema, ref.name))
     ]);
     const pkSet = new Set(pks.rows.map((row) => String(row.column_name)));
     return columns.rows.map((row) => ({
@@ -136,7 +155,7 @@ export class PostgresAdapter implements DatabaseAdapter {
 
   async listIndexes(session: DbSession, ref: ObjectRef): Promise<IndexInfo[]> {
     const schema = ref.schema ?? DEFAULT_SCHEMA;
-    const result = await this.client(session).query(Q.LIST_INDEXES, [schema, ref.name]);
+    const result = await this.client(session).query(Q.listIndexesSql(schema, ref.name));
     const byName = new Map<string, IndexInfo>();
     for (const row of result.rows) {
       const name = String(row.index_name);
@@ -152,7 +171,7 @@ export class PostgresAdapter implements DatabaseAdapter {
 
   async listForeignKeys(session: DbSession, ref: ObjectRef): Promise<ForeignKeyInfo[]> {
     const schema = ref.schema ?? DEFAULT_SCHEMA;
-    const result = await this.client(session).query(Q.LIST_FOREIGN_KEYS, [schema, ref.name]);
+    const result = await this.client(session).query(Q.listForeignKeysSql(schema, ref.name));
     const byName = new Map<string, ForeignKeyInfo>();
     for (const row of result.rows) {
       const name = String(row.constraint_name);
@@ -175,19 +194,16 @@ export class PostgresAdapter implements DatabaseAdapter {
 
   async getObjectDDL(session: DbSession, ref: ObjectRef): Promise<string> {
     const schema = ref.schema ?? DEFAULT_SCHEMA;
-    const client = this.client(session);
-    const kind = await client.query(Q.REL_KIND, [schema, ref.name]);
-    const relkind = kind.rows[0]?.relkind;
-    if (relkind === "v" || relkind === "m") {
-      const def = await client.query(Q.VIEW_DEF, [schema, ref.name]);
-      return `CREATE VIEW ${qualify(schema, ref.name)} AS\n${(def.rows[0]?.def as string | undefined) ?? ""}`;
+    const def = await this.client(session).query(Q.objectDefinitionSql(schema, ref.name));
+    const definition = def.rows[0]?.def as string | null | undefined;
+    if (definition) {
+      return definition;
     }
     const columns = await this.listColumns(session, ref);
-    const lines = columns.map((column) => {
-      const nullable = column.nullable ? "" : " NOT NULL";
-      return `  ${column.name} ${column.dataType}${nullable}`;
-    });
-    return `CREATE TABLE ${qualify(schema, ref.name)} (\n${lines.join(",\n")}\n);`;
+    const lines = columns.map(
+      (column) => `  ${column.name} ${column.dataType}${column.nullable ? "" : " NOT NULL"}`
+    );
+    return `CREATE TABLE ${quoteBracket(schema)}.${quoteBracket(ref.name)} (\n${lines.join(",\n")}\n);`;
   }
 
   async executeQuery(
@@ -198,50 +214,46 @@ export class PostgresAdapter implements DatabaseAdapter {
     if (options?.signal?.aborted) {
       throw new Error("Query cancelled.");
     }
-    const client = this.client(session);
     const started = Date.now();
-    const result = await client.query(sql);
-    const columns: QueryColumn[] = result.fields.map((field, index) => ({
-      name: field.name,
-      ordinal: index
-    }));
+    const result = await this.client(session).query(sql);
+    const columns: QueryColumn[] = result.columns.map((name, index) => ({ name, ordinal: index }));
     let rows = result.rows;
     const truncated = options?.maxRows !== undefined && rows.length > options.maxRows;
     if (truncated) {
       rows = rows.slice(0, options.maxRows);
     }
-    const isSelect = result.command === "SELECT" || columns.length > 0;
+    const isSelect = columns.length > 0;
     return {
       queryId: newId(),
       columns,
       rows,
       rowCount: rows.length,
-      affectedRows: isSelect ? undefined : (result.rowCount ?? undefined),
+      affectedRows: isSelect ? undefined : result.rowsAffected,
       durationMs: Date.now() - started,
       truncated
     };
   }
 
-  private client(session: DbSession): PgClient {
+  private client(session: DbSession): MssqlClient {
     const client = this.sessions.get(session.id);
     if (!client) {
-      throw new Error("PostgreSQL session is not connected.");
+      throw new Error("SQL Server session is not connected.");
     }
     return client;
   }
 }
 
-function toConfig(profile: RuntimeConnectionProfile): PgConnectionConfig {
+function toConfig(profile: RuntimeConnectionProfile): MssqlConnectionConfig {
   return {
     host: profile.host,
-    port: profile.port ?? 5432,
+    port: profile.port ?? 1433,
     user: profile.username,
     password: profile.password,
-    database: profile.database ?? "postgres"
+    database: profile.database
   };
 }
 
-async function safeEnd(client: PgClient): Promise<void> {
+async function safeEnd(client: MssqlClient): Promise<void> {
   try {
     await client.end();
   } catch {

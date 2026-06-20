@@ -11,6 +11,7 @@ import type {
   TableInfo,
   TestConnectionResult
 } from "../core/types";
+import type { PaginationStyle } from "./common/pagination";
 
 /**
  * Handle phiên kết nối. Adapter tự quản lý chi tiết driver bên trong; service
@@ -29,7 +30,10 @@ export interface DbSession {
 export interface DatabaseAdapter {
   readonly dbType: DbType;
 
-  /** Bọc identifier theo dialect (double-quote / backtick) cho SQL extension tự sinh. */
+  /** Kiểu phân trang cho table viewer (limit-offset / offset-fetch). */
+  readonly paginationStyle: PaginationStyle;
+
+  /** Bọc identifier theo dialect (double-quote / backtick / bracket) cho SQL extension tự sinh. */
   quoteIdentifier(name: string): string;
 
   connect(profile: RuntimeConnectionProfile): Promise<DbSession>;

@@ -15,6 +15,7 @@ import type {
 } from "../../core/types";
 import { newId } from "../../utils/objectId";
 import { quoteIdentifier, quoteStringLiteral } from "../../utils/sqlSafety";
+import type { PaginationStyle } from "../common/pagination";
 import type { DatabaseAdapter, DbSession } from "../DatabaseAdapter";
 
 type Db = Database.Database;
@@ -53,6 +54,7 @@ interface PragmaForeignKeyRow {
 /** Adapter SQLite dựa trên better-sqlite3 (đồng bộ). */
 export class SqliteAdapter implements DatabaseAdapter {
   readonly dbType: DbType = "sqlite";
+  readonly paginationStyle: PaginationStyle = "limit-offset";
 
   private readonly sessions = new Map<string, Db>();
 

@@ -15,6 +15,7 @@ import type {
 } from "../../core/types";
 import { newId } from "../../utils/objectId";
 import { quoteBacktick } from "../../utils/sqlSafety";
+import type { PaginationStyle } from "../common/pagination";
 import type { DatabaseAdapter, DbSession } from "../DatabaseAdapter";
 import * as Q from "./mysqlMetadataQueries";
 
@@ -62,6 +63,8 @@ const defaultFactory: MySqlClientFactory = async (config) => {
 
 /** Adapter MySQL/MariaDB (async) dùng mysql2. */
 export class MySqlAdapter implements DatabaseAdapter {
+  readonly paginationStyle: PaginationStyle = "limit-offset";
+
   private readonly sessions = new Map<string, MySqlClient>();
 
   constructor(

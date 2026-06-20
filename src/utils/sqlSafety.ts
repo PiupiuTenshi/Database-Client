@@ -13,6 +13,11 @@ export function quoteBacktick(name: string): string {
   return `\`${name.replace(/`/g, "``")}\``;
 }
 
+/** Bọc identifier trong ngoặc vuông (SQL Server), escape `]` -> `]]`. */
+export function quoteBracket(name: string): string {
+  return `[${name.replace(/]/g, "]]")}]`;
+}
+
 /** Bọc chuỗi thành string literal (dùng cho PRAGMA không nhận placeholder). */
 export function quoteStringLiteral(value: string): string {
   return `'${value.replace(/'/g, "''")}'`;

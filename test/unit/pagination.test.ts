@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildCount, buildSelectAll } from "../../src/adapters/common/pagination";
-import { quoteBacktick, quoteIdentifier } from "../../src/utils/sqlSafety";
+import { quoteBacktick, quoteBracket, quoteIdentifier } from "../../src/utils/sqlSafety";
 
 describe("pagination", () => {
   it("builds a paginated SELECT * with the given quoter", () => {
@@ -15,6 +15,14 @@ describe("pagination", () => {
   it("supports backtick quoting (MySQL)", () => {
     expect(buildSelectAll({ schema: "app", name: "users" }, 10, 0, quoteBacktick)).toBe(
       "SELECT * FROM `app`.`users` LIMIT 10 OFFSET 0"
+    );
+  });
+
+  it("supports offset-fetch pagination (SQL Server)", () => {
+    expect(
+      buildSelectAll({ schema: "dbo", name: "users" }, 25, 50, quoteBracket, "offset-fetch")
+    ).toBe(
+      "SELECT * FROM [dbo].[users] ORDER BY (SELECT NULL) OFFSET 50 ROWS FETCH NEXT 25 ROWS ONLY"
     );
   });
 
