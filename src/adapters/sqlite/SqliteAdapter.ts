@@ -1,17 +1,20 @@
 import Database from "better-sqlite3";
 import type {
+  CheckConstraintInfo,
   ColumnInfo,
   DbType,
   ForeignKeyInfo,
   IndexInfo,
   ObjectRef,
+  PlaceholderStyle,
   QueryColumn,
   QueryOptions,
   QueryResult,
   RuntimeConnectionProfile,
   SchemaInfo,
   TableInfo,
-  TestConnectionResult
+  TestConnectionResult,
+  TriggerInfo
 } from "../../core/types";
 import { newId } from "../../utils/objectId";
 import { quoteIdentifier, quoteStringLiteral } from "../../utils/sqlSafety";
@@ -55,6 +58,7 @@ interface PragmaForeignKeyRow {
 export class SqliteAdapter implements DatabaseAdapter {
   readonly dbType: DbType = "sqlite";
   readonly paginationStyle: PaginationStyle = "limit-offset";
+  readonly placeholderStyle: PlaceholderStyle = "qmark";
 
   private readonly sessions = new Map<string, Db>();
 
@@ -161,6 +165,20 @@ export class SqliteAdapter implements DatabaseAdapter {
     return [...byId.values()];
   }
 
+  async listTriggers(session: DbSession, ref: ObjectRef): Promise<TriggerInfo[]> {
+    const db = this.getDb(session);
+    const rows = db
+      .prepare("SELECT name, sql FROM sqlite_master WHERE type = 'trigger' AND tbl_name = ?")
+      .all(ref.name) as { name: string; sql: string | null }[];
+    return rows.map((row) => ({ name: row.name, statement: row.sql ?? undefined }));
+  }
+
+  async listCheckConstraints(session: DbSession, ref: ObjectRef): Promise<CheckConstraintInfo[]> {
+    // SQLite không liệt kê CHECK qua catalog; trích từ DDL của bảng.
+    const ddl = await this.getObjectDDL(session, ref);
+    return extractSqliteChecks(ddl);
+  }
+
   async listViewDependencies(_session: DbSession, _ref: ObjectRef): Promise<ObjectRef[]> {
     // SQLite không có catalog dependency; cần parse SQL -> bỏ qua ở MVP.
     return [];
@@ -185,6 +203,7 @@ export class SqliteAdapter implements DatabaseAdapter {
     }
     const started = Date.now();
     const statement = db.prepare(sql);
+    const params = (options?.params ?? []).map(normalizeBind);
 
     if (statement.reader) {
       const columns: QueryColumn[] = statement.columns().map((column, index) => ({
@@ -192,7 +211,7 @@ export class SqliteAdapter implements DatabaseAdapter {
         dataType: column.type ?? undefined,
         ordinal: index
       }));
-      let rows = statement.all() as Record<string, unknown>[];
+      let rows = statement.all(...params) as Record<string, unknown>[];
       const total = rows.length;
       const maxRows = options?.maxRows;
       const truncated = maxRows !== undefined && total > maxRows;
@@ -209,7 +228,7 @@ export class SqliteAdapter implements DatabaseAdapter {
       };
     }
 
-    const info = statement.run();
+    const info = statement.run(...params);
     return {
       queryId: newId(),
       columns: [],
@@ -253,4 +272,26 @@ export class SqliteAdapter implements DatabaseAdapter {
 
 function toErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+/** better-sqlite3 không nhận boolean/undefined; chuẩn hóa về kiểu nó chấp nhận. */
+function normalizeBind(value: unknown): unknown {
+  if (value === undefined) {
+    return null;
+  }
+  if (typeof value === "boolean") {
+    return value ? 1 : 0;
+  }
+  return value;
+}
+
+/** Trích CHECK constraint có đặt tên từ DDL `CREATE TABLE` của SQLite (best effort). */
+function extractSqliteChecks(ddl: string): CheckConstraintInfo[] {
+  const checks: CheckConstraintInfo[] = [];
+  const regex = /CONSTRAINT\s+["'`]?(\w+)["'`]?\s+CHECK\s*\(([^)]*(?:\([^)]*\)[^)]*)*)\)/gi;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(ddl)) !== null) {
+    checks.push({ name: match[1], expression: match[2].trim() });
+  }
+  return checks;
 }

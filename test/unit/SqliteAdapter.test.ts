@@ -74,6 +74,36 @@ describe("SqliteAdapter (in-memory)", () => {
     expect(fks[0].target.columns).toEqual(["id"]);
   });
 
+  it("lists triggers on a table", async () => {
+    await adapter.executeQuery(
+      session,
+      "CREATE TRIGGER trg_users AFTER INSERT ON users BEGIN SELECT 1; END"
+    );
+    const triggers = await adapter.listTriggers(session, { name: "users" });
+    expect(triggers.map((t) => t.name)).toEqual(["trg_users"]);
+    expect(triggers[0].statement).toContain("AFTER INSERT");
+  });
+
+  it("extracts named check constraints from DDL", async () => {
+    await adapter.executeQuery(
+      session,
+      "CREATE TABLE acct (id INTEGER PRIMARY KEY, bal INTEGER, CONSTRAINT chk_pos CHECK (bal >= 0))"
+    );
+    const checks = await adapter.listCheckConstraints(session, { name: "acct" });
+    expect(checks.map((c) => c.name)).toContain("chk_pos");
+    expect(checks.find((c) => c.name === "chk_pos")?.expression).toContain("bal >= 0");
+  });
+
+  it("writes via parameterized query (params binding)", async () => {
+    await adapter.executeQuery(session, "INSERT INTO users (name) VALUES (?)", {
+      params: ["param-name"]
+    });
+    const result = await adapter.executeQuery(session, "SELECT name FROM users WHERE name = ?", {
+      params: ["param-name"]
+    });
+    expect(result.rows).toHaveLength(1);
+  });
+
   it("returns DDL for an object", async () => {
     const ddl = await adapter.getObjectDDL(session, { name: "users" });
     expect(ddl).toContain("CREATE TABLE");

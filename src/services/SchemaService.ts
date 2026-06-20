@@ -1,11 +1,13 @@
 import type {
+  CheckConstraintInfo,
   ColumnInfo,
   ConnectionProfile,
   ForeignKeyInfo,
   IndexInfo,
   ObjectRef,
   SchemaInfo,
-  TableInfo
+  TableInfo,
+  TriggerInfo
 } from "../core/types";
 import type { SessionManager } from "./SessionManager";
 
@@ -44,6 +46,24 @@ export class SchemaService {
   async listForeignKeys(profile: ConnectionProfile, ref: ObjectRef): Promise<ForeignKeyInfo[]> {
     const { adapter, session } = await this.sessionManager.getOrConnect(profile);
     return adapter.listForeignKeys(session, ref);
+  }
+
+  async listTriggers(profile: ConnectionProfile, ref: ObjectRef): Promise<TriggerInfo[]> {
+    const { adapter, session } = await this.sessionManager.getOrConnect(profile);
+    return adapter.listTriggers(session, ref);
+  }
+
+  async listCheckConstraints(
+    profile: ConnectionProfile,
+    ref: ObjectRef
+  ): Promise<CheckConstraintInfo[]> {
+    const { adapter, session } = await this.sessionManager.getOrConnect(profile);
+    return adapter.listCheckConstraints(session, ref);
+  }
+
+  async getObjectDDL(profile: ConnectionProfile, ref: ObjectRef): Promise<string> {
+    const { adapter, session } = await this.sessionManager.getOrConnect(profile);
+    return adapter.getObjectDDL(session, ref);
   }
 
   async listViewDependencies(profile: ConnectionProfile, ref: ObjectRef): Promise<ObjectRef[]> {

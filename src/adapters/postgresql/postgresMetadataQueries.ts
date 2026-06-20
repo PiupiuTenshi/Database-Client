@@ -64,6 +64,21 @@ FROM information_schema.view_table_usage
 WHERE view_schema = $1 AND view_name = $2
 ORDER BY table_schema, table_name`;
 
+export const LIST_TRIGGERS = `
+SELECT trigger_name, action_timing, event_manipulation, action_statement
+FROM information_schema.triggers
+WHERE event_object_schema = $1 AND event_object_table = $2
+ORDER BY trigger_name`;
+
+export const LIST_CHECKS = `
+SELECT cc.constraint_name, cc.check_clause
+FROM information_schema.check_constraints cc
+JOIN information_schema.table_constraints tc
+  ON tc.constraint_name = cc.constraint_name AND tc.constraint_schema = cc.constraint_schema
+WHERE tc.constraint_type = 'CHECK' AND tc.table_schema = $1 AND tc.table_name = $2
+  AND cc.constraint_name NOT LIKE '%_not_null'
+ORDER BY cc.constraint_name`;
+
 export const REL_KIND = `
 SELECT c.relkind
 FROM pg_class c

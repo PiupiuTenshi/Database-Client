@@ -83,6 +83,31 @@ WHERE VIEW_SCHEMA = ${quoteStringLiteral(schema)} AND VIEW_NAME = ${quoteStringL
 ORDER BY TABLE_SCHEMA, TABLE_NAME`;
 }
 
+export function listTriggersSql(schema: string, table: string): string {
+  const objectId = quoteStringLiteral(`${schema}.${table}`);
+  return `
+SELECT t.name AS trigger_name,
+       CASE WHEN OBJECTPROPERTY(t.object_id, 'ExecIsInsteadOfTrigger') = 1 THEN 'INSTEAD OF' ELSE 'AFTER' END AS action_timing,
+       LTRIM(STUFF(
+         CASE WHEN OBJECTPROPERTY(t.object_id, 'ExecIsInsertTrigger') = 1 THEN ', INSERT' ELSE '' END +
+         CASE WHEN OBJECTPROPERTY(t.object_id, 'ExecIsUpdateTrigger') = 1 THEN ', UPDATE' ELSE '' END +
+         CASE WHEN OBJECTPROPERTY(t.object_id, 'ExecIsDeleteTrigger') = 1 THEN ', DELETE' ELSE '' END,
+         1, 2, '')) AS event_manipulation,
+       OBJECT_DEFINITION(t.object_id) AS action_statement
+FROM sys.triggers t
+WHERE t.parent_id = OBJECT_ID(${objectId})
+ORDER BY t.name`;
+}
+
+export function listChecksSql(schema: string, table: string): string {
+  const objectId = quoteStringLiteral(`${schema}.${table}`);
+  return `
+SELECT cc.name AS constraint_name, cc.definition AS check_clause
+FROM sys.check_constraints cc
+WHERE cc.parent_object_id = OBJECT_ID(${objectId})
+ORDER BY cc.name`;
+}
+
 export function objectDefinitionSql(schema: string, table: string): string {
   return `SELECT OBJECT_DEFINITION(OBJECT_ID(${quoteStringLiteral(`${schema}.${table}`)})) AS def`;
 }

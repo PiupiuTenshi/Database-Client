@@ -1,15 +1,18 @@
 import type {
+  CheckConstraintInfo,
   ColumnInfo,
   DbType,
   ForeignKeyInfo,
   IndexInfo,
   ObjectRef,
+  PlaceholderStyle,
   QueryOptions,
   QueryResult,
   RuntimeConnectionProfile,
   SchemaInfo,
   TableInfo,
-  TestConnectionResult
+  TestConnectionResult,
+  TriggerInfo
 } from "../core/types";
 import type { PaginationStyle } from "./common/pagination";
 
@@ -33,6 +36,9 @@ export interface DatabaseAdapter {
   /** Kiểu phân trang cho table viewer (limit-offset / offset-fetch). */
   readonly paginationStyle: PaginationStyle;
 
+  /** Kiểu placeholder cho parameterized write/DDL (qmark / numbered / named). */
+  readonly placeholderStyle: PlaceholderStyle;
+
   /** Bọc identifier theo dialect (double-quote / backtick / bracket) cho SQL extension tự sinh. */
   quoteIdentifier(name: string): string;
 
@@ -47,6 +53,10 @@ export interface DatabaseAdapter {
   listColumns(session: DbSession, ref: ObjectRef): Promise<ColumnInfo[]>;
   listIndexes(session: DbSession, ref: ObjectRef): Promise<IndexInfo[]>;
   listForeignKeys(session: DbSession, ref: ObjectRef): Promise<ForeignKeyInfo[]>;
+  /** Trigger gắn trên table. Trả [] nếu engine không hỗ trợ trigger. */
+  listTriggers(session: DbSession, ref: ObjectRef): Promise<TriggerInfo[]>;
+  /** CHECK constraint trên table. Trả [] nếu engine không hỗ trợ. */
+  listCheckConstraints(session: DbSession, ref: ObjectRef): Promise<CheckConstraintInfo[]>;
   /** Các đối tượng mà một view tham chiếu. Trả [] nếu engine không hỗ trợ. */
   listViewDependencies(session: DbSession, ref: ObjectRef): Promise<ObjectRef[]>;
   getObjectDDL(session: DbSession, ref: ObjectRef): Promise<string>;

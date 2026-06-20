@@ -1,17 +1,20 @@
 import { createClient } from "redis";
 import type {
+  CheckConstraintInfo,
   ColumnInfo,
   DbType,
   ForeignKeyInfo,
   IndexInfo,
   ObjectRef,
+  PlaceholderStyle,
   QueryColumn,
   QueryOptions,
   QueryResult,
   RuntimeConnectionProfile,
   SchemaInfo,
   TableInfo,
-  TestConnectionResult
+  TestConnectionResult,
+  TriggerInfo
 } from "../../core/types";
 import { newId } from "../../utils/objectId";
 import { tokenizeCommand } from "../../utils/commandTokenizer";
@@ -65,6 +68,7 @@ const defaultFactory: RedisClientFactory = async (config) => {
 export class RedisAdapter implements DatabaseAdapter {
   readonly dbType: DbType = "redis";
   readonly paginationStyle: PaginationStyle = "limit-offset";
+  readonly placeholderStyle: PlaceholderStyle = "qmark";
 
   private readonly sessions = new Map<string, RedisClient>();
 
@@ -134,6 +138,14 @@ export class RedisAdapter implements DatabaseAdapter {
   }
 
   async listForeignKeys(_session: DbSession, _ref: ObjectRef): Promise<ForeignKeyInfo[]> {
+    return [];
+  }
+
+  async listTriggers(_session: DbSession, _ref: ObjectRef): Promise<TriggerInfo[]> {
+    return [];
+  }
+
+  async listCheckConstraints(_session: DbSession, _ref: ObjectRef): Promise<CheckConstraintInfo[]> {
     return [];
   }
 

@@ -98,6 +98,22 @@ export interface IndexInfo {
   columns: string[];
 }
 
+/** Trigger gắn trên một table (Properties tab). `statement` có thể rỗng nếu engine không trả body. */
+export interface TriggerInfo {
+  name: string;
+  /** BEFORE / AFTER / INSTEAD OF khi engine cung cấp. */
+  timing?: string;
+  /** INSERT / UPDATE / DELETE (hoặc danh sách gộp). */
+  event?: string;
+  statement?: string;
+}
+
+/** CHECK constraint trên table (Properties tab). */
+export interface CheckConstraintInfo {
+  name: string;
+  expression: string;
+}
+
 export interface ForeignKeyInfo {
   name: string;
   source: { schema?: string; table: string; columns: string[] };
@@ -131,6 +147,20 @@ export interface QueryResult {
 export interface QueryOptions {
   maxRows?: number;
   signal?: AbortSignal;
+  /**
+   * Giá trị bind cho query có placeholder (chống SQL injection). Thứ tự khớp với
+   * placeholder theo `DatabaseAdapter.placeholderStyle`. Dùng cho data edit/DDL.
+   */
+  params?: unknown[];
+}
+
+/** Kiểu placeholder cho parameterized query theo dialect. */
+export type PlaceholderStyle = "qmark" | "numbered" | "named";
+
+/** Một câu SQL kèm tham số đã bind (cho data edit / DDL). */
+export interface ParamStatement {
+  sql: string;
+  params: unknown[];
 }
 
 /** Lỗi DB đã chuẩn hóa (docs/04 §10). Không lộ stack dài cho user. */

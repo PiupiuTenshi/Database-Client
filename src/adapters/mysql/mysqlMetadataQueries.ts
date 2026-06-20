@@ -32,6 +32,21 @@ FROM information_schema.statistics
 WHERE table_schema = ? AND table_name = ?
 ORDER BY index_name, seq_in_index`;
 
+export const LIST_TRIGGERS = `
+SELECT trigger_name AS trigger_name, action_timing AS action_timing,
+       event_manipulation AS event_manipulation, action_statement AS action_statement
+FROM information_schema.triggers
+WHERE event_object_schema = ? AND event_object_table = ?
+ORDER BY trigger_name`;
+
+export const LIST_CHECKS = `
+SELECT tc.constraint_name AS constraint_name, cc.check_clause AS check_clause
+FROM information_schema.table_constraints tc
+JOIN information_schema.check_constraints cc
+  ON cc.constraint_name = tc.constraint_name AND cc.constraint_schema = tc.table_schema
+WHERE tc.constraint_type = 'CHECK' AND tc.table_schema = ? AND tc.table_name = ?
+ORDER BY tc.constraint_name`;
+
 export const LIST_FOREIGN_KEYS = `
 SELECT kcu.constraint_name AS constraint_name,
        kcu.column_name AS source_column,

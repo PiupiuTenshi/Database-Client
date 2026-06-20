@@ -1,17 +1,20 @@
 import { createConnection, type FieldPacket, type ResultSetHeader } from "mysql2/promise";
 import type {
+  CheckConstraintInfo,
   ColumnInfo,
   DbType,
   ForeignKeyInfo,
   IndexInfo,
   ObjectRef,
+  PlaceholderStyle,
   QueryColumn,
   QueryOptions,
   QueryResult,
   RuntimeConnectionProfile,
   SchemaInfo,
   TableInfo,
-  TestConnectionResult
+  TestConnectionResult,
+  TriggerInfo
 } from "../../core/types";
 import { newId } from "../../utils/objectId";
 import { quoteBacktick } from "../../utils/sqlSafety";
@@ -64,6 +67,7 @@ const defaultFactory: MySqlClientFactory = async (config) => {
 /** Adapter MySQL/MariaDB (async) dùng mysql2. */
 export class MySqlAdapter implements DatabaseAdapter {
   readonly paginationStyle: PaginationStyle = "limit-offset";
+  readonly placeholderStyle: PlaceholderStyle = "qmark";
 
   private readonly sessions = new Map<string, MySqlClient>();
 
@@ -187,6 +191,30 @@ export class MySqlAdapter implements DatabaseAdapter {
     return [...byName.values()];
   }
 
+  async listTriggers(session: DbSession, ref: ObjectRef): Promise<TriggerInfo[]> {
+    const result = await this.client(session).query(Q.LIST_TRIGGERS, [
+      this.requireSchema(ref.schema),
+      ref.name
+    ]);
+    return result.rows.map((row) => ({
+      name: String(row.trigger_name),
+      timing: row.action_timing == null ? undefined : (row.action_timing as string),
+      event: row.event_manipulation == null ? undefined : (row.event_manipulation as string),
+      statement: row.action_statement == null ? undefined : (row.action_statement as string)
+    }));
+  }
+
+  async listCheckConstraints(session: DbSession, ref: ObjectRef): Promise<CheckConstraintInfo[]> {
+    const result = await this.client(session).query(Q.LIST_CHECKS, [
+      this.requireSchema(ref.schema),
+      ref.name
+    ]);
+    return result.rows.map((row) => ({
+      name: String(row.constraint_name),
+      expression: String(row.check_clause)
+    }));
+  }
+
   async listViewDependencies(_session: DbSession, _ref: ObjectRef): Promise<ObjectRef[]> {
     // MySQL không có INFORMATION_SCHEMA.VIEW_TABLE_USAGE; bỏ qua ở MVP.
     return [];
@@ -212,7 +240,7 @@ export class MySqlAdapter implements DatabaseAdapter {
       throw new Error("Query cancelled.");
     }
     const started = Date.now();
-    const result = await this.client(session).query(sql);
+    const result = await this.client(session).query(sql, options?.params);
     const columns: QueryColumn[] = result.fields.map((field, index) => ({
       name: field.name,
       ordinal: index

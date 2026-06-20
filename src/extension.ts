@@ -8,6 +8,7 @@ import { SqliteAdapter } from "./adapters/sqlite/SqliteAdapter";
 import { registerCommands } from "./commands/registerCommands";
 import { EXTENSION_DISPLAY_NAME, VIEWS } from "./core/constants";
 import { ConnectionService } from "./services/ConnectionService";
+import { DataEditService } from "./services/DataEditService";
 import { DependencyGraphService } from "./services/DependencyGraphService";
 import { LogService } from "./services/LogService";
 import { QueryDocumentService } from "./services/QueryDocumentService";
@@ -42,6 +43,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(sessionManager);
   const schemaService = new SchemaService(sessionManager);
   const queryService = new QueryService(sessionManager);
+  const dataEditService = new DataEditService(sessionManager);
   const graphService = new DependencyGraphService(schemaService);
 
   const historyStore = new QueryHistoryStore(context.globalState);
@@ -73,6 +75,8 @@ export function activate(context: vscode.ExtensionContext): void {
     treeProvider,
     sessionManager,
     queryService,
+    schemaService,
+    dataEditService,
     logService,
     queryDocs,
     queryRunner,

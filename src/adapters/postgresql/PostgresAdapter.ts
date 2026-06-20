@@ -1,17 +1,20 @@
 import { Client } from "pg";
 import type {
+  CheckConstraintInfo,
   ColumnInfo,
   DbType,
   ForeignKeyInfo,
   IndexInfo,
   ObjectRef,
+  PlaceholderStyle,
   QueryColumn,
   QueryOptions,
   QueryResult,
   RuntimeConnectionProfile,
   SchemaInfo,
   TableInfo,
-  TestConnectionResult
+  TestConnectionResult,
+  TriggerInfo
 } from "../../core/types";
 import { newId } from "../../utils/objectId";
 import { qualify, quoteIdentifier } from "../../utils/sqlSafety";
@@ -52,6 +55,7 @@ const defaultFactory: PgClientFactory = (config) => new Client(config) as unknow
 export class PostgresAdapter implements DatabaseAdapter {
   readonly dbType: DbType = "postgresql";
   readonly paginationStyle: PaginationStyle = "limit-offset";
+  readonly placeholderStyle: PlaceholderStyle = "numbered";
 
   private readonly sessions = new Map<string, PgClient>();
 
@@ -173,6 +177,37 @@ export class PostgresAdapter implements DatabaseAdapter {
     return [...byName.values()];
   }
 
+  async listTriggers(session: DbSession, ref: ObjectRef): Promise<TriggerInfo[]> {
+    const schema = ref.schema ?? DEFAULT_SCHEMA;
+    const result = await this.client(session).query(Q.LIST_TRIGGERS, [schema, ref.name]);
+    const byName = new Map<string, TriggerInfo>();
+    for (const row of result.rows) {
+      const name = String(row.trigger_name);
+      let trigger = byName.get(name);
+      if (!trigger) {
+        trigger = {
+          name,
+          timing: row.action_timing == null ? undefined : (row.action_timing as string),
+          event: row.event_manipulation == null ? undefined : (row.event_manipulation as string),
+          statement: row.action_statement == null ? undefined : (row.action_statement as string)
+        };
+        byName.set(name, trigger);
+      } else if (row.event_manipulation) {
+        trigger.event = `${trigger.event}, ${row.event_manipulation as string}`;
+      }
+    }
+    return [...byName.values()];
+  }
+
+  async listCheckConstraints(session: DbSession, ref: ObjectRef): Promise<CheckConstraintInfo[]> {
+    const schema = ref.schema ?? DEFAULT_SCHEMA;
+    const result = await this.client(session).query(Q.LIST_CHECKS, [schema, ref.name]);
+    return result.rows.map((row) => ({
+      name: String(row.constraint_name),
+      expression: String(row.check_clause)
+    }));
+  }
+
   async listViewDependencies(session: DbSession, ref: ObjectRef): Promise<ObjectRef[]> {
     const schema = ref.schema ?? DEFAULT_SCHEMA;
     const result = await this.client(session).query(Q.LIST_VIEW_DEPENDENCIES, [schema, ref.name]);
@@ -209,7 +244,7 @@ export class PostgresAdapter implements DatabaseAdapter {
     }
     const client = this.client(session);
     const started = Date.now();
-    const result = await client.query(sql);
+    const result = await client.query(sql, options?.params);
     const columns: QueryColumn[] = result.fields.map((field, index) => ({
       name: field.name,
       ordinal: index

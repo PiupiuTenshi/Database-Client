@@ -1,13 +1,17 @@
 import * as vscode from "vscode";
 import { COMMANDS } from "../core/constants";
+import type { DataEditService } from "../services/DataEditService";
 import type { DependencyGraphService } from "../services/DependencyGraphService";
 import type { QueryService } from "../services/QueryService";
+import type { SchemaService } from "../services/SchemaService";
 import { TableNode } from "../views/databaseExplorer/nodes/tableNodes";
 import { DependencyGraphPanel } from "../webviews/dependencyGraph/DependencyGraphPanel";
 import { TableDataPanel } from "../webviews/tableViewer/TableDataPanel";
 
 export interface SchemaCommandDeps {
   queryService: QueryService;
+  schemaService: SchemaService;
+  dataEditService: DataEditService;
   graphService: DependencyGraphService;
 }
 
@@ -18,14 +22,27 @@ export function registerSchemaCommands(
   context.subscriptions.push(
     vscode.commands.registerCommand(COMMANDS.openTableData, (node?: TableNode) => {
       if (node instanceof TableNode) {
-        TableDataPanel.show(deps.queryService, node.profile, node.ref);
+        TableDataPanel.show(
+          {
+            queryService: deps.queryService,
+            schemaService: deps.schemaService,
+            dataEditService: deps.dataEditService
+          },
+          node.profile,
+          node.ref
+        );
       }
     }),
 
     vscode.commands.registerCommand(COMMANDS.openDependencyGraph, (node?: TableNode) => {
       if (node instanceof TableNode) {
         DependencyGraphPanel.show(
-          { graphService: deps.graphService, queryService: deps.queryService },
+          {
+            graphService: deps.graphService,
+            queryService: deps.queryService,
+            schemaService: deps.schemaService,
+            dataEditService: deps.dataEditService
+          },
           node.profile,
           node.ref
         );
