@@ -2,13 +2,20 @@ import * as vscode from "vscode";
 import { registerCommands } from "./commands/registerCommands";
 import { EXTENSION_DISPLAY_NAME, VIEWS } from "./core/constants";
 import { ConnectionService } from "./services/ConnectionService";
+import { LogService } from "./services/LogService";
+import { ProfileStore } from "./storage/ProfileStore";
+import { SecretStore } from "./storage/SecretStore";
 import { DatabaseTreeProvider } from "./views/databaseExplorer/DatabaseTreeProvider";
 import { registerStatusBar } from "./views/statusBar";
 
 export function activate(context: vscode.ExtensionContext): void {
-  const connectionService = new ConnectionService();
+  const logService = new LogService();
+  context.subscriptions.push(logService);
+
+  const profileStore = new ProfileStore(context.globalState);
+  const secretStore = new SecretStore(context.secrets);
+  const connectionService = new ConnectionService(profileStore, secretStore, logService);
   context.subscriptions.push(connectionService);
-  connectionService.seedMockProfiles();
 
   const treeProvider = new DatabaseTreeProvider(connectionService);
   context.subscriptions.push(treeProvider);
@@ -23,9 +30,9 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(connectionService.onDidChangeProfiles(() => treeProvider.refresh()));
 
   registerStatusBar(context, connectionService);
-  registerCommands(context, { connectionService, treeProvider });
+  registerCommands(context, { connectionService, treeProvider, logService });
 
-  console.log(`${EXTENSION_DISPLAY_NAME} activated.`);
+  logService.info(`${EXTENSION_DISPLAY_NAME} activated.`);
 }
 
 export function deactivate(): void {

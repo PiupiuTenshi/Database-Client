@@ -2,7 +2,7 @@
   "name": "open-db-nexus",
   "displayName": "Open DB Nexus",
   "description": "A VS Code multi-database client extension with schema explorer, query runner, and dependency graph tooling.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "piupiutenshi",
   "license": "MIT",
   "private": true,
@@ -49,14 +49,24 @@
         "icon": "$(add)"
       },
       {
+        "command": "openDbNexus.editConnection",
+        "title": "Open DB Nexus: Edit Connection",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "openDbNexus.testConnection",
+        "title": "Open DB Nexus: Test Connection",
+        "icon": "$(plug)"
+      },
+      {
+        "command": "openDbNexus.deleteConnection",
+        "title": "Open DB Nexus: Delete Connection",
+        "icon": "$(trash)"
+      },
+      {
         "command": "openDbNexus.refreshConnections",
         "title": "Open DB Nexus: Refresh Connections",
         "icon": "$(refresh)"
-      },
-      {
-        "command": "openDbNexus.removeConnection",
-        "title": "Open DB Nexus: Remove Connection",
-        "icon": "$(trash)"
       }
     ],
     "menus": {
@@ -74,11 +84,51 @@
       ],
       "view/item/context": [
         {
-          "command": "openDbNexus.removeConnection",
+          "command": "openDbNexus.testConnection",
           "when": "view == openDbNexus.connections && viewItem == connection",
-          "group": "inline"
+          "group": "inline@1"
+        },
+        {
+          "command": "openDbNexus.editConnection",
+          "when": "view == openDbNexus.connections && viewItem == connection",
+          "group": "inline@2"
+        },
+        {
+          "command": "openDbNexus.deleteConnection",
+          "when": "view == openDbNexus.connections && viewItem == connection",
+          "group": "inline@3"
+        },
+        {
+          "command": "openDbNexus.editConnection",
+          "when": "view == openDbNexus.connections && viewItem == connection",
+          "group": "1_modify@1"
+        },
+        {
+          "command": "openDbNexus.testConnection",
+          "when": "view == openDbNexus.connections && viewItem == connection",
+          "group": "1_modify@2"
+        },
+        {
+          "command": "openDbNexus.deleteConnection",
+          "when": "view == openDbNexus.connections && viewItem == connection",
+          "group": "1_modify@3"
         }
       ]
+    },
+    "configuration": {
+      "title": "Open DB Nexus",
+      "properties": {
+        "openDbNexus.schemaCacheTtlSeconds": {
+          "type": "number",
+          "default": 300,
+          "description": "Schema cache TTL in seconds."
+        },
+        "openDbNexus.query.maxRows": {
+          "type": "number",
+          "default": 1000,
+          "description": "Maximum rows fetched by default."
+        }
+      }
     }
   },
   "scripts": {
