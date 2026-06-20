@@ -2,7 +2,7 @@
   "name": "open-db-nexus",
   "displayName": "Open DB Nexus",
   "description": "A VS Code multi-database client extension with schema explorer, query runner, and dependency graph tooling.",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "publisher": "piupiutenshi",
   "license": "MIT",
   "private": true,
@@ -81,6 +81,11 @@
         "command": "openDbNexus.backupConnection",
         "title": "Open DB Nexus: Backup (logical SQL dump)",
         "icon": "$(save-all)"
+      },
+      {
+        "command": "openDbNexus.searchSchema",
+        "title": "Open DB Nexus: Search Schema (tables, views, columns)",
+        "icon": "$(search)"
       },
       {
         "command": "openDbNexus.openTableData",
@@ -186,6 +191,11 @@
           "command": "openDbNexus.backupConnection",
           "when": "view == openDbNexus.connections && viewItem == connection",
           "group": "2_manage@2"
+        },
+        {
+          "command": "openDbNexus.searchSchema",
+          "when": "view == openDbNexus.connections && viewItem == connection",
+          "group": "2_manage@3"
         },
         {
           "command": "openDbNexus.openTableData",

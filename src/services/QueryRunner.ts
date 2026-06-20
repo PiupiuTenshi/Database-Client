@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { normalizeError } from "../adapters/common/normalizeError";
 import type { ConnectionProfile, QueryResult } from "../core/types";
 import { newId } from "../utils/objectId";
+import { analyzeStatements } from "../utils/sqlAnalyzer";
 import { splitStatements } from "../utils/statementSplitter";
 import type { QueryHistoryStore } from "../storage/QueryHistoryStore";
 import { ResultGridPanel } from "../webviews/queryResult/ResultGridPanel";
@@ -23,6 +24,19 @@ export class QueryRunner {
     if (statements.length === 0) {
       void vscode.window.showInformationMessage("No SQL statement to run.");
       return;
+    }
+
+    const warnings = analyzeStatements(statements);
+    if (warnings.length > 0) {
+      const detail = warnings.map((warning) => `• ${warning.reason}`).join("\n");
+      const choice = await vscode.window.showWarningMessage(
+        `This query contains ${warnings.length} potentially destructive statement(s):\n\n${detail}`,
+        { modal: true },
+        "Run anyway"
+      );
+      if (choice !== "Run anyway") {
+        return;
+      }
     }
 
     const maxRows = vscode.workspace

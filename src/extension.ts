@@ -16,6 +16,7 @@ import { ExportService } from "./services/ExportService";
 import { GeneratorService } from "./services/GeneratorService";
 import { ImportService } from "./services/ImportService";
 import { PolicyService } from "./services/PolicyService";
+import { SchemaSearchService } from "./services/SchemaSearchService";
 import { LogService } from "./services/LogService";
 import { QueryDocumentService } from "./services/QueryDocumentService";
 import { QueryRunner } from "./services/QueryRunner";
@@ -63,6 +64,7 @@ export function activate(context: vscode.ExtensionContext): void {
       maxRows: config.get<number>("query.maxRows", 1000)
     };
   });
+  const schemaSearchService = new SchemaSearchService(schemaService);
   const graphService = new DependencyGraphService(schemaService);
 
   const historyStore = new QueryHistoryStore(context.globalState, () =>
@@ -104,6 +106,7 @@ export function activate(context: vscode.ExtensionContext): void {
     backupService,
     dashboardService,
     policyService,
+    schemaSearchService,
     logService,
     queryDocs,
     queryRunner,

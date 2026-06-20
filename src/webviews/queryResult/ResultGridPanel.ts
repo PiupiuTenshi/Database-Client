@@ -142,6 +142,7 @@ ${commonStyles(nonce)}
   <div class="toolbar">
     <span class="title" id="bar">Run a query to see results.</span>
     <span class="spacer"></span>
+    <input id="filter" placeholder="Filter rows…" style="min-width:160px" />
     <select id="exportFmt" title="Export format">
       <option value="csv">CSV</option>
       <option value="json">JSON</option>
@@ -160,22 +161,56 @@ ${commonStyles(nonce)}
     return "<td>" + esc(v) + "</td>";
   }
   $("exportBtn").addEventListener("click", () => vscode.postMessage({ type:"export", format: $("exportFmt").value }));
+
+  let current = null;        // last result payload
+  let sortCol = null, sortDir = 1, filterText = "";
+
+  function valStr(v){ return (v === null || v === undefined) ? "" : (typeof v === "object" ? JSON.stringify(v) : String(v)); }
+
+  function viewRows(){
+    let rows = current.rows;
+    if (filterText){ const f = filterText.toLowerCase(); rows = rows.filter((r)=>current.columns.some((c)=>valStr(r[c]).toLowerCase().includes(f))); }
+    if (sortCol !== null){
+      rows = rows.slice().sort((a,b)=>{ const x=valStr(a[sortCol]), y=valStr(b[sortCol]);
+        const nx=parseFloat(x), ny=parseFloat(y);
+        const cmp = (!isNaN(nx)&&!isNaN(ny)) ? (nx-ny) : x.localeCompare(y);
+        return cmp*sortDir; });
+    }
+    return rows;
+  }
+
+  function renderGrid(){
+    if (!current) return;
+    const rows = viewRows();
+    $("bar").textContent = rows.length + (rows.length!==current.rowCount ? "/"+current.rowCount : "") + " rows · " + current.durationMs + "ms" + (current.truncated ? " · truncated" : "");
+    const head = "<tr>" + current.columns.map((c)=>{ const arrow = sortCol===c ? (sortDir>0?" ▲":" ▼") : ""; return "<th data-col=\\""+esc(c)+"\\" style=\\"cursor:pointer\\">"+esc(c)+arrow+"</th>"; }).join("") + "</tr>";
+    const body = rows.map((r)=>"<tr>"+current.columns.map((c)=>cell(r[c])).join("")+"</tr>").join("");
+    $("grid").outerHTML = '<table id="grid"><thead>'+head+"</thead><tbody>"+body+"</tbody></table>";
+    document.querySelectorAll("#grid th[data-col]").forEach((th)=>th.addEventListener("click", ()=>{
+      const c = th.dataset.col;
+      if (sortCol === c) sortDir = -sortDir; else { sortCol = c; sortDir = 1; }
+      renderGrid();
+    }));
+  }
+
+  $("filter").addEventListener("input", () => { filterText = $("filter").value; if (current) renderGrid(); });
+
   window.addEventListener("message", (event) => {
     const p = event.data;
     if (p.kind === "error") {
+      current = null;
       $("bar").textContent = "Error" + (p.code ? " [" + p.code + "]" : "");
       $("grid").outerHTML = '<div id="grid" class="err">' + esc(p.message) + "</div>";
       return;
     }
     if (!p.columns.length) {
+      current = null;
       $("bar").textContent = (p.affectedRows ?? 0) + " row(s) affected · " + p.durationMs + "ms";
       $("grid").outerHTML = '<div id="grid" class="msg">Query OK.</div>';
       return;
     }
-    $("bar").textContent = p.rowCount + " rows · " + p.durationMs + "ms" + (p.truncated ? " · truncated" : "");
-    const head = "<tr>" + p.columns.map((c)=>"<th>"+esc(c)+"</th>").join("") + "</tr>";
-    const body = p.rows.map((r)=>"<tr>"+p.columns.map((c)=>cell(r[c])).join("")+"</tr>").join("");
-    $("grid").outerHTML = '<table id="grid"><thead>'+head+"</thead><tbody>"+body+"</tbody></table>";
+    current = p; sortCol = null; sortDir = 1;
+    renderGrid();
   });
   vscode.postMessage({ type: "ready" });
 </script>

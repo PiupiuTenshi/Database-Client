@@ -9,6 +9,7 @@ import type { GeneratorService } from "../services/GeneratorService";
 import type { ImportService } from "../services/ImportService";
 import type { PolicyService } from "../services/PolicyService";
 import type { QueryService } from "../services/QueryService";
+import type { SchemaSearchService } from "../services/SchemaSearchService";
 import type { SchemaService } from "../services/SchemaService";
 import { type CodeTarget } from "../utils/codeGen";
 import { productionWriteWarning } from "../utils/productionGuard";
@@ -40,6 +41,7 @@ export interface SchemaCommandDeps {
   backupService: BackupService;
   dashboardService: DashboardService;
   policyService: PolicyService;
+  schemaSearchService: SchemaSearchService;
   graphService: DependencyGraphService;
 }
 
@@ -153,6 +155,45 @@ export function registerSchemaCommands(
         }
       );
       void vscode.window.showInformationMessage(`Backup written to ${target.fsPath}.`);
+    }),
+
+    vscode.commands.registerCommand(COMMANDS.searchSchema, async (node?: ConnectionNode) => {
+      if (!(node instanceof ConnectionNode)) {
+        return;
+      }
+      const profile = node.profile;
+      const term = await vscode.window.showInputBox({
+        prompt: `Search tables, views and columns in ${profile.name}`,
+        placeHolder: "name fragment…"
+      });
+      if (!term) {
+        return;
+      }
+      const hits = await vscode.window.withProgress(
+        { location: vscode.ProgressLocation.Window, title: "Searching schema…" },
+        () => deps.schemaSearchService.search(profile, profile.database, term)
+      );
+      if (hits.length === 0) {
+        void vscode.window.showInformationMessage(`No schema objects match "${term}".`);
+        return;
+      }
+      const picked = await vscode.window.showQuickPick(
+        hits.map((hit) => ({
+          label:
+            hit.kind === "column"
+              ? `$(symbol-field) ${hit.table}.${hit.column}`
+              : `$(table) ${hit.table}`,
+          description: hit.kind,
+          hit
+        })),
+        { placeHolder: `${hits.length} match(es) — pick to open the table` }
+      );
+      if (picked) {
+        TableDataPanel.show(toObjectPanelDeps(deps), profile, {
+          schema: picked.hit.schema,
+          name: picked.hit.table
+        });
+      }
     }),
 
     vscode.commands.registerCommand(COMMANDS.openDependencyGraph, (node?: TableNode) => {
