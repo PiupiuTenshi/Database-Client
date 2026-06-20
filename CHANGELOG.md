@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.2.0] - 2026-06-21
+
+### Added
+
+- **Object panel with tabs** — the table viewer is now a tabbed panel (Data · Columns · Constraints · Triggers · DDL) with a refreshed, theme-aware UI design kit shared across webviews.
+- **Editable data grid** — double-click a cell to edit, add rows, and delete rows. All writes use parameterized statements (values bound via driver placeholders, never string-interpolated) and target rows by primary key.
+- **Column DDL** — add/drop columns from the Columns tab with a SQL preview before running (dialect-aware: `ADD COLUMN` vs SQL Server `ADD`).
+- **Properties introspection** — triggers and check constraints for SQLite, PostgreSQL, MySQL/MariaDB and SQL Server, plus existing columns/indexes/foreign keys and the object DDL, with paging and a page-size selector.
+- **Production write guard** — writes/DDL on connections marked `production` require an explicit confirmation, and the panel shows a production banner.
+
+### Internal
+
+- `QueryOptions.params` + `DatabaseAdapter.placeholderStyle` thread parameterized values through every SQL adapter.
+- New `rowMutation` builders (insert/update/delete by key, add/drop column) and `DataEditService`, both unit-tested.
+
 ## [1.1.0] - 2026-06-20
 
 ### Added
