@@ -14,7 +14,7 @@ import type {
   TestConnectionResult
 } from "../../core/types";
 import { newId } from "../../utils/objectId";
-import { quoteStringLiteral } from "../../utils/sqlSafety";
+import { quoteIdentifier, quoteStringLiteral } from "../../utils/sqlSafety";
 import type { DatabaseAdapter, DbSession } from "../DatabaseAdapter";
 
 type Db = Database.Database;
@@ -55,6 +55,10 @@ export class SqliteAdapter implements DatabaseAdapter {
   readonly dbType: DbType = "sqlite";
 
   private readonly sessions = new Map<string, Db>();
+
+  quoteIdentifier(name: string): string {
+    return quoteIdentifier(name);
+  }
 
   async connect(profile: RuntimeConnectionProfile): Promise<DbSession> {
     const db = this.open(profile);

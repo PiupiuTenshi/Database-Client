@@ -8,6 +8,11 @@ export function quoteIdentifier(name: string): string {
   return `"${name.replace(/"/g, '""')}"`;
 }
 
+/** Bọc identifier trong backtick (MySQL/MariaDB), escape `` ` `` -> ``` `` ```. */
+export function quoteBacktick(name: string): string {
+  return `\`${name.replace(/`/g, "``")}\``;
+}
+
 /** Bọc chuỗi thành string literal (dùng cho PRAGMA không nhận placeholder). */
 export function quoteStringLiteral(value: string): string {
   return `'${value.replace(/'/g, "''")}'`;

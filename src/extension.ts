@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { AdapterRegistry } from "./adapters/AdapterRegistry";
+import { MySqlAdapter } from "./adapters/mysql/MySqlAdapter";
 import { PostgresAdapter } from "./adapters/postgresql/PostgresAdapter";
 import { SqliteAdapter } from "./adapters/sqlite/SqliteAdapter";
 import { registerCommands } from "./commands/registerCommands";
@@ -29,6 +30,8 @@ export function activate(context: vscode.ExtensionContext): void {
   const registry = new AdapterRegistry();
   registry.register(new SqliteAdapter());
   registry.register(new PostgresAdapter());
+  registry.register(new MySqlAdapter("mysql"));
+  registry.register(new MySqlAdapter("mariadb"));
 
   const sessionManager = new SessionManager(registry, secretStore, logService);
   context.subscriptions.push(sessionManager);

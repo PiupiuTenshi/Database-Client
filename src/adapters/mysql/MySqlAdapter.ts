@@ -1,4 +1,4 @@
-import { Client } from "pg";
+import { createConnection, type FieldPacket, type ResultSetHeader } from "mysql2/promise";
 import type {
   ColumnInfo,
   DbType,
@@ -14,28 +14,24 @@ import type {
   TestConnectionResult
 } from "../../core/types";
 import { newId } from "../../utils/objectId";
-import { qualify, quoteIdentifier } from "../../utils/sqlSafety";
+import { quoteBacktick } from "../../utils/sqlSafety";
 import type { DatabaseAdapter, DbSession } from "../DatabaseAdapter";
-import * as Q from "./postgresMetadataQueries";
+import * as Q from "./mysqlMetadataQueries";
 
-const DEFAULT_SCHEMA = "public";
-
-/** Kết quả query tối giản mà adapter cần (tương thích pg.QueryResult). */
-export interface PgQueryResult {
+/** Kết quả query tối giản mà adapter cần. */
+export interface MySqlQueryResult {
   rows: Record<string, unknown>[];
   fields: { name: string }[];
-  rowCount: number | null;
-  command: string;
+  affectedRows?: number;
 }
 
-/** Client tối giản (tương thích pg.Client) — cho phép inject mock khi test. */
-export interface PgClient {
-  connect(): Promise<void>;
-  query(text: string, values?: unknown[]): Promise<PgQueryResult>;
+/** Client tối giản (bọc mysql2) — cho phép inject mock khi test. */
+export interface MySqlClient {
+  query(sql: string, values?: unknown[]): Promise<MySqlQueryResult>;
   end(): Promise<void>;
 }
 
-export interface PgConnectionConfig {
+export interface MySqlConnectionConfig {
   host?: string;
   port?: number;
   user?: string;
@@ -43,40 +39,59 @@ export interface PgConnectionConfig {
   database?: string;
 }
 
-export type PgClientFactory = (config: PgConnectionConfig) => PgClient;
+export type MySqlClientFactory = (config: MySqlConnectionConfig) => Promise<MySqlClient>;
 
-const defaultFactory: PgClientFactory = (config) => new Client(config) as unknown as PgClient;
+const defaultFactory: MySqlClientFactory = async (config) => {
+  const conn = await createConnection(config);
+  return {
+    query: async (sql, values) => {
+      const [result, fields] = await conn.query(sql, values);
+      if (Array.isArray(result)) {
+        return {
+          rows: result as Record<string, unknown>[],
+          fields: (fields ?? []).map((field: FieldPacket) => ({ name: field.name }))
+        };
+      }
+      return { rows: [], fields: [], affectedRows: (result as ResultSetHeader).affectedRows };
+    },
+    end: async () => {
+      await conn.end();
+    }
+  };
+};
 
-/** Adapter PostgreSQL (async) dùng node-postgres. */
-export class PostgresAdapter implements DatabaseAdapter {
-  readonly dbType: DbType = "postgresql";
+/** Adapter MySQL/MariaDB (async) dùng mysql2. */
+export class MySqlAdapter implements DatabaseAdapter {
+  private readonly sessions = new Map<string, MySqlClient>();
 
-  private readonly sessions = new Map<string, PgClient>();
-
-  constructor(private readonly factory: PgClientFactory = defaultFactory) {}
+  constructor(
+    readonly dbType: DbType = "mysql",
+    private readonly factory: MySqlClientFactory = defaultFactory
+  ) {}
 
   quoteIdentifier(name: string): string {
-    return quoteIdentifier(name);
+    return quoteBacktick(name);
   }
 
   async connect(profile: RuntimeConnectionProfile): Promise<DbSession> {
-    const client = this.factory(toConfig(profile));
-    await client.connect();
+    const client = await this.factory(toConfig(profile));
     const id = newId();
     this.sessions.set(id, client);
     return { id, dbType: this.dbType };
   }
 
   async testConnection(profile: RuntimeConnectionProfile): Promise<TestConnectionResult> {
-    const client = this.factory(toConfig(profile));
+    let client: MySqlClient | undefined;
     try {
-      await client.connect();
+      client = await this.factory(toConfig(profile));
       await client.query("SELECT 1");
-      return { ok: true, message: "Connected to PostgreSQL successfully." };
+      return { ok: true, message: "Connected to MySQL/MariaDB successfully." };
     } catch (error) {
       return { ok: false, message: toErrorMessage(error) };
     } finally {
-      await safeEnd(client);
+      if (client) {
+        await safeEnd(client);
+      }
     }
   }
 
@@ -90,57 +105,55 @@ export class PostgresAdapter implements DatabaseAdapter {
 
   async listSchemas(session: DbSession): Promise<SchemaInfo[]> {
     const result = await this.client(session).query(Q.LIST_SCHEMAS);
-    return result.rows.map((row) => ({
-      name: String(row.schema_name),
-      isDefault: row.schema_name === DEFAULT_SCHEMA
-    }));
+    return result.rows.map((row) => ({ name: String(row.schema_name) }));
   }
 
-  async listTables(session: DbSession, schema = DEFAULT_SCHEMA): Promise<TableInfo[]> {
-    const result = await this.client(session).query(Q.LIST_TABLES, [schema]);
+  async listTables(session: DbSession, schema?: string): Promise<TableInfo[]> {
+    const target = this.requireSchema(schema);
+    const result = await this.client(session).query(Q.LIST_TABLES, [target]);
     return result.rows.map((row) => ({
       name: String(row.table_name),
-      schema,
+      schema: target,
       type: "base_table"
     }));
   }
 
-  async listViews(session: DbSession, schema = DEFAULT_SCHEMA): Promise<TableInfo[]> {
-    const result = await this.client(session).query(Q.LIST_VIEWS, [schema]);
+  async listViews(session: DbSession, schema?: string): Promise<TableInfo[]> {
+    const target = this.requireSchema(schema);
+    const result = await this.client(session).query(Q.LIST_VIEWS, [target]);
     return result.rows.map((row) => ({
       name: String(row.table_name),
-      schema,
+      schema: target,
       type: "view"
     }));
   }
 
   async listColumns(session: DbSession, ref: ObjectRef): Promise<ColumnInfo[]> {
-    const schema = ref.schema ?? DEFAULT_SCHEMA;
-    const client = this.client(session);
-    const [columns, pks] = await Promise.all([
-      client.query(Q.LIST_COLUMNS, [schema, ref.name]),
-      client.query(Q.LIST_PRIMARY_KEYS, [schema, ref.name])
+    const result = await this.client(session).query(Q.LIST_COLUMNS, [
+      this.requireSchema(ref.schema),
+      ref.name
     ]);
-    const pkSet = new Set(pks.rows.map((row) => String(row.column_name)));
-    return columns.rows.map((row) => ({
+    return result.rows.map((row) => ({
       name: String(row.column_name),
       dataType: String(row.data_type),
       ordinal: Number(row.ordinal_position),
       nullable: row.is_nullable === "YES",
       defaultValue: row.column_default == null ? undefined : (row.column_default as string),
-      isPrimaryKey: pkSet.has(String(row.column_name))
+      isPrimaryKey: row.column_key === "PRI"
     }));
   }
 
   async listIndexes(session: DbSession, ref: ObjectRef): Promise<IndexInfo[]> {
-    const schema = ref.schema ?? DEFAULT_SCHEMA;
-    const result = await this.client(session).query(Q.LIST_INDEXES, [schema, ref.name]);
+    const result = await this.client(session).query(Q.LIST_INDEXES, [
+      this.requireSchema(ref.schema),
+      ref.name
+    ]);
     const byName = new Map<string, IndexInfo>();
     for (const row of result.rows) {
       const name = String(row.index_name);
       let index = byName.get(name);
       if (!index) {
-        index = { name, unique: Boolean(row.is_unique), columns: [] };
+        index = { name, unique: Number(row.non_unique) === 0, columns: [] };
         byName.set(name, index);
       }
       index.columns.push(String(row.column_name));
@@ -149,7 +162,7 @@ export class PostgresAdapter implements DatabaseAdapter {
   }
 
   async listForeignKeys(session: DbSession, ref: ObjectRef): Promise<ForeignKeyInfo[]> {
-    const schema = ref.schema ?? DEFAULT_SCHEMA;
+    const schema = this.requireSchema(ref.schema);
     const result = await this.client(session).query(Q.LIST_FOREIGN_KEYS, [schema, ref.name]);
     const byName = new Map<string, ForeignKeyInfo>();
     for (const row of result.rows) {
@@ -172,20 +185,14 @@ export class PostgresAdapter implements DatabaseAdapter {
   }
 
   async getObjectDDL(session: DbSession, ref: ObjectRef): Promise<string> {
-    const schema = ref.schema ?? DEFAULT_SCHEMA;
-    const client = this.client(session);
-    const kind = await client.query(Q.REL_KIND, [schema, ref.name]);
-    const relkind = kind.rows[0]?.relkind;
-    if (relkind === "v" || relkind === "m") {
-      const def = await client.query(Q.VIEW_DEF, [schema, ref.name]);
-      return `CREATE VIEW ${qualify(schema, ref.name)} AS\n${(def.rows[0]?.def as string | undefined) ?? ""}`;
-    }
-    const columns = await this.listColumns(session, ref);
-    const lines = columns.map((column) => {
-      const nullable = column.nullable ? "" : " NOT NULL";
-      return `  ${column.name} ${column.dataType}${nullable}`;
-    });
-    return `CREATE TABLE ${qualify(schema, ref.name)} (\n${lines.join(",\n")}\n);`;
+    const qualified = `${quoteBacktick(this.requireSchema(ref.schema))}.${quoteBacktick(ref.name)}`;
+    const result = await this.client(session).query(`SHOW CREATE TABLE ${qualified}`);
+    const row = result.rows[0] ?? {};
+    return (
+      (row["Create Table"] as string | undefined) ??
+      (row["Create View"] as string | undefined) ??
+      ""
+    );
   }
 
   async executeQuery(
@@ -196,9 +203,8 @@ export class PostgresAdapter implements DatabaseAdapter {
     if (options?.signal?.aborted) {
       throw new Error("Query cancelled.");
     }
-    const client = this.client(session);
     const started = Date.now();
-    const result = await client.query(sql);
+    const result = await this.client(session).query(sql);
     const columns: QueryColumn[] = result.fields.map((field, index) => ({
       name: field.name,
       ordinal: index
@@ -208,38 +214,45 @@ export class PostgresAdapter implements DatabaseAdapter {
     if (truncated) {
       rows = rows.slice(0, options.maxRows);
     }
-    const isSelect = result.command === "SELECT" || columns.length > 0;
+    const isSelect = columns.length > 0;
     return {
       queryId: newId(),
       columns,
       rows,
       rowCount: rows.length,
-      affectedRows: isSelect ? undefined : (result.rowCount ?? undefined),
+      affectedRows: isSelect ? undefined : result.affectedRows,
       durationMs: Date.now() - started,
       truncated
     };
   }
 
-  private client(session: DbSession): PgClient {
+  private requireSchema(schema?: string): string {
+    if (!schema) {
+      throw new Error("MySQL requires a schema/database name.");
+    }
+    return schema;
+  }
+
+  private client(session: DbSession): MySqlClient {
     const client = this.sessions.get(session.id);
     if (!client) {
-      throw new Error("PostgreSQL session is not connected.");
+      throw new Error("MySQL session is not connected.");
     }
     return client;
   }
 }
 
-function toConfig(profile: RuntimeConnectionProfile): PgConnectionConfig {
+function toConfig(profile: RuntimeConnectionProfile): MySqlConnectionConfig {
   return {
     host: profile.host,
-    port: profile.port ?? 5432,
+    port: profile.port ?? 3306,
     user: profile.username,
     password: profile.password,
-    database: profile.database ?? "postgres"
+    database: profile.database
   };
 }
 
-async function safeEnd(client: PgClient): Promise<void> {
+async function safeEnd(client: MySqlClient): Promise<void> {
   try {
     await client.end();
   } catch {

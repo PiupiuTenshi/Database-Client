@@ -29,6 +29,9 @@ export interface DbSession {
 export interface DatabaseAdapter {
   readonly dbType: DbType;
 
+  /** Bọc identifier theo dialect (double-quote / backtick) cho SQL extension tự sinh. */
+  quoteIdentifier(name: string): string;
+
   connect(profile: RuntimeConnectionProfile): Promise<DbSession>;
   testConnection(profile: RuntimeConnectionProfile): Promise<TestConnectionResult>;
   disconnect(session: DbSession): Promise<void>;

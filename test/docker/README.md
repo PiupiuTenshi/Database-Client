@@ -23,3 +23,23 @@ Tạo connection trong extension với:
 
 Seed (`seed.sql`) tạo schema `app` với `users`, `orders` (có FK + index) và view
 `user_order_counts` để kiểm tra schema explorer và dependency graph.
+
+## MySQL
+
+```bash
+docker compose -f test/docker/docker-compose.mysql.yml up -d   # khởi động
+docker compose -f test/docker/docker-compose.mysql.yml down -v # xóa sạch
+```
+
+Tạo connection trong extension với:
+
+| Field    | Value     |
+| -------- | --------- |
+| Database | MySQL     |
+| Host     | localhost |
+| Port     | 3306      |
+| Username | root      |
+| Password | mysql     |
+| Database | app_db    |
+
+Seed (`seed-mysql.sql`) tạo `users`, `orders` (FK + index) và view `user_order_counts`.

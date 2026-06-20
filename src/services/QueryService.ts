@@ -30,8 +30,9 @@ export class QueryService {
     offset: number
   ): Promise<TablePage> {
     const { adapter, session } = await this.sessionManager.getOrConnect(profile);
-    const result = await adapter.executeQuery(session, buildSelectAll(ref, limit, offset));
-    const countResult = await adapter.executeQuery(session, buildCount(ref));
+    const quote = (id: string): string => adapter.quoteIdentifier(id);
+    const result = await adapter.executeQuery(session, buildSelectAll(ref, limit, offset, quote));
+    const countResult = await adapter.executeQuery(session, buildCount(ref, quote));
     const total = Number((countResult.rows[0]?.count as number | undefined) ?? 0);
     return { result, total, offset, limit };
   }

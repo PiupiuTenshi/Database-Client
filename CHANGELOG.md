@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.0.7] - 2026-06-20
+
+### Added
+
+- Phase 6 — MySQL/MariaDB adapter (mysql2), registered for both `mysql` and `mariadb`.
+- `MySqlAdapter`: connect, test, list schemas/tables/views/columns/indexes/foreign keys, DDL (SHOW CREATE), execute query.
+- Per-dialect identifier quoting: `DatabaseAdapter.quoteIdentifier` (double-quote for SQLite/Postgres, backtick for MySQL) so the table viewer builds valid SQL for each engine.
+- Docker Compose + seed for a local MySQL test database.
+- Tests for MySQL metadata mapping and backtick pagination.
+
+### Changed
+
+- `adapters/common/pagination` now takes a quoting function instead of hard-coded double quotes.
+- `mysql2` added as a runtime dependency (externalized from the esbuild bundle).
+
 ## [0.0.6] - 2026-06-20
 
 ### Added
