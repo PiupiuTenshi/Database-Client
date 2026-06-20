@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.0] - 2026-06-21
+
+### Added
+
+- **Security policies (hard enforcement)** — `openDbNexus.security.disableWriteOnProduction` and `openDbNexus.security.disableExportOnProduction` block writes/DDL and exports/backups on `production` connections outright (beyond the existing confirm prompt).
+- **Logical backup** — right-click a connection → _Backup_ to dump table DDL + data as a single `.sql` file (no external tools like pg_dump/mysqldump required), with a progress notification. Honors the export policy.
+- **Connection dashboard** — right-click a connection → _Open Dashboard_ for a card view of table/view counts and the server version.
+
+### Notes
+
+- Process/session monitor and a role/privilege editor remain on the backlog (engine-specific, higher risk).
+
 ## [1.4.0] - 2026-06-21
 
 ### Added
