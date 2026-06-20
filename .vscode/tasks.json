@@ -1,0 +1,19 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "npm: package",
+      "type": "npm",
+      "script": "package",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "npm: bundle:watch",
+      "type": "npm",
+      "script": "bundle:watch",
+      "isBackground": true,
+      "problemMatcher": []
+    }
+  ]
+}

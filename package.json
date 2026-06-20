@@ -1,0 +1,52 @@
+{
+  "name": "open-db-nexus",
+  "displayName": "Open DB Nexus",
+  "description": "A VS Code multi-database client extension with schema explorer, query runner, and dependency graph tooling.",
+  "version": "0.0.1",
+  "publisher": "piupiutenshi",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:openDbNexus.helloWorld"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "openDbNexus.helloWorld",
+        "title": "Open DB Nexus: Hello World"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "tsc -p ./ --noEmit",
+    "watch": "tsc -watch -p ./ --noEmit",
+    "bundle": "node esbuild.js",
+    "bundle:watch": "node esbuild.js --watch",
+    "package": "node esbuild.js --production",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format": "prettier --write .",
+    "check": "npm run compile && npm run lint && npm test && npm run package"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.29.0",
+    "@types/node": "^20.14.10",
+    "@types/vscode": "^1.90.0",
+    "@vscode/test-electron": "^2.5.2",
+    "esbuild": "^0.28.1",
+    "eslint": "^9.29.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.34.1",
+    "vitest": "^4.1.9"
+  }
+}
