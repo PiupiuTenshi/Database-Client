@@ -1,14 +1,16 @@
 import * as vscode from "vscode";
-import type { ConnectionService } from "../../../services/ConnectionService";
+import type { SchemaService } from "../../../services/SchemaService";
+import type { SessionManager } from "../../../services/SessionManager";
 
-/** Dependencies truyền xuống node khi lazy-load con. Sẽ mở rộng ở các phase sau. */
+/** Dependencies truyền xuống node khi lazy-load con. */
 export interface TreeContext {
-  connectionService: ConnectionService;
+  schemaService: SchemaService;
+  sessionManager: SessionManager;
 }
 
 /**
  * Base cho mọi node trong Database Explorer. Mỗi node tự biết cách render thành
- * vscode.TreeItem và (nếu có) cách lấy node con.
+ * vscode.TreeItem và (nếu có) cách lazy-load node con.
  */
 export abstract class DbTreeNode {
   abstract toTreeItem(): vscode.TreeItem;

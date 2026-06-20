@@ -7,6 +7,8 @@ import {
 } from "../core/messages";
 import type { ConnectionService } from "../services/ConnectionService";
 import type { LogService } from "../services/LogService";
+import type { QueryService } from "../services/QueryService";
+import type { SessionManager } from "../services/SessionManager";
 import type { DatabaseTreeProvider } from "../views/databaseExplorer/DatabaseTreeProvider";
 import { ConnectionNode } from "../views/databaseExplorer/nodes/ConnectionNode";
 import { ConnectionFormPanel } from "../webviews/connectionForm/ConnectionFormPanel";
@@ -14,6 +16,8 @@ import { ConnectionFormPanel } from "../webviews/connectionForm/ConnectionFormPa
 export interface CommandDeps {
   connectionService: ConnectionService;
   treeProvider: DatabaseTreeProvider;
+  sessionManager: SessionManager;
+  queryService: QueryService;
   logService: LogService;
 }
 
@@ -21,7 +25,7 @@ export function registerConnectionCommands(
   context: vscode.ExtensionContext,
   deps: CommandDeps
 ): void {
-  const { connectionService, treeProvider, logService } = deps;
+  const { connectionService, treeProvider, sessionManager, logService } = deps;
 
   context.subscriptions.push(
     vscode.commands.registerCommand(COMMANDS.addConnection, () => {
@@ -52,11 +56,11 @@ export function registerConnectionCommands(
       }
     }),
 
-    vscode.commands.registerCommand(COMMANDS.testConnection, (node?: ConnectionNode) => {
+    vscode.commands.registerCommand(COMMANDS.testConnection, async (node?: ConnectionNode) => {
       if (!(node instanceof ConnectionNode)) {
         return;
       }
-      const result = connectionService.testConnection(node.profile);
+      const result = await sessionManager.testProfile(node.profile);
       logService.info(`Test connection "${node.profile.name}": ${result.message}`);
       if (result.ok) {
         void vscode.window.showInformationMessage(result.message);
@@ -66,6 +70,7 @@ export function registerConnectionCommands(
     }),
 
     vscode.commands.registerCommand(COMMANDS.refreshConnections, () => {
+      sessionManager.disconnectAll();
       treeProvider.refresh();
     })
   );

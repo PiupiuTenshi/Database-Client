@@ -7,7 +7,7 @@ const watch = process.argv.includes("--watch");
 const buildOptions = {
   entryPoints: ["src/extension.ts"],
   bundle: true,
-  external: ["vscode"],
+  external: ["vscode", "better-sqlite3"],
   format: "cjs",
   platform: "node",
   target: "node20",

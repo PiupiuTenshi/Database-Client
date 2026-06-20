@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.0.4] - 2026-06-20
+
+### Added
+
+- Phase 3 — SQLite Adapter (first real database engine).
+- `DatabaseAdapter` interface + `AdapterRegistry` (adapter layer foundation).
+- `SqliteAdapter` (better-sqlite3): connect, test, list tables/views/columns/indexes/foreign keys, DDL, execute query.
+- `SessionManager` (connection pooling per profile), `SchemaService`, `QueryService`.
+- Schema explorer tree: Connection → Tables/Views → Table → Columns/Indexes/Foreign Keys.
+- Table Data viewer webview with pagination (Open Table Data).
+- Tree "Test Connection" now performs a real connect for SQLite.
+- `utils/sqlSafety` (identifier quoting) and `adapters/common/pagination`.
+- Integration tests against real in-memory SQLite, plus registry/sql-safety/pagination unit tests.
+
+### Changed
+
+- `better-sqlite3` added as a runtime dependency (externalized from the esbuild bundle).
+
 ## [0.0.3] - 2026-06-20
 
 ### Added

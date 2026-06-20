@@ -1,6 +1,6 @@
 /**
- * Database engine được hỗ trợ qua adapter layer (xem docs/04). Phase 2 mới chỉ
- * lưu/sửa profile; kết nối thật đến từ adapter ở các phase sau.
+ * Database engine được hỗ trợ qua adapter layer (xem docs/04). Phase 3 mới
+ * implement adapter cho SQLite; các engine khác sẽ tới sau.
  */
 export type DbType =
   | "sqlite"
@@ -37,6 +37,11 @@ export interface ConnectionProfile {
   updatedAt: string;
 }
 
+/** Profile + secret, chỉ tồn tại trong bộ nhớ runtime khi kết nối. */
+export interface RuntimeConnectionProfile extends ConnectionProfile {
+  password?: string;
+}
+
 /** Dữ liệu người dùng nhập ở form (chưa có id/timestamp). */
 export interface ConnectionDraft {
   name: string;
@@ -53,4 +58,70 @@ export interface ConnectionDraft {
 export interface TestConnectionResult {
   ok: boolean;
   message: string;
+}
+
+// ---------------------------------------------------------------------------
+// Metadata models (chuẩn hóa từ mọi DBMS — docs/04 §7)
+// ---------------------------------------------------------------------------
+
+/** Tham chiếu một đối tượng schema (table/view). */
+export interface ObjectRef {
+  schema?: string;
+  name: string;
+}
+
+export interface TableInfo {
+  name: string;
+  schema?: string;
+  type: "base_table" | "view";
+  rowEstimate?: number;
+}
+
+export interface ColumnInfo {
+  name: string;
+  dataType: string;
+  ordinal: number;
+  nullable: boolean;
+  defaultValue?: string;
+  isPrimaryKey: boolean;
+}
+
+export interface IndexInfo {
+  name: string;
+  unique: boolean;
+  columns: string[];
+}
+
+export interface ForeignKeyInfo {
+  name: string;
+  source: { schema?: string; table: string; columns: string[] };
+  target: { schema?: string; table: string; columns: string[] };
+  onUpdate?: string;
+  onDelete?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Query models (docs/06)
+// ---------------------------------------------------------------------------
+
+export interface QueryColumn {
+  name: string;
+  dataType?: string;
+  ordinal: number;
+}
+
+export type QueryRow = Record<string, unknown>;
+
+export interface QueryResult {
+  queryId: string;
+  columns: QueryColumn[];
+  rows: QueryRow[];
+  rowCount: number;
+  affectedRows?: number;
+  durationMs: number;
+  truncated?: boolean;
+}
+
+export interface QueryOptions {
+  maxRows?: number;
 }

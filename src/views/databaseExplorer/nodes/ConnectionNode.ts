@@ -1,7 +1,8 @@
 import * as vscode from "vscode";
 import { CONTEXT_VALUES } from "../../../core/constants";
 import type { ConnectionProfile } from "../../../core/types";
-import { DbTreeNode } from "./DbTreeNode";
+import { DbTreeNode, type TreeContext } from "./DbTreeNode";
+import { TablesFolderNode, ViewsFolderNode } from "./folderNodes";
 import { InfoNode } from "./InfoNode";
 
 /** Node gốc đại diện cho một connection profile. */
@@ -48,8 +49,10 @@ export class ConnectionNode extends DbTreeNode {
     return lines.join("\n");
   }
 
-  getChildren(): DbTreeNode[] {
-    // Phase 2: chưa connect DB thật, hiển thị placeholder cho tới Phase 3 (adapter).
-    return [new InfoNode("Connect & schema explorer arrive with the database adapters")];
+  getChildren(context: TreeContext): DbTreeNode[] {
+    if (!context.sessionManager.supports(this.profile)) {
+      return [new InfoNode(`Adapter for ${this.profile.dbType} arrives in a later phase`)];
+    }
+    return [new TablesFolderNode(this.profile), new ViewsFolderNode(this.profile)];
   }
 }

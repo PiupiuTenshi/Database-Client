@@ -2,7 +2,7 @@
   "name": "open-db-nexus",
   "displayName": "Open DB Nexus",
   "description": "A VS Code multi-database client extension with schema explorer, query runner, and dependency graph tooling.",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "piupiutenshi",
   "license": "MIT",
   "private": true,
@@ -67,6 +67,11 @@
         "command": "openDbNexus.refreshConnections",
         "title": "Open DB Nexus: Refresh Connections",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "openDbNexus.openTableData",
+        "title": "Open DB Nexus: Open Table Data",
+        "icon": "$(table)"
       }
     ],
     "menus": {
@@ -112,6 +117,16 @@
           "command": "openDbNexus.deleteConnection",
           "when": "view == openDbNexus.connections && viewItem == connection",
           "group": "1_modify@3"
+        },
+        {
+          "command": "openDbNexus.openTableData",
+          "when": "view == openDbNexus.connections && viewItem == table",
+          "group": "inline"
+        },
+        {
+          "command": "openDbNexus.openTableData",
+          "when": "view == openDbNexus.connections && viewItem == table",
+          "group": "1_view@1"
         }
       ]
     },
@@ -146,6 +161,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20.14.10",
     "@types/vscode": "^1.90.0",
     "@vscode/test-electron": "^2.5.2",
@@ -155,5 +171,8 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.34.1",
     "vitest": "^4.1.9"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0"
   }
 }

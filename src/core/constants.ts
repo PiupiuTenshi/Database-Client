@@ -17,12 +17,14 @@ export const COMMANDS = {
   editConnection: "openDbNexus.editConnection",
   deleteConnection: "openDbNexus.deleteConnection",
   testConnection: "openDbNexus.testConnection",
-  refreshConnections: "openDbNexus.refreshConnections"
+  refreshConnections: "openDbNexus.refreshConnections",
+  openTableData: "openDbNexus.openTableData"
 } as const;
 
 /** contextValue gắn lên TreeItem để điều khiển hiển thị context menu (when: viewItem == ...). */
 export const CONTEXT_VALUES = {
   connection: "connection",
+  table: "table",
   info: "info"
 } as const;
 

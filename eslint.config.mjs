@@ -33,6 +33,8 @@ export default tseslint.config(
     },
     rules: {
       "@typescript-eslint/no-floating-promises": "error",
+      // Adapter implement interface async; engine đồng bộ (sqlite) không cần await.
+      "@typescript-eslint/require-await": "off",
       "@typescript-eslint/no-unused-vars": [
         "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }
