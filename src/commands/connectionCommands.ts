@@ -29,12 +29,12 @@ export function registerConnectionCommands(
 
   context.subscriptions.push(
     vscode.commands.registerCommand(COMMANDS.addConnection, () => {
-      ConnectionFormPanel.show(connectionService);
+      ConnectionFormPanel.show(connectionService, context.extensionUri);
     }),
 
     vscode.commands.registerCommand(COMMANDS.editConnection, (node?: ConnectionNode) => {
       if (node instanceof ConnectionNode) {
-        ConnectionFormPanel.show(connectionService, node.profile);
+        ConnectionFormPanel.show(connectionService, context.extensionUri, node.profile);
       }
     }),
 

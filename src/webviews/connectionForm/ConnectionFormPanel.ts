@@ -16,7 +16,11 @@ export class ConnectionFormPanel {
 
   private readonly disposables: vscode.Disposable[] = [];
 
-  static show(connectionService: ConnectionService, profile?: ConnectionProfile): void {
+  static show(
+    connectionService: ConnectionService,
+    extensionUri: vscode.Uri,
+    profile?: ConnectionProfile
+  ): void {
     if (ConnectionFormPanel.current) {
       ConnectionFormPanel.current.profile = profile;
       ConnectionFormPanel.current.panel.title = ConnectionFormPanel.titleFor(profile);
@@ -28,14 +32,24 @@ export class ConnectionFormPanel {
       "openDbNexus.connectionForm",
       ConnectionFormPanel.titleFor(profile),
       vscode.ViewColumn.Active,
-      { enableScripts: true, retainContextWhenHidden: true }
+      {
+        enableScripts: true,
+        retainContextWhenHidden: true,
+        localResourceRoots: [vscode.Uri.joinPath(extensionUri, "resources")]
+      }
     );
-    ConnectionFormPanel.current = new ConnectionFormPanel(panel, connectionService, profile);
+    ConnectionFormPanel.current = new ConnectionFormPanel(
+      panel,
+      connectionService,
+      extensionUri,
+      profile
+    );
   }
 
   private constructor(
     private readonly panel: vscode.WebviewPanel,
     private readonly connectionService: ConnectionService,
+    private readonly extensionUri: vscode.Uri,
     private profile: ConnectionProfile | undefined
   ) {
     this.render();
@@ -104,9 +118,16 @@ export class ConnectionFormPanel {
   private buildHtml(webview: vscode.Webview): string {
     const nonce = getNonce();
     const csp = buildCsp(webview.cspSource, nonce);
+    const logoUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.extensionUri, "resources", "db-nexus.svg")
+    );
     const dbOptions = DB_TYPE_OPTIONS.map(
       (option) => `<option value="${option.value}">${option.label}</option>`
     ).join("");
+    const supportedDatabases = ["SQLite", "PostgreSQL", "MySQL / MariaDB", "SQL Server", "Redis"];
+    const databaseBadges = supportedDatabases
+      .map((database) => `<span class="database-badge">${database}</span>`)
+      .join("");
     const envOptions = ENVIRONMENT_OPTIONS.map(
       (env) => `<option value="${env}">${env}</option>`
     ).join("");
@@ -123,7 +144,17 @@ export class ConnectionFormPanel {
 <title>${EXTENSION_DISPLAY_NAME}</title>
 <style nonce="${nonce}">
   body { font-family: var(--vscode-font-family); color: var(--vscode-foreground); padding: 16px; }
-  h2 { margin: 0 0 16px; font-weight: 600; }
+  h2 { margin: 0; font-weight: 600; }
+  .connection-header { margin-bottom: 22px; }
+  .brand { display: flex; align-items: center; gap: 10px; margin: 10px 0 12px; }
+  .brand-logo { width: 38px; height: 38px; flex: 0 0 auto; }
+  .brand-name { font-size: 14px; font-weight: 600; }
+  .brand-description { margin-top: 2px; font-size: 12px; opacity: 0.75; }
+  .supported-databases { display: flex; flex-wrap: wrap; gap: 6px; }
+  .database-badge {
+    padding: 3px 7px; border: 1px solid var(--vscode-widget-border, var(--vscode-input-border, transparent));
+    border-radius: 999px; font-size: 11px; color: var(--vscode-descriptionForeground);
+  }
   .field { margin-bottom: 12px; display: flex; flex-direction: column; }
   label { font-size: 12px; margin-bottom: 4px; opacity: 0.85; }
   input, select {
@@ -150,7 +181,17 @@ export class ConnectionFormPanel {
 </style>
 </head>
 <body>
-  <h2 id="heading">New Connection</h2>
+  <header class="connection-header">
+    <h2 id="heading">New Connection</h2>
+    <div class="brand">
+      <img class="brand-logo" src="${logoUri.toString()}" alt="Open DB Nexus logo" />
+      <div>
+        <div class="brand-name">${EXTENSION_DISPLAY_NAME}</div>
+        <div class="brand-description">Connect to your databases from VS Code</div>
+      </div>
+    </div>
+    <div class="supported-databases" aria-label="Supported databases">${databaseBadges}</div>
+  </header>
 
   <div class="field">
     <label for="name">Name *</label>
