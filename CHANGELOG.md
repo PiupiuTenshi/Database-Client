@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.6.0] - 2026-06-21
+
+### Added
+
+- **Dangerous-SQL warning** — running `DROP`, `TRUNCATE`, or a `DELETE`/`UPDATE` without a `WHERE` clause from the query editor now prompts a modal confirmation first. Detection ignores keywords inside comments and string literals.
+- **Global schema search** — right-click a connection → _Search Schema_ to find tables, views and columns by name (column scan capped at 150 tables) and open the match.
+- **Result grid filter & sort** — the Query Result panel gained a live filter box and clickable, sortable column headers (numeric-aware).
+
+### Notes
+
+- Explain-plan visualizer, PNG graph export and procedure/trigger dependency graphs remain on the backlog.
+
 ## [1.5.0] - 2026-06-21
 
 ### Added
