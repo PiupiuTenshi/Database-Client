@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.4.0] - 2026-06-21
+
+### Added
+
+- **Mock data generator** — right-click a table → _Generate Mock Data_, enter a row count, and seeded, type-aware values are inserted (int, decimal, boolean, date/datetime, UUID, email, name, JSON, text). Integer primary keys are skipped (treated as auto-increment); nullable columns can receive NULL. Capped at 5k rows and guarded on production.
+- **Code generators** — right-click a table → _Generate Code_ to produce a TypeScript interface, a C# entity class, or CRUD SQL (SELECT/INSERT/UPDATE/DELETE keyed by primary key), opened in a new editor.
+
+### Internal
+
+- Deterministic seeded PRNG (`mockData`) and `codeGen` builders, both unit-tested; `GeneratorService` ties them to the schema + edit services.
+
 ## [1.3.0] - 2026-06-21
 
 ### Added
