@@ -161,6 +161,11 @@ export class SqliteAdapter implements DatabaseAdapter {
     return [...byId.values()];
   }
 
+  async listViewDependencies(_session: DbSession, _ref: ObjectRef): Promise<ObjectRef[]> {
+    // SQLite không có catalog dependency; cần parse SQL -> bỏ qua ở MVP.
+    return [];
+  }
+
   async getObjectDDL(session: DbSession, ref: ObjectRef): Promise<string> {
     const db = this.getDb(session);
     const row = db.prepare("SELECT sql FROM sqlite_master WHERE name = ?").get(ref.name) as

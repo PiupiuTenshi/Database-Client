@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { buildFkGraph, getSubgraph, objectId } from "../../src/services/graphBuilder";
+import {
+  appendViewDependencies,
+  buildFkGraph,
+  buildImpactReport,
+  detectCycles,
+  getSubgraph,
+  objectId
+} from "../../src/services/graphBuilder";
 import type { ForeignKeyInfo } from "../../src/core/types";
 
 function fk(
@@ -84,5 +91,50 @@ describe("objectId", () => {
   it("qualifies with schema when present", () => {
     expect(objectId("public", "t")).toBe("public.t");
     expect(objectId(undefined, "t")).toBe("t");
+  });
+});
+
+describe("appendViewDependencies", () => {
+  it("adds view nodes and view_reference edges", () => {
+    const base = buildFkGraph(FKS);
+    const merged = appendViewDependencies(base, [
+      {
+        view: { schema: "public", name: "v_orders" },
+        references: [
+          { schema: "public", name: "orders" },
+          { schema: "public", name: "users" }
+        ]
+      }
+    ]);
+    const viewNode = merged.nodes.find((n) => n.id === "public.v_orders");
+    expect(viewNode?.type).toBe("view");
+    const viewEdges = merged.edges.filter((e) => e.type === "view_reference");
+    expect(viewEdges).toHaveLength(2);
+    expect(viewEdges.every((e) => e.source === "public.v_orders")).toBe(true);
+  });
+});
+
+describe("detectCycles", () => {
+  it("returns nothing for an acyclic FK graph", () => {
+    expect(detectCycles(buildFkGraph(FKS))).toEqual([]);
+  });
+
+  it("detects a cycle A -> B -> A", () => {
+    const graph = buildFkGraph([
+      fk("c1", "a", "b_id", "b", "id"),
+      fk("c2", "b", "a_id", "a", "id")
+    ]);
+    const cycles = detectCycles(graph);
+    expect(cycles.length).toBeGreaterThan(0);
+  });
+});
+
+describe("buildImpactReport", () => {
+  it("lists dependencies, dependents and impact", () => {
+    const md = buildImpactReport(buildFkGraph(FKS), "public.orders");
+    expect(md).toContain("# Dependency Report: public.orders");
+    expect(md).toContain("orders depends on");
+    expect(md).toContain("users"); // outbound
+    expect(md).toContain("order_items"); // inbound / impact
   });
 });

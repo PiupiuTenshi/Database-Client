@@ -36,6 +36,8 @@ const fksByTable: Record<string, ForeignKeyInfo[]> = {
 function makeService(): DependencyGraphService {
   const fake = {
     listTables: () => Promise.resolve(tables),
+    listViews: () => Promise.resolve([]),
+    listViewDependencies: () => Promise.resolve([]),
     listForeignKeys: (_p: ConnectionProfile, ref: { name: string }) =>
       Promise.resolve(fksByTable[ref.name] ?? [])
   } as unknown as SchemaService;

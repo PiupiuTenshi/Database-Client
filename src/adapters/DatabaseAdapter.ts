@@ -47,6 +47,8 @@ export interface DatabaseAdapter {
   listColumns(session: DbSession, ref: ObjectRef): Promise<ColumnInfo[]>;
   listIndexes(session: DbSession, ref: ObjectRef): Promise<IndexInfo[]>;
   listForeignKeys(session: DbSession, ref: ObjectRef): Promise<ForeignKeyInfo[]>;
+  /** Các đối tượng mà một view tham chiếu. Trả [] nếu engine không hỗ trợ. */
+  listViewDependencies(session: DbSession, ref: ObjectRef): Promise<ObjectRef[]>;
   getObjectDDL(session: DbSession, ref: ObjectRef): Promise<string>;
 
   executeQuery(session: DbSession, sql: string, options?: QueryOptions): Promise<QueryResult>;

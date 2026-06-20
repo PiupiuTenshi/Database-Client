@@ -161,10 +161,16 @@ export interface GraphEdge {
   id: string;
   source: string;
   target: string;
-  type: "foreign_key";
+  type: "foreign_key" | "view_reference";
   label?: string;
   sourceColumns?: string[];
   targetColumns?: string[];
+}
+
+/** Một view và các đối tượng nó tham chiếu (cho view dependency). */
+export interface ViewDependency {
+  view: ObjectRef;
+  references: ObjectRef[];
 }
 
 /** "source depends on target" (docs/05 §4). FK: child -> parent. */

@@ -45,4 +45,9 @@ export class SchemaService {
     const { adapter, session } = await this.sessionManager.getOrConnect(profile);
     return adapter.listForeignKeys(session, ref);
   }
+
+  async listViewDependencies(profile: ConnectionProfile, ref: ObjectRef): Promise<ObjectRef[]> {
+    const { adapter, session } = await this.sessionManager.getOrConnect(profile);
+    return adapter.listViewDependencies(session, ref);
+  }
 }

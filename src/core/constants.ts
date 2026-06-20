@@ -20,6 +20,7 @@ export const COMMANDS = {
   refreshConnections: "openDbNexus.refreshConnections",
   openTableData: "openDbNexus.openTableData",
   openDependencyGraph: "openDbNexus.openDependencyGraph",
+  openDependencyReport: "openDbNexus.openDependencyReport",
   openQuery: "openDbNexus.openQuery",
   runQuery: "openDbNexus.runQuery",
   runAllQueries: "openDbNexus.runAllQueries",

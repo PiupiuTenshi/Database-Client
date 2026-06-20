@@ -30,6 +30,18 @@ export function registerSchemaCommands(
           node.ref
         );
       }
+    }),
+
+    vscode.commands.registerCommand(COMMANDS.openDependencyReport, async (node?: TableNode) => {
+      if (!(node instanceof TableNode)) {
+        return;
+      }
+      const markdown = await deps.graphService.buildReport(node.profile, node.ref);
+      const doc = await vscode.workspace.openTextDocument({
+        language: "markdown",
+        content: markdown
+      });
+      await vscode.window.showTextDocument(doc);
     })
   );
 }

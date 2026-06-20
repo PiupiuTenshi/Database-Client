@@ -192,6 +192,15 @@ export class SqlServerAdapter implements DatabaseAdapter {
     return [...byName.values()];
   }
 
+  async listViewDependencies(session: DbSession, ref: ObjectRef): Promise<ObjectRef[]> {
+    const schema = ref.schema ?? DEFAULT_SCHEMA;
+    const result = await this.client(session).query(Q.listViewDependenciesSql(schema, ref.name));
+    return result.rows.map((row) => ({
+      schema: String(row.table_schema),
+      name: String(row.table_name)
+    }));
+  }
+
   async getObjectDDL(session: DbSession, ref: ObjectRef): Promise<string> {
     const schema = ref.schema ?? DEFAULT_SCHEMA;
     const def = await this.client(session).query(Q.objectDefinitionSql(schema, ref.name));

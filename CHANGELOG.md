@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.0.10] - 2026-06-20
+
+### Added
+
+- Phase 9 — Advanced dependency analysis.
+- Circular dependency detection (DFS) — surfaced as a warning in the graph.
+- Impact analysis: "Open Dependency Report" generates a Markdown report (depends on / depended on by / transitive impact / cycles).
+- View dependency edges (PostgreSQL + SQL Server via `VIEW_TABLE_USAGE`) drawn as dashed `view_reference` edges; SQLite/MySQL return none.
+- Export the graph as a standalone SVG file.
+- `appendViewDependencies`, `detectCycles`, `buildImpactReport` in the graph builder (pure, tested).
+
+### Notes
+
+- Procedure/function/trigger dependency and PNG export are deferred (need procedure/trigger introspection and canvas rasterization).
+
 ## [0.0.9] - 2026-06-20
 
 ### Added

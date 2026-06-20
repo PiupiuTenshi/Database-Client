@@ -163,6 +163,25 @@ describe("PostgresAdapter (mocked driver)", () => {
     ]);
   });
 
+  it("lists view dependencies", async () => {
+    const { adapter, session } = await connect((text) =>
+      text === Q.LIST_VIEW_DEPENDENCIES
+        ? result([
+            { table_schema: "public", table_name: "orders" },
+            { table_schema: "public", table_name: "users" }
+          ])
+        : result([])
+    );
+    const refs = await adapter.listViewDependencies(session, {
+      schema: "public",
+      name: "v_orders"
+    });
+    expect(refs).toEqual([
+      { schema: "public", name: "orders" },
+      { schema: "public", name: "users" }
+    ]);
+  });
+
   it("maps a SELECT result", async () => {
     const { adapter, session } = await connect(() =>
       result([{ id: 1, name: "a" }], { command: "SELECT" })

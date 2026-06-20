@@ -75,6 +75,14 @@ WHERE fkc.parent_object_id = OBJECT_ID(${objectId})
 ORDER BY fk.name, fkc.constraint_column_id`;
 }
 
+export function listViewDependenciesSql(schema: string, view: string): string {
+  return `
+SELECT TABLE_SCHEMA AS table_schema, TABLE_NAME AS table_name
+FROM INFORMATION_SCHEMA.VIEW_TABLE_USAGE
+WHERE VIEW_SCHEMA = ${quoteStringLiteral(schema)} AND VIEW_NAME = ${quoteStringLiteral(view)}
+ORDER BY TABLE_SCHEMA, TABLE_NAME`;
+}
+
 export function objectDefinitionSql(schema: string, table: string): string {
   return `SELECT OBJECT_DEFINITION(OBJECT_ID(${quoteStringLiteral(`${schema}.${table}`)})) AS def`;
 }

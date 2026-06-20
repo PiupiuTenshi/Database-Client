@@ -173,6 +173,15 @@ export class PostgresAdapter implements DatabaseAdapter {
     return [...byName.values()];
   }
 
+  async listViewDependencies(session: DbSession, ref: ObjectRef): Promise<ObjectRef[]> {
+    const schema = ref.schema ?? DEFAULT_SCHEMA;
+    const result = await this.client(session).query(Q.LIST_VIEW_DEPENDENCIES, [schema, ref.name]);
+    return result.rows.map((row) => ({
+      schema: String(row.table_schema),
+      name: String(row.table_name)
+    }));
+  }
+
   async getObjectDDL(session: DbSession, ref: ObjectRef): Promise<string> {
     const schema = ref.schema ?? DEFAULT_SCHEMA;
     const client = this.client(session);

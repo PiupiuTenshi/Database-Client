@@ -58,6 +58,12 @@ JOIN information_schema.referential_constraints rc
   ON rc.constraint_name = tc.constraint_name AND rc.constraint_schema = tc.table_schema
 WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema = $1 AND tc.table_name = $2`;
 
+export const LIST_VIEW_DEPENDENCIES = `
+SELECT table_schema, table_name
+FROM information_schema.view_table_usage
+WHERE view_schema = $1 AND view_name = $2
+ORDER BY table_schema, table_name`;
+
 export const REL_KIND = `
 SELECT c.relkind
 FROM pg_class c

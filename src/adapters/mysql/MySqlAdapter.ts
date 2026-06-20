@@ -187,6 +187,11 @@ export class MySqlAdapter implements DatabaseAdapter {
     return [...byName.values()];
   }
 
+  async listViewDependencies(_session: DbSession, _ref: ObjectRef): Promise<ObjectRef[]> {
+    // MySQL không có INFORMATION_SCHEMA.VIEW_TABLE_USAGE; bỏ qua ở MVP.
+    return [];
+  }
+
   async getObjectDDL(session: DbSession, ref: ObjectRef): Promise<string> {
     const qualified = `${quoteBacktick(this.requireSchema(ref.schema))}.${quoteBacktick(ref.name)}`;
     const result = await this.client(session).query(`SHOW CREATE TABLE ${qualified}`);

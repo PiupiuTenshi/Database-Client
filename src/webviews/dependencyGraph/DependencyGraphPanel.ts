@@ -9,15 +9,17 @@ import type {
 } from "../../core/types";
 import type { DependencyGraphService } from "../../services/DependencyGraphService";
 import type { QueryService } from "../../services/QueryService";
+import { detectCycles } from "../../services/graphBuilder";
 import { TableDataPanel } from "../tableViewer/TableDataPanel";
 import { buildCsp, getNonce } from "../WebviewBase";
 
 interface IncomingMessage {
-  type: "ready" | "rebuild" | "openTable" | "export";
+  type: "ready" | "rebuild" | "openTable" | "export" | "report" | "exportSvg";
   direction?: GraphDirection;
   depth?: GraphDepth;
   schema?: string;
   table?: string;
+  svg?: string;
 }
 
 export interface DependencyGraphDeps {
@@ -87,6 +89,33 @@ export class DependencyGraphPanel {
       case "export":
         await this.exportJson();
         return;
+      case "report":
+        await this.openReport();
+        return;
+      case "exportSvg":
+        if (message.svg) {
+          await this.saveSvg(message.svg);
+        }
+        return;
+    }
+  }
+
+  private async openReport(): Promise<void> {
+    const markdown = await this.deps.graphService.buildReport(this.profile, this.ref);
+    const doc = await vscode.workspace.openTextDocument({
+      language: "markdown",
+      content: markdown
+    });
+    await vscode.window.showTextDocument(doc, vscode.ViewColumn.Beside);
+  }
+
+  private async saveSvg(svg: string): Promise<void> {
+    const uri = await vscode.window.showSaveDialog({
+      filters: { "SVG image": ["svg"] },
+      saveLabel: "Export graph as SVG"
+    });
+    if (uri) {
+      await vscode.workspace.fs.writeFile(uri, Buffer.from(svg, "utf8"));
     }
   }
 
@@ -98,13 +127,21 @@ export class DependencyGraphPanel {
         this.direction,
         this.depth
       );
+      const cycles = detectCycles(this.current);
+      const warnings = [...(this.current.warnings ?? [])];
+      if (cycles.length > 0) {
+        warnings.push(
+          `Circular dependency detected: ${cycles.map((c) => c.join(" → ")).join("; ")}`
+        );
+      }
       void this.panel.webview.postMessage({
         type: "graph",
         payload: {
           graph: this.current,
           center: this.current.center,
           direction: this.direction,
-          depth: this.depth
+          depth: this.depth,
+          warnings
         }
       });
     } catch (error) {
@@ -147,6 +184,8 @@ export class DependencyGraphPanel {
   svg { width: 100vw; height: calc(100vh - 40px); display: block; cursor: grab; }
   svg.grabbing { cursor: grabbing; }
   .edge { stroke: var(--vscode-editorLineNumber-foreground); stroke-width: 1.2; opacity: 0.6; }
+  .edge.view { stroke-dasharray: 5 3; }
+  .node.view rect { fill: var(--vscode-editorWidget-background); stroke: var(--vscode-charts-blue, #3794ff); }
   .node rect { fill: var(--vscode-editorWidget-background); stroke: var(--vscode-editorLineNumber-foreground); stroke-width: 1; rx: 4; cursor: pointer; }
   .node text { fill: var(--vscode-foreground); font-size: 12px; pointer-events: none; }
   .node.center rect { stroke: var(--vscode-focusBorder); stroke-width: 2; }
@@ -172,6 +211,8 @@ export class DependencyGraphPanel {
     <input id="search" type="text" placeholder="Search node…" />
     <button id="fit">Fit</button>
     <button id="export">Export JSON</button>
+    <button id="svg">Export SVG</button>
+    <button id="report">Report</button>
     <span id="info"></span>
   </div>
   <div id="warn"></div>
@@ -230,7 +271,7 @@ export class DependencyGraphPanel {
       const line = document.createElementNS(SVGNS, "line");
       line.setAttribute("x1", s.x); line.setAttribute("y1", s.y);
       line.setAttribute("x2", t.x); line.setAttribute("y2", t.y);
-      line.setAttribute("class", "edge");
+      line.setAttribute("class", "edge" + (e.type === "view_reference" ? " view" : ""));
       const title = document.createElementNS(SVGNS, "title");
       title.textContent = e.label ?? "";
       line.appendChild(title);
@@ -241,7 +282,7 @@ export class DependencyGraphPanel {
     for (const n of graph.nodes) {
       const p = pos.get(n.id); if (!p) continue;
       const g = document.createElementNS(SVGNS, "g");
-      g.setAttribute("class", "node" + (n.id === center ? " center" : ""));
+      g.setAttribute("class", "node" + (n.id === center ? " center" : "") + (n.type === "view" ? " view" : ""));
       g.setAttribute("transform", "translate(" + (p.x - W / 2) + "," + (p.y - H / 2) + ")");
       g.dataset.id = n.id; g.dataset.table = n.objectName; if (n.schema) g.dataset.schema = n.schema;
       const rect = document.createElementNS(SVGNS, "rect");
@@ -282,6 +323,15 @@ export class DependencyGraphPanel {
   });
   $("fit").addEventListener("click", fit);
   $("export").addEventListener("click", () => vscode.postMessage({ type: "export" }));
+  $("report").addEventListener("click", () => vscode.postMessage({ type: "report" }));
+  $("svg").addEventListener("click", () => {
+    const clone = $("canvas").cloneNode(true);
+    clone.setAttribute("xmlns", SVGNS);
+    const style = document.createElementNS(SVGNS, "style");
+    style.textContent = ".edge{stroke:#888;stroke-width:1.2}.edge.view{stroke-dasharray:5 3}.node rect{fill:#fff;stroke:#888}.node.view rect{stroke:#3794ff}.node text{font:12px sans-serif;fill:#111;text-anchor:middle}";
+    clone.insertBefore(style, clone.firstChild);
+    vscode.postMessage({ type: "exportSvg", svg: clone.outerHTML });
+  });
 
   window.addEventListener("message", (event) => {
     const msg = event.data;
@@ -289,7 +339,7 @@ export class DependencyGraphPanel {
       graph = msg.payload.graph; center = msg.payload.center;
       $("direction").value = msg.payload.direction;
       $("depth").value = String(msg.payload.depth);
-      $("warn").textContent = (graph.warnings || []).join(" ");
+      $("warn").textContent = (msg.payload.warnings || []).join(" · ");
       fit(); render();
     } else if (msg.type === "error") {
       $("warn").textContent = msg.payload.message;

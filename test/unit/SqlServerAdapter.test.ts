@@ -132,6 +132,16 @@ describe("SqlServerAdapter (mocked driver)", () => {
     });
   });
 
+  it("lists view dependencies", async () => {
+    const { adapter, session } = await connect((text) =>
+      text.includes("VIEW_TABLE_USAGE")
+        ? result([{ table_schema: "dbo", table_name: "orders" }])
+        : result([])
+    );
+    const refs = await adapter.listViewDependencies(session, { schema: "dbo", name: "v_orders" });
+    expect(refs).toEqual([{ schema: "dbo", name: "orders" }]);
+  });
+
   it("returns object definition as DDL when available", async () => {
     const { adapter, session } = await connect((text) =>
       text.includes("OBJECT_DEFINITION")
