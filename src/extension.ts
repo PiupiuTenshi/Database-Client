@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { AdapterRegistry } from "./adapters/AdapterRegistry";
+import { PostgresAdapter } from "./adapters/postgresql/PostgresAdapter";
 import { SqliteAdapter } from "./adapters/sqlite/SqliteAdapter";
 import { registerCommands } from "./commands/registerCommands";
 import { EXTENSION_DISPLAY_NAME, VIEWS } from "./core/constants";
@@ -27,6 +28,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   const registry = new AdapterRegistry();
   registry.register(new SqliteAdapter());
+  registry.register(new PostgresAdapter());
 
   const sessionManager = new SessionManager(registry, secretStore, logService);
   context.subscriptions.push(sessionManager);

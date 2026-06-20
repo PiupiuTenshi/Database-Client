@@ -9,6 +9,7 @@ import type {
   QueryOptions,
   QueryResult,
   RuntimeConnectionProfile,
+  SchemaInfo,
   TableInfo,
   TestConnectionResult
 } from "../../core/types";
@@ -84,11 +85,16 @@ export class SqliteAdapter implements DatabaseAdapter {
     }
   }
 
-  async listTables(session: DbSession): Promise<TableInfo[]> {
+  async listSchemas(_session: DbSession): Promise<SchemaInfo[]> {
+    // SQLite không có lớp schema -> trả rỗng (tree hiển thị Tables/Views trực tiếp).
+    return [];
+  }
+
+  async listTables(session: DbSession, _schema?: string): Promise<TableInfo[]> {
     return this.listObjects(session, "table");
   }
 
-  async listViews(session: DbSession): Promise<TableInfo[]> {
+  async listViews(session: DbSession, _schema?: string): Promise<TableInfo[]> {
     return this.listObjects(session, "view");
   }
 

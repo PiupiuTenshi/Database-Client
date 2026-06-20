@@ -1,0 +1,20 @@
+# PostgreSQL test DB cho Open DB Nexus (chỉ dùng local/manual — CI dùng mock).
+# Chạy:   docker compose -f test/docker/docker-compose.postgres.yml up -d
+# Dừng:   docker compose -f test/docker/docker-compose.postgres.yml down -v
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: open-db-nexus-pg
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: app_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./seed.sql:/docker-entrypoint-initdb.d/seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d app_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 10

@@ -4,25 +4,31 @@ import type {
   ForeignKeyInfo,
   IndexInfo,
   ObjectRef,
+  SchemaInfo,
   TableInfo
 } from "../core/types";
 import type { SessionManager } from "./SessionManager";
 
 /**
- * Đọc metadata schema qua adapter. Phase 3 chưa cache; mỗi lần gọi đọc trực
+ * Đọc metadata schema qua adapter. Phase 5 chưa cache; mỗi lần gọi đọc trực
  * tiếp từ DB (SchemaCacheStore sẽ thêm ở phase sau).
  */
 export class SchemaService {
   constructor(private readonly sessionManager: SessionManager) {}
 
-  async listTables(profile: ConnectionProfile): Promise<TableInfo[]> {
+  async listSchemas(profile: ConnectionProfile): Promise<SchemaInfo[]> {
     const { adapter, session } = await this.sessionManager.getOrConnect(profile);
-    return adapter.listTables(session);
+    return adapter.listSchemas(session);
   }
 
-  async listViews(profile: ConnectionProfile): Promise<TableInfo[]> {
+  async listTables(profile: ConnectionProfile, schema?: string): Promise<TableInfo[]> {
     const { adapter, session } = await this.sessionManager.getOrConnect(profile);
-    return adapter.listViews(session);
+    return adapter.listTables(session, schema);
+  }
+
+  async listViews(profile: ConnectionProfile, schema?: string): Promise<TableInfo[]> {
+    const { adapter, session } = await this.sessionManager.getOrConnect(profile);
+    return adapter.listViews(session, schema);
   }
 
   async listColumns(profile: ConnectionProfile, ref: ObjectRef): Promise<ColumnInfo[]> {

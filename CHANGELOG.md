@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.0.6] - 2026-06-20
+
+### Added
+
+- Phase 5 — PostgreSQL adapter (first async engine, node-postgres).
+- `PostgresAdapter`: connect, test, list schemas/tables/views/columns/indexes/foreign keys, DDL, execute query.
+- Schema layer in the tree: Connection → Schema → Tables/Views (SQLite still shows Tables/Views directly).
+- Injectable pg client factory so the adapter is unit-tested without a live database.
+- Docker Compose test database (`test/docker/`) with seed schema for manual testing.
+- Tests for PostgresAdapter metadata mapping (schemas, columns/PK, FK + index grouping, query/affectedRows).
+
+### Changed
+
+- `DatabaseAdapter` gains `listSchemas` and optional schema arg on `listTables`/`listViews`.
+- `pg` added as a runtime dependency (externalized from the esbuild bundle).
+
 ## [0.0.5] - 2026-06-20
 
 ### Added

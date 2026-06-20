@@ -2,8 +2,9 @@ import * as vscode from "vscode";
 import { CONTEXT_VALUES } from "../../../core/constants";
 import type { ConnectionProfile } from "../../../core/types";
 import { DbTreeNode, type TreeContext } from "./DbTreeNode";
-import { TablesFolderNode, ViewsFolderNode } from "./folderNodes";
+import { SchemaNode, TablesFolderNode, ViewsFolderNode } from "./folderNodes";
 import { InfoNode } from "./InfoNode";
+import { safeChildren } from "./treeHelpers";
 
 /** Node gốc đại diện cho một connection profile. */
 export class ConnectionNode extends DbTreeNode {
@@ -49,10 +50,19 @@ export class ConnectionNode extends DbTreeNode {
     return lines.join("\n");
   }
 
-  getChildren(context: TreeContext): DbTreeNode[] {
+  getChildren(context: TreeContext): Promise<DbTreeNode[]> {
     if (!context.sessionManager.supports(this.profile)) {
-      return [new InfoNode(`Adapter for ${this.profile.dbType} arrives in a later phase`)];
+      return Promise.resolve([
+        new InfoNode(`Adapter for ${this.profile.dbType} arrives in a later phase`)
+      ]);
     }
-    return [new TablesFolderNode(this.profile), new ViewsFolderNode(this.profile)];
+    return safeChildren(async () => {
+      const schemas = await context.schemaService.listSchemas(this.profile);
+      // Engine không có lớp schema (SQLite) -> hiện Tables/Views trực tiếp.
+      if (schemas.length === 0) {
+        return [new TablesFolderNode(this.profile), new ViewsFolderNode(this.profile)];
+      }
+      return schemas.map((schema) => new SchemaNode(this.profile, schema.name));
+    });
   }
 }

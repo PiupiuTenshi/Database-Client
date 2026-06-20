@@ -70,6 +70,12 @@ export interface ObjectRef {
   name: string;
 }
 
+/** Một schema/namespace trong DB (Postgres, SQL Server...). */
+export interface SchemaInfo {
+  name: string;
+  isDefault?: boolean;
+}
+
 export interface TableInfo {
   name: string;
   schema?: string;

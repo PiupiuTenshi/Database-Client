@@ -7,6 +7,7 @@ import type {
   QueryOptions,
   QueryResult,
   RuntimeConnectionProfile,
+  SchemaInfo,
   TableInfo,
   TestConnectionResult
 } from "../core/types";
@@ -32,8 +33,10 @@ export interface DatabaseAdapter {
   testConnection(profile: RuntimeConnectionProfile): Promise<TestConnectionResult>;
   disconnect(session: DbSession): Promise<void>;
 
-  listTables(session: DbSession): Promise<TableInfo[]>;
-  listViews(session: DbSession): Promise<TableInfo[]>;
+  /** Danh sách schema. Trả [] nếu engine không có lớp schema (vd SQLite). */
+  listSchemas(session: DbSession): Promise<SchemaInfo[]>;
+  listTables(session: DbSession, schema?: string): Promise<TableInfo[]>;
+  listViews(session: DbSession, schema?: string): Promise<TableInfo[]>;
   listColumns(session: DbSession, ref: ObjectRef): Promise<ColumnInfo[]>;
   listIndexes(session: DbSession, ref: ObjectRef): Promise<IndexInfo[]>;
   listForeignKeys(session: DbSession, ref: ObjectRef): Promise<ForeignKeyInfo[]>;
