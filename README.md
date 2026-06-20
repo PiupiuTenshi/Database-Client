@@ -16,9 +16,15 @@ A VS Code multi-database client with a schema explorer, SQL query runner, result
 - **Connection manager** — create / edit / delete / test connections. Passwords are stored in VS Code `SecretStorage`, never in plaintext.
 - **Schema explorer** — Connections → (Schema) → Tables / Views → Columns / Indexes / Foreign Keys.
 - **Query editor** — open a SQL document bound to a connection, run the selection or the current statement (`Ctrl+Enter`) or the whole file (`Ctrl+Shift+Enter`), with a result grid and query history.
-- **Table data viewer** — paginated browsing of any table.
-- **Dependency Graph** — visualize foreign-key relationships between tables (inbound / outbound / both, depth 1/2/3/all), search nodes, open a table from the graph, and export the graph as JSON or SVG.
-- **Advanced dependency analysis** — view dependencies (PostgreSQL / SQL Server), circular-dependency detection, and a Markdown impact report.
+- **Object panel with tabs** — Data (editable), Columns, Constraints, Triggers and DDL in one tabbed view with a refreshed, theme-aware UI.
+- **Editable data grid** — double-click to edit, add/delete rows, add/drop columns with a DDL preview. All writes are parameterized and keyed by primary key.
+- **Import / export** — export the page or whole table to CSV / JSON / SQL Insert (and from the Query Result panel); import a CSV file with header auto-mapping.
+- **Mock data & code generators** — seeded, type-aware mock rows, plus TypeScript / C# / CRUD SQL generated from a table.
+- **Database manager** — logical SQL backup (DDL + data), a connection dashboard, and global schema search (tables / views / columns).
+- **Safety** — production write/export confirmation, hard-block policies (`disableWriteOnProduction` / `disableExportOnProduction`), and a destructive-SQL warning (DROP / TRUNCATE / DELETE|UPDATE without WHERE).
+- **Query editor** — run the selection, the current statement (`Ctrl+Enter`) or the whole file (`Ctrl+Shift+Enter`); result grid with live filter and sortable columns; searchable, favorite-able query history.
+- **Dependency Graph** — visualize foreign-key relationships (inbound / outbound / both, depth 1/2/3/all), search nodes, open a table from the graph, export as JSON or SVG, plus circular-dependency detection and a Markdown impact report.
+- **Per-connection SSL/TLS** — toggle TLS (allowing self-signed certs) for PostgreSQL and MySQL/MariaDB.
 
 ## Supported databases
 
