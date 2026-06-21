@@ -17,7 +17,7 @@ A VS Code multi-database client with a schema explorer, SQL query runner, result
 - **Schema explorer** — Connections → (Schema) → Tables / Views → Columns / Indexes / Foreign Keys.
 - **Query editor** — open a SQL document bound to a connection, run the selection or the current statement (`Ctrl+Enter`) or the whole file (`Ctrl+Shift+Enter`), with a result grid and query history.
 - **Object panel with tabs** — Data (editable), Columns, Constraints, Triggers and DDL in one tabbed view with a refreshed, theme-aware UI.
-- **Editable data grid** — double-click to edit, add/delete rows, add/drop columns with a DDL preview. All writes are parameterized and keyed by primary key.
+- **Editable data grid** — action buttons and double-click editing, add rows, delete keyed rows, add/drop columns with a DDL preview. Updates/deletes are primary-key guarded; inserts work even before a key exists.
 - **Import / export** — export the page or whole table to CSV / JSON / SQL Insert (and from the Query Result panel); import a CSV file with header auto-mapping.
 - **Mock data & code generators** — seeded, type-aware mock rows, plus TypeScript / C# / CRUD SQL generated from a table.
 - **Database manager** — logical SQL backup (DDL + data), a connection dashboard, and global schema search (tables / views / columns).
@@ -77,6 +77,8 @@ Press `F5` in VS Code to launch the Extension Development Host.
 > ```
 
 Local test databases (Docker) for PostgreSQL / MySQL / SQL Server are in [`test/docker/`](test/docker/README.md).
+
+Release notes, phase tracking, GitHub CLI setup, and commit/push/release commands are in [`docs/11-phases-github-versioning.md`](docs/11-phases-github-versioning.md).
 
 ### Build a VSIX
 

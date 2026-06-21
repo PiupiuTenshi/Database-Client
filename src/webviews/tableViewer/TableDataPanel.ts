@@ -491,11 +491,13 @@ ${this.clientScript()}
     $("next").disabled = p.offset + p.pageSize >= p.total;
     if (!p.columns.length){ $("dataGrid").className="msg"; $("dataGrid").textContent="No columns."; return; }
     const editable = p.pkColumns.length > 0;
-    const actionsHead = editable ? "<th style='width:34px'></th>" : "";
+    const actionsHead = "<th style='width:74px'>Actions</th>";
     const head = "<tr>" + actionsHead + p.columns.map((c)=>"<th>"+esc(c)+(p.pkColumns.includes(c)?" 🔑":"")+"</th>").join("") + "</tr>";
     const body = p.rows.map((row, i) => {
-      const del = editable ? "<td><button class='icon-btn' data-del='"+i+"' title='Delete row'>🗑</button></td>" : "";
-      return "<tr>" + del + p.columns.map((c)=>cellHtml(c, row[c], i)).join("") + "</tr>";
+      const actions = editable
+        ? "<td class='row-actions'><button class='icon-btn' data-edit='"+i+"' title='Edit row'>✎</button><button class='icon-btn' data-del='"+i+"' title='Delete row'>🗑</button></td>"
+        : "<td class='row-actions subtle' title='Updates and deletes need a primary key'>PK required</td>";
+      return "<tr>" + actions + p.columns.map((c)=>cellHtml(c, row[c], i)).join("") + "</tr>";
     }).join("");
     const wrap = $("dataGrid"); wrap.className=""; wrap.outerHTML = '<table id="dataGrid"><thead>'+head+'</thead><tbody>'+body+'</tbody></table>';
     bindGrid();
@@ -504,6 +506,9 @@ ${this.clientScript()}
   function bindGrid(){
     document.querySelectorAll("#dataGrid td.editable").forEach((td) => {
       td.addEventListener("dblclick", () => beginEdit(td));
+    });
+    document.querySelectorAll("#dataGrid [data-edit]").forEach((btn) => {
+      btn.addEventListener("click", () => editFirstCell(Number(btn.dataset.edit)));
     });
     document.querySelectorAll("#dataGrid [data-del]").forEach((btn) => {
       btn.addEventListener("click", () => deleteRow(Number(btn.dataset.del)));
@@ -522,29 +527,38 @@ ${this.clientScript()}
     const input = document.createElement("input");
     input.value = (original === null || original === undefined) ? "" : (typeof original === "object" ? JSON.stringify(original) : String(original));
     input.style.width = "100%";
+    td.classList.add("editing");
     td.textContent = ""; td.appendChild(input); input.focus(); input.select();
     let done = false;
+    const restore = () => renderData(stateAsPayload());
     const commit = () => {
       if (done) return; done = true;
       const raw = input.value;
       const newVal = raw === "" ? null : raw;
-      const origStr = (original === null || original === undefined) ? null : String(original);
-      if (String(newVal) === String(origStr)) { renderData(stateAsPayload()); return; }
+      const origText = (original === null || original === undefined) ? "" : (typeof original === "object" ? JSON.stringify(original) : String(original));
+      if (raw === origText) { restore(); return; }
       vscode.postMessage({ type:"updateRow", set:[{ column: col, value: newVal }], keys: rowKeys(rowIndex) });
     };
-    input.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){commit();} else if(e.key==="Escape"){done=true;renderData(stateAsPayload());} });
+    input.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){commit();} else if(e.key==="Escape"){done=true;restore();} });
     input.addEventListener("blur", commit);
   }
   function stateAsPayload(){ return { columns: state.columns, pkColumns: state.pkColumns, rows: state.rows, total: state.total, offset: state.offset, pageSize: state.pageSize, durationMs: 0 }; }
+  function editFirstCell(rowIndex){
+    const column = state.columns.find((c)=>!state.pkColumns.includes(c)) || state.columns[0];
+    const td = document.querySelector('#dataGrid td[data-row="'+rowIndex+'"][data-col="'+CSS.escape(column)+'"]');
+    if (td) beginEdit(td);
+  }
 
   function deleteRow(rowIndex){ vscode.postMessage({ type:"deleteRow", keys: rowKeys(rowIndex) }); }
 
   function showAddRow(){
     if (!state.columns.length) return;
     const tbody = document.querySelector("#dataGrid tbody"); if(!tbody) return;
-    const editable = state.pkColumns.length>0;
+    const existing = tbody.querySelector("tr.new-row");
+    if (existing) { const input = existing.querySelector("input"); if (input) input.focus(); return; }
     const tr = document.createElement("tr");
-    const lead = editable ? "<td><button class='icon-btn' id='saveNew' title='Save'>✔</button></td>" : "";
+    tr.className = "new-row";
+    const lead = "<td class='row-actions'><button class='icon-btn' id='saveNew' title='Save row'>✔</button><button class='icon-btn' id='cancelNew' title='Cancel'>×</button></td>";
     tr.innerHTML = lead + state.columns.map((c)=>"<td><input data-newcol='"+esc(c)+"' placeholder='"+esc(c)+"' style='width:100%'/></td>").join("");
     tbody.insertBefore(tr, tbody.firstChild);
     const save = () => {
@@ -555,6 +569,8 @@ ${this.clientScript()}
     };
     const saveBtn = tr.querySelector("#saveNew");
     if (saveBtn) saveBtn.addEventListener("click", save);
+    const cancelBtn = tr.querySelector("#cancelNew");
+    if (cancelBtn) cancelBtn.addEventListener("click", () => tr.remove());
     tr.querySelectorAll("input").forEach((inp)=>inp.addEventListener("keydown",(e)=>{ if(e.key==="Enter") save(); }));
     const first = tr.querySelector("input"); if(first) first.focus();
   }

@@ -6,6 +6,7 @@ Ba cách dùng extension: **tải `.vsix` từ GitHub Releases** (dễ nhất), 
 
 - VS Code ≥ 1.90
 - Node.js 20+ và npm (chỉ cần nếu chạy từ source / tự đóng gói)
+- GitHub CLI `gh` (chỉ cần nếu muốn push/tag/release trên GitHub)
 - (Tùy chọn) Docker — để chạy DB test local trong `test/docker/`
 
 ---
@@ -16,8 +17,14 @@ Ba cách dùng extension: **tải `.vsix` từ GitHub Releases** (dễ nhất), 
 2. Tải file `open-db-nexus-<version>.vsix` ở mục **Assets**.
 3. Cài bằng dòng lệnh:
 
-   ```bash
-   code --install-extension open-db-nexus-1.7.0.vsix
+   ```powershell
+   code --install-extension .\open-db-nexus-1.7.1.vsix
+   ```
+
+   Nếu terminal đang đứng ở thư mục cha chứa `vscode-db-client/`, dùng:
+
+   ```powershell
+   code --install-extension .\vscode-db-client\open-db-nexus-1.7.1.vsix
    ```
 
    Hoặc trong VS Code UI: tab **Extensions** (`Ctrl+Shift+X`) → menu `...` góc trên phải → **Install from VSIX...** → chọn file.
@@ -79,24 +86,24 @@ Extension này **chưa lên Marketplace** nên VS Code **không tự cập nhậ
 1. Tải file `.vsix` **bản mới** từ [Releases](https://github.com/PiupiuTenshi/Database-Client/releases/latest) (hoặc tự đóng gói lại bằng Cách 3 sau khi `git pull`).
 2. Cài đè bản cũ:
 
-   ```bash
-   code --install-extension open-db-nexus-1.7.0.vsix
+   ```powershell
+   code --install-extension .\open-db-nexus-1.7.1.vsix
    ```
 
    - VS Code tự thay phiên bản cũ bằng phiên bản trong file `.vsix`.
    - Nếu cài lại **cùng version** (hoặc version thấp hơn) và bị từ chối, thêm `--force`:
 
-     ```bash
-     code --install-extension open-db-nexus-1.7.0.vsix --force
+     ```powershell
+     code --install-extension .\open-db-nexus-1.7.1.vsix --force
      ```
 
    - Hoặc dùng UI: **Extensions** → `...` → **Install from VSIX...** → chọn file mới.
 3. **Reload Window** (`Ctrl+Shift+P` → *Developer: Reload Window*) hoặc khởi động lại VS Code để bản mới có hiệu lực.
 4. Kiểm tra version đang chạy:
 
-   ```bash
-   code --list-extensions --show-versions | grep open-db-nexus
-   # ví dụ: piupiutenshi.open-db-nexus@1.7.0
+   ```powershell
+   code --list-extensions --show-versions | Select-String open-db-nexus
+   # ví dụ: piupiutenshi.open-db-nexus@1.7.1
    ```
 
    Hoặc xem ở tab Extensions, mục **Open DB Nexus** sẽ hiển thị số phiên bản.
@@ -104,6 +111,18 @@ Extension này **chưa lên Marketplace** nên VS Code **không tự cập nhậ
 > Không cần gỡ bản cũ trước khi update; cài đè là đủ. Nếu muốn cài sạch hoàn toàn,
 > gỡ rồi cài lại (xem mục dưới) — nhưng profile/secret vẫn được giữ vì lưu theo
 > publisher id `piupiutenshi.open-db-nexus`.
+
+## GitHub CLI cho commit/push/release
+
+Nếu máy chưa có `gh`, cài nhanh trên Windows:
+
+```powershell
+winget install --id GitHub.cli
+gh auth login
+gh auth status
+```
+
+Quy trình phase/release đầy đủ nằm trong `docs/11-phases-github-versioning.md`.
 
 ### Gỡ cài đặt
 
