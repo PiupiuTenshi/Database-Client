@@ -18,3 +18,28 @@ esbuild.js
 *.vsix
 .vscode-test/**
 coverage/**
+
+# --- Trim node_modules cruft (giữ runtime .js, native .node và LICENSE) ---
+node_modules/**/*.md
+node_modules/**/*.markdown
+node_modules/**/*.flow
+node_modules/**/test/**
+node_modules/**/tests/**
+node_modules/**/__tests__/**
+node_modules/**/example/**
+node_modules/**/examples/**
+node_modules/**/doc/**
+node_modules/**/docs/**
+node_modules/**/.github/**
+node_modules/**/.editorconfig
+node_modules/**/.eslintrc*
+node_modules/**/.prettierrc*
+
+# better-sqlite3: deps/ và src/ chỉ dùng lúc build (node-gyp). Runtime chỉ cần
+# build/Release/better_sqlite3.node + lib/*.js, nên loại nguồn C/C++ và amalgamation.
+node_modules/better-sqlite3/deps/**
+node_modules/better-sqlite3/src/**
+node_modules/better-sqlite3/build/Release/obj/**
+node_modules/better-sqlite3/build/Release/obj.target/**
+node_modules/better-sqlite3/build/**/*.o
+node_modules/better-sqlite3/build/**/*.cc

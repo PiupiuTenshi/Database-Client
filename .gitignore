@@ -8,6 +8,9 @@ coverage/
 .env
 .env.*
 
+# Design docs giữ local, không theo dõi trên git
+docs/
+
 # Secrets & credentials (phòng ngừa — không commit kể cả khi lỡ tạo)
 *.pem
 *.key
