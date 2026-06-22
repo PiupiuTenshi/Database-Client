@@ -8,6 +8,9 @@ coverage/
 .env
 .env.*
 
+# Local design notes/docs are kept out of the repository.
+docs/
+
 # Secrets & credentials (phòng ngừa — không commit kể cả khi lỡ tạo)
 *.pem
 *.key
