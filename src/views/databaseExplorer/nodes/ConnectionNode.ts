@@ -24,6 +24,10 @@ export class ConnectionNode extends DbTreeNode {
     return item;
   }
 
+  cacheKey(): string {
+    return `connection:${this.profile.id}`;
+  }
+
   private describe(): string {
     const parts: string[] = [this.profile.dbType];
     if (this.profile.environment !== "local") {

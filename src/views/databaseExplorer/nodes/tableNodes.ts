@@ -19,9 +19,14 @@ export class TableNode extends DbTreeNode {
 
   toTreeItem(): vscode.TreeItem {
     const item = new vscode.TreeItem(this.table.name, vscode.TreeItemCollapsibleState.Collapsed);
+    item.id = `${this.profile.id}:table:${this.ref.schema ?? "default"}:${this.ref.name}`;
     item.contextValue = CONTEXT_VALUES.table;
     item.iconPath = new vscode.ThemeIcon(this.table.type === "view" ? "eye" : "table");
     return item;
+  }
+
+  cacheKey(): string {
+    return `table:${this.profile.id}:${this.ref.schema ?? "default"}:${this.ref.name}`;
   }
 
   getChildren(): DbTreeNode[] {
@@ -43,8 +48,13 @@ class ColumnsFolderNode extends DbTreeNode {
 
   toTreeItem(): vscode.TreeItem {
     const item = new vscode.TreeItem("Columns", vscode.TreeItemCollapsibleState.Collapsed);
+    item.id = `${this.profile.id}:columns:${this.ref.schema ?? "default"}:${this.ref.name}`;
     item.iconPath = new vscode.ThemeIcon("symbol-field");
     return item;
+  }
+
+  cacheKey(): string {
+    return `columns:${this.profile.id}:${this.ref.schema ?? "default"}:${this.ref.name}`;
   }
 
   getChildren(context: TreeContext): Promise<DbTreeNode[]> {
@@ -65,8 +75,13 @@ class IndexesFolderNode extends DbTreeNode {
 
   toTreeItem(): vscode.TreeItem {
     const item = new vscode.TreeItem("Indexes", vscode.TreeItemCollapsibleState.Collapsed);
+    item.id = `${this.profile.id}:indexes:${this.ref.schema ?? "default"}:${this.ref.name}`;
     item.iconPath = new vscode.ThemeIcon("list-ordered");
     return item;
+  }
+
+  cacheKey(): string {
+    return `indexes:${this.profile.id}:${this.ref.schema ?? "default"}:${this.ref.name}`;
   }
 
   getChildren(context: TreeContext): Promise<DbTreeNode[]> {
@@ -87,8 +102,13 @@ class ForeignKeysFolderNode extends DbTreeNode {
 
   toTreeItem(): vscode.TreeItem {
     const item = new vscode.TreeItem("Foreign Keys", vscode.TreeItemCollapsibleState.Collapsed);
+    item.id = `${this.profile.id}:foreignKeys:${this.ref.schema ?? "default"}:${this.ref.name}`;
     item.iconPath = new vscode.ThemeIcon("references");
     return item;
+  }
+
+  cacheKey(): string {
+    return `foreignKeys:${this.profile.id}:${this.ref.schema ?? "default"}:${this.ref.name}`;
   }
 
   getChildren(context: TreeContext): Promise<DbTreeNode[]> {

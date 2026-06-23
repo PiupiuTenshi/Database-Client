@@ -15,8 +15,13 @@ export class SchemaNode extends DbTreeNode {
 
   toTreeItem(): vscode.TreeItem {
     const item = new vscode.TreeItem(this.schema, vscode.TreeItemCollapsibleState.Collapsed);
+    item.id = `${this.profile.id}:schema:${this.schema}`;
     item.iconPath = new vscode.ThemeIcon("symbol-namespace");
     return item;
+  }
+
+  cacheKey(): string {
+    return `schema:${this.profile.id}:${this.schema}`;
   }
 
   getChildren(): DbTreeNode[] {
@@ -37,8 +42,13 @@ export class TablesFolderNode extends DbTreeNode {
 
   toTreeItem(): vscode.TreeItem {
     const item = new vscode.TreeItem("Tables", vscode.TreeItemCollapsibleState.Collapsed);
+    item.id = `${this.profile.id}:${this.schema ?? "default"}:tables`;
     item.iconPath = new vscode.ThemeIcon("list-flat");
     return item;
+  }
+
+  cacheKey(): string {
+    return `tables:${this.profile.id}:${this.schema ?? "default"}`;
   }
 
   getChildren(context: TreeContext): Promise<DbTreeNode[]> {
@@ -59,8 +69,13 @@ export class ViewsFolderNode extends DbTreeNode {
 
   toTreeItem(): vscode.TreeItem {
     const item = new vscode.TreeItem("Views", vscode.TreeItemCollapsibleState.Collapsed);
+    item.id = `${this.profile.id}:${this.schema ?? "default"}:views`;
     item.iconPath = new vscode.ThemeIcon("eye");
     return item;
+  }
+
+  cacheKey(): string {
+    return `views:${this.profile.id}:${this.schema ?? "default"}`;
   }
 
   getChildren(context: TreeContext): Promise<DbTreeNode[]> {

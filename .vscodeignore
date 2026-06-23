@@ -16,6 +16,7 @@ esbuild.js
 **/*.map
 **/tsconfig.json
 *.vsix
+debug.log
 .vscode-test/**
 coverage/**
 

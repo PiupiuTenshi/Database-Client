@@ -2,7 +2,7 @@
   "name": "open-db-nexus",
   "displayName": "Open DB Nexus",
   "description": "A VS Code multi-database client extension with schema explorer, query runner, and dependency graph tooling.",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "publisher": "piupiutenshi",
   "license": "MIT",
   "private": true,

@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.7.1] - 2026-06-21
+
+### Fixed
+
+- **Activity Bar logo** now uses a VS Code-friendly monochrome SVG, while the connection form keeps the color brand logo.
+- **Editable table grid** actions are easier to discover: rows show edit/delete actions when a primary key exists, and new rows always show Save/Cancel.
+- **Insert row on tables without a primary key** now works from the Data tab; update/delete remain primary-key guarded.
+- Empty-string cells no longer get converted to `NULL` just by entering and leaving edit mode.
+- **Connection tree loading** no longer blocks the explorer while old/slow databases load; schema branches now show a loading placeholder and refresh themselves when metadata arrives.
+
+### Docs
+
+- Added the GitHub CLI setup and release workflow for phase commits, push, tag, GitHub Release creation, and VSIX upload.
+
 ## [1.7.0] - 2026-06-21
 
 ### Added

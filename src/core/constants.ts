@@ -47,10 +47,7 @@ export const DB_TYPE_OPTIONS: { value: DbType; label: string; fileBased: boolean
   { value: "mysql", label: "MySQL", fileBased: false },
   { value: "mariadb", label: "MariaDB", fileBased: false },
   { value: "sqlserver", label: "SQL Server", fileBased: false },
-  { value: "duckdb", label: "DuckDB", fileBased: true },
-  { value: "mongodb", label: "MongoDB", fileBased: false },
-  { value: "redis", label: "Redis", fileBased: false },
-  { value: "oracle", label: "Oracle", fileBased: false }
+  { value: "redis", label: "Redis", fileBased: false }
 ];
 
 export const ENVIRONMENT_OPTIONS: ConnectionEnvironment[] = [

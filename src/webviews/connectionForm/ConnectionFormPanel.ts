@@ -119,7 +119,7 @@ export class ConnectionFormPanel {
     const nonce = getNonce();
     const csp = buildCsp(webview.cspSource, nonce);
     const logoUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, "resources", "db-nexus.svg")
+      vscode.Uri.joinPath(this.extensionUri, "resources", "db-nexus-logo.svg")
     );
     const dbOptions = DB_TYPE_OPTIONS.map(
       (option) => `<option value="${option.value}">${option.label}</option>`

@@ -74,7 +74,10 @@ export function commonStyles(nonce: string): string {
   tbody tr:nth-child(even) td { background: var(--vscode-list-hoverBackground); }
   tbody tr:hover td { background: var(--vscode-list-activeSelectionBackground, var(--vscode-list-hoverBackground)); }
   td.editable { cursor: text; }
+  td.editing { padding: 2px; background: var(--vscode-input-background) !important; }
   td.pk { font-weight: 600; }
+  td.row-actions { min-width: 74px; white-space: nowrap; text-align: center; }
+  tr.new-row td { background: var(--vscode-editorWidget-background, var(--vscode-list-hoverBackground)); }
   .null { color: var(--muted); font-style: italic; }
   .pill { display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 11px; border: 1px solid var(--border); color: var(--muted); }
   .pill.pk { color: var(--vscode-charts-yellow, #d7ba7d); border-color: currentColor; }

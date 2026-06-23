@@ -15,6 +15,10 @@ export interface TreeContext {
 export abstract class DbTreeNode {
   abstract toTreeItem(): vscode.TreeItem;
 
+  cacheKey(): string | undefined {
+    return undefined;
+  }
+
   getChildren(_context: TreeContext): DbTreeNode[] | Promise<DbTreeNode[]> {
     return [];
   }
