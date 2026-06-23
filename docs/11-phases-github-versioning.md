@@ -48,7 +48,7 @@ Tài khoản GitHub cần có quyền push vào repo và tạo release. Nếu `g
 | 15    | `v1.5.0`           | _(xem tag)_                     | Security policies (chặn cứng prod), logical SQL backup, connection dashboard.        |
 | 16    | `v1.6.0`           | _(xem tag)_                     | Dangerous-SQL warning, global schema search, result-grid filter/sort.                |
 | 17    | `v1.7.0`           | _(xem tag)_                     | Adapter contract test + SSL/TLS option per-connection (Postgres/MySQL).              |
-| 18    | `v1.7.1`           | _(xem tag)_                     | Startup/tree responsiveness, logo fix, table grid edit UX, release workflow docs.    |
+| 18    | `v1.7.2`           | _(xem tag)_                     | Startup/tree responsiveness and phase 18-24 GitHub planning.                         |
 
 `9266444` bổ sung tài liệu cài đặt và usage guide sau `v1.1.0`; đã đưa vào release `v1.2.0`.
 
@@ -74,7 +74,7 @@ Không tăng version hay tạo tag chỉ vì thay đổi backlog/docs. Version p
 | 15    | `v1.5.0`        | Backup, dashboard, logs, process/privilege manager              | `feature/database-manager`      |
 | 16    | `v1.6.0`        | Query/schema/graph quality                                      | `feature/query-schema-graph`    |
 | 17    | `v1.7.0`        | Adapter contract, SSL/TLS, test/UX/release quality              | `feature/platform-coverage`     |
-| 18    | `v1.7.1`        | Startup/tree responsiveness và patch UX                         | `fix/tree-startup-loading`      |
+| 18    | `v1.7.2`        | Startup/tree responsiveness và patch UX                         | `fix/tree-startup-loading`      |
 | 19    | `v1.8.0`        | Adapter wave 1: DuckDB, MongoDB, Oracle                         | `feature/adapter-wave-1`        |
 | 20    | `v1.9.0`        | SSH tunnel, Socks/HTTP proxy, Docker discovery, JDBC bridge      | `feature/tunnel-proxy`          |
 | 21    | `v1.10.0`       | Cloud/serverless SQL: D1, Turso, Azure SQL, compatibility modes  | `feature/cloud-sql`             |
@@ -164,7 +164,7 @@ Sau khi merge `main`, merge ngược về `develop` nếu workflow repository d�
 
 ## 6.1. Commit, push, tag và GitHub Release bằng `gh`
 
-Patch release mẫu cho Phase 18 / `v1.7.1`:
+Patch release mẫu cho Phase 18 / `v1.7.2`:
 
 ```bash
 npm run check
@@ -172,28 +172,28 @@ npm run package:vsix
 git status --short
 git add package.json package-lock.json CHANGELOG.md README.md INSTALL.md docs resources src
 git commit -m "fix(tree): load database explorer children in background"
-git tag v1.7.1
+git tag v1.7.2
 git push origin main --tags
-gh release create v1.7.1 open-db-nexus-1.7.1.vsix --title "Open DB Nexus v1.7.1" --notes-file CHANGELOG.md
+gh release create v1.7.2 open-db-nexus-1.7.2.vsix --title "Open DB Nexus v1.7.2" --notes-file CHANGELOG.md
 ```
 
 Nếu đã tạo release trước đó và chỉ muốn upload lại VSIX:
 
 ```bash
-gh release upload v1.7.1 open-db-nexus-1.7.1.vsix --clobber
+gh release upload v1.7.2 open-db-nexus-1.7.2.vsix --clobber
 ```
 
 Nếu làm theo branch release:
 
 ```bash
-git checkout -b release/v1.7.1
-npm version 1.7.1 --no-git-tag-version
+git checkout -b release/v1.7.2
+npm version 1.7.2 --no-git-tag-version
 npm run check
 npm run package:vsix
 git add .
-git commit -m "build(release): prepare v1.7.1"
-git push -u origin release/v1.7.1
-gh pr create --base main --head release/v1.7.1 --title "Release v1.7.1" --body "Patch release for startup responsiveness, table editing, logo, and release docs."
+git commit -m "build(release): prepare v1.7.2"
+git push -u origin release/v1.7.2
+gh pr create --base main --head release/v1.7.2 --title "Release v1.7.2" --body "Patch release for startup responsiveness and phase 18-24 GitHub planning."
 ```
 
 Feature release mẫu cho Phase 19 / `v1.8.0`:
@@ -289,7 +289,7 @@ Tạo milestone theo phase/release, gắn issue/PR đúng scope:
 
 | Milestone | Title                                 | Label gợi ý                                      |
 | --------- | ------------------------------------- | ------------------------------------------------ |
-| `v1.7.1`  | Phase 18 — Startup & connection UX    | `phase:18`, `type:fix`, `area:tree`, `release`   |
+| `v1.7.2`  | Phase 18 — Startup & connection UX    | `phase:18`, `type:fix`, `area:tree`, `release`   |
 | `v1.8.0`  | Phase 19 — Adapter wave 1             | `phase:19`, `type:feature`, `area:adapter`       |
 | `v1.9.0`  | Phase 20 — Tunnel/proxy/local connect | `phase:20`, `area:tunnel`, `area:docker`         |
 | `v1.10.0` | Phase 21 — Cloud/serverless SQL       | `phase:21`, `area:cloud`, `area:adapter`         |
@@ -300,7 +300,7 @@ Tạo milestone theo phase/release, gắn issue/PR đúng scope:
 Lệnh tạo milestone bằng `gh`:
 
 ```bash
-gh api repos/PiupiuTenshi/Database-Client/milestones -f title="v1.7.1" -f description="Phase 18 — Startup & connection UX"
+gh api repos/PiupiuTenshi/Database-Client/milestones -f title="v1.7.2" -f description="Phase 18 — Startup & connection UX"
 gh api repos/PiupiuTenshi/Database-Client/milestones -f title="v1.8.0" -f description="Phase 19 — Adapter wave 1"
 gh api repos/PiupiuTenshi/Database-Client/milestones -f title="v1.9.0" -f description="Phase 20 — Tunnel/proxy/local connect"
 gh api repos/PiupiuTenshi/Database-Client/milestones -f title="v1.10.0" -f description="Phase 21 — Cloud/serverless SQL"

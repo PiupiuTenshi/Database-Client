@@ -59,7 +59,108 @@ A VS Code multi-database client with a schema explorer, SQL query runner, result
 - Secrets are masked before any logging (`utils/maskSecret`).
 - Webviews use a strict Content-Security-Policy with a per-render nonce and receive no secrets.
 
-See [`SECURITY.md`](SECURITY.md) and [`docs/07-security-license-and-ethics.md`](docs/07-security-license-and-ethics.md).
+See [`SECURITY.md`](SECURITY.md).
+
+## Installation
+
+### Install from GitHub Releases
+
+1. Download `open-db-nexus-<version>.vsix` from the latest GitHub Release.
+2. Install it from the terminal:
+
+   ```powershell
+   code --install-extension .\open-db-nexus-<version>.vsix
+   ```
+
+3. Reload VS Code if prompted.
+4. Open **Open DB Nexus** from the Activity Bar.
+
+You can also install through VS Code: **Extensions** → `...` → **Install from VSIX...**.
+
+### Run from source
+
+```bash
+npm install
+npm run compile
+```
+
+Open this repository in VS Code and press `F5` to launch an Extension Development Host.
+
+If SQLite fails with a native module ABI error inside VS Code, rebuild `better-sqlite3` for VS Code's Electron runtime:
+
+```bash
+npx @electron/rebuild -f -w better-sqlite3
+```
+
+## How To Use
+
+### Add a connection
+
+1. Open the **Open DB Nexus** Activity Bar view.
+2. Click **Add Connection**.
+3. Choose a database type.
+4. Fill in the connection fields.
+5. Click **Test Connection**.
+6. Click **Save**.
+
+Passwords are stored in VS Code `SecretStorage`, not in files or settings.
+
+### Browse schema
+
+Expand a saved connection to view schemas, tables, views, columns, indexes, and foreign keys.
+
+Useful table actions:
+
+- **Open Table (Data & Properties)**: view paginated data and object metadata.
+- **Open Dependency Graph**: visualize foreign-key dependencies.
+- **Open Dependency Report**: generate a Markdown impact report.
+- **Generate Code**: create TypeScript, C#, or CRUD SQL snippets.
+- **Generate Mock Data**: insert seeded mock rows.
+
+### Edit table data
+
+Open a table with **Open Table (Data & Properties)**, then use the **Data** tab.
+
+- Click the edit action or double-click a cell to edit.
+- Click **Add row** to insert a row.
+- Use the delete action to remove a row.
+- Updates and deletes require a primary key so the extension can target one row safely.
+- Inserts are allowed even when the table does not have a primary key.
+
+All insert/update/delete values are passed through driver parameters; table and column names are quoted by the adapter.
+
+### Import and export
+
+From the Data tab:
+
+- Export the current page or all rows as CSV, JSON, or SQL Insert.
+- Import CSV with header auto-mapping.
+
+From the Query Result panel:
+
+- Filter rows.
+- Sort columns.
+- Export query results.
+
+### Run SQL
+
+Right-click a connection and choose **Open Query Editor**.
+
+Shortcuts:
+
+| Shortcut           | Action                             |
+| ------------------ | ---------------------------------- |
+| `Ctrl+Enter`       | Run selection or current statement |
+| `Ctrl+Shift+Enter` | Run the whole SQL file             |
+
+Dangerous statements such as `DROP`, `TRUNCATE`, or `DELETE`/`UPDATE` without `WHERE` prompt before running.
+
+### Production safety
+
+Set a connection environment to `production` to enable extra warnings. These settings can hard-block risky operations:
+
+- `openDbNexus.security.disableWriteOnProduction`
+- `openDbNexus.security.disableExportOnProduction`
 
 ## Development
 
@@ -99,9 +200,37 @@ npm run format       Format files with Prettier.
 npm run check        compile + lint + test + package.
 ```
 
-## Documentation
+## Release Workflow
 
-Product and architecture docs live in [`docs/`](docs/README.md).
+Install GitHub CLI if needed:
+
+```powershell
+winget install --id GitHub.cli
+gh auth login
+gh auth status
+```
+
+Prepare a patch release:
+
+```bash
+npm version <version> --no-git-tag-version
+npm run check
+npm run package:vsix
+git add .
+git commit -m "build(release): prepare v<version>"
+git tag v<version>
+git push origin main --tags
+```
+
+Create a GitHub Release and upload the VSIX:
+
+```powershell
+gh release create v<version> .\open-db-nexus-<version>.vsix --title "Open DB Nexus v<version>" --notes-file CHANGELOG.md
+```
+
+## Repository Notes
+
+The `docs/` folder is intentionally ignored. Keep long-form planning notes local and put user-facing setup, usage, development, and release instructions in this README.
 
 ## License
 

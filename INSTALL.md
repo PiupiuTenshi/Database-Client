@@ -18,13 +18,13 @@ Ba cách dùng extension: **tải `.vsix` từ GitHub Releases** (dễ nhất), 
 3. Cài bằng dòng lệnh:
 
    ```powershell
-   code --install-extension .\vscode-db-client\open-db-nexus-1.7.0.vsix
+   code --install-extension .\open-db-nexus-1.7.2.vsix
    ```
 
-   Nếu terminal đang đứng sẵn trong thư mục `vscode-db-client/`, dùng:
+   Nếu terminal đang đứng ở thư mục cha chứa `vscode-db-client/`, dùng:
 
    ```powershell
-   code --install-extension .\open-db-nexus-1.7.0.vsix
+   code --install-extension .\vscode-db-client\open-db-nexus-1.7.2.vsix
    ```
 
    Hoặc trong VS Code UI: tab **Extensions** (`Ctrl+Shift+X`) → menu `...` góc trên phải → **Install from VSIX...** → chọn file.
@@ -87,14 +87,14 @@ Extension này **chưa lên Marketplace** nên VS Code **không tự cập nhậ
 2. Cài đè bản cũ:
 
    ```powershell
-   code --install-extension .\vscode-db-client\open-db-nexus-1.7.0.vsix
+   code --install-extension .\open-db-nexus-1.7.2.vsix
    ```
 
    - VS Code tự thay phiên bản cũ bằng phiên bản trong file `.vsix`.
    - Nếu cài lại **cùng version** (hoặc version thấp hơn) và bị từ chối, thêm `--force`:
 
      ```powershell
-     code --install-extension .\vscode-db-client\open-db-nexus-1.7.0.vsix --force
+     code --install-extension .\open-db-nexus-1.7.2.vsix --force
      ```
 
    - Hoặc dùng UI: **Extensions** → `...` → **Install from VSIX...** → chọn file mới.
@@ -103,7 +103,7 @@ Extension này **chưa lên Marketplace** nên VS Code **không tự cập nhậ
 
    ```powershell
    code --list-extensions --show-versions | Select-String open-db-nexus
-   # ví dụ: piupiutenshi.open-db-nexus@1.7.0
+   # ví dụ: piupiutenshi.open-db-nexus@1.7.2
    ```
 
    Hoặc xem ở tab Extensions, mục **Open DB Nexus** sẽ hiển thị số phiên bản.

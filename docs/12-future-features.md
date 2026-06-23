@@ -151,9 +151,9 @@ Backlog còn lại (mỗi mục là một release tương lai): lazy schema cach
 - ⭐ Integration test chạy thật qua Docker (Postgres/MySQL/SQL Server/Redis) trong CI tùy chọn.
 - ⭐ Contract test chung cho mọi adapter (đảm bảo cùng shape output).
 
-## 15. Release phases đề xuất sau `v1.7.1`
+## 15. Release phases đề xuất sau `v1.7.2`
 
-- `v1.7.1` / Phase 18 — startup và connection UX: schema tree load nền, không block tạo connection mới khi DB cũ chậm/offline.
+- `v1.7.2` / Phase 18 — startup và connection UX: schema tree load nền, không block tạo connection mới khi DB cũ chậm/offline.
 - `v1.8.0` / Phase 19 — adapter wave 1: DuckDB, MongoDB, Oracle; mỗi adapter có contract test và docs riêng.
 - `v1.9.0` / Phase 20 — tunnel/proxy: SSH tunnel, Socks proxy, HTTP proxy, Docker discovery.
 - `v1.10.0` / Phase 21 — cloud/serverless SQL: Cloudflare D1, Turso, Azure SQL preset, Cockroach/GaussDB compatibility.

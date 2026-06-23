@@ -120,7 +120,7 @@ Mục tiêu version: `v1.7.0` — phát hành 2026-06-21.
 
 ## Phase 18 — Startup & connection UX ✅
 
-Mục tiêu version: `v1.7.1` — patch release.
+Mục tiêu version: `v1.7.2` — patch release.
 
 - [x] TreeView schema/table metadata load nền: mở nhánh cũ hiển thị `Loading…`, không block explorer khi database cũ chậm/offline.
 - [x] Người dùng vẫn tạo/sửa connection mới được ngay sau khi extension activate.
@@ -132,7 +132,7 @@ Commit gợi ý:
 ```txt
 fix(tree): load database explorer children in background
 docs(roadmap): add phase 18 startup responsiveness scope
-chore(release): bump version to 1.7.1
+chore(release): bump version to 1.7.2
 ```
 
 ## Phase 19 — Adapter wave 1 ⏳
@@ -184,7 +184,7 @@ Mục tiêu version: `v1.12.0`.
 
 Mục tiêu version: `v2.0.0` khi có breaking change ở adapter contract, storage format hoặc UI workflow.
 
-Đánh giá tại 2026-06-23: các thay đổi từ `v1.2.0`→`v1.7.1` vẫn **tương thích ngược** (thêm field optional `ssl`/`favorite`, thêm method adapter, thêm command/webview, thêm cache/load nền — không phá storage format hay contract cũ). Vì vậy **chưa tạo `v2.0.0`**; tiếp tục tăng MINOR `v1.x.0` cho tới khi có breaking change thực sự (đổi storage format profile, đổi chữ ký `DatabaseAdapter` theo cách phá vỡ, hoặc thay đổi workflow UI lớn). Khi đó mới mở milestone `v2.0.0` kèm migration path.
+Đánh giá tại 2026-06-23: các thay đổi từ `v1.2.0`→`v1.7.2` vẫn **tương thích ngược** (thêm field optional `ssl`/`favorite`, thêm method adapter, thêm command/webview, thêm cache/load nền — không phá storage format hay contract cũ). Vì vậy **chưa tạo `v2.0.0`**; tiếp tục tăng MINOR `v1.x.0` cho tới khi có breaking change thực sự (đổi storage format profile, đổi chữ ký `DatabaseAdapter` theo cách phá vỡ, hoặc thay đổi workflow UI lớn). Khi đó mới mở milestone `v2.0.0` kèm migration path.
 
 ## Quy tắc phát hành
 
