@@ -50,6 +50,17 @@ export const DB_TYPE_OPTIONS: { value: DbType; label: string; fileBased: boolean
   { value: "duckdb", label: "DuckDB", fileBased: true },
   { value: "mongodb", label: "MongoDB", fileBased: false },
   { value: "oracle", label: "Oracle", fileBased: false },
+  { value: "cloudflare-d1", label: "Cloudflare D1", fileBased: false },
+  { value: "turso", label: "Turso", fileBased: false },
+  { value: "azuresql", label: "Azure SQL", fileBased: false },
+  { value: "cockroachdb", label: "CockroachDB", fileBased: false },
+  { value: "gaussdb", label: "GaussDB", fileBased: false },
+  { value: "kingbase", label: "Kingbase", fileBased: false },
+  { value: "redshift", label: "Redshift", fileBased: false },
+  { value: "doris", label: "Apache Doris", fileBased: false },
+  { value: "clickhouse", label: "ClickHouse", fileBased: false },
+  { value: "trino", label: "Trino", fileBased: false },
+  { value: "presto", label: "Presto", fileBased: false },
   { value: "redis", label: "Redis", fileBased: false }
 ];
 

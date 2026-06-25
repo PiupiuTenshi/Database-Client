@@ -176,23 +176,25 @@ Mục tiêu version: `v1.11.0`.
 - [ ] Docker discovery thật từ local container port mapping.
 - [ ] JDBC bridge proof-of-concept cho engine hiếm/nặng mà Node driver không phù hợp.
 
-## Phase 23 — Cloud/serverless SQL ⏳
+## Phase 23 — Cloud/serverless SQL 🟡
 
 Mục tiêu version: `v1.12.0`.
 
-- [ ] Cloudflare D1 và Turso (SQLite-compatible remote/local workflow).
-- [ ] Azure SQL Server preset dựa trên SQL Server adapter hiện có.
-- [ ] CockroachDB/GaussDB/Kingbase/Dameng compatibility qua PostgreSQL-compatible adapter trước.
-- [ ] BigQuery/Athena/Snowflake/Databricks research spike: driver, auth, pagination, cost guard.
+- [x] Cloudflare D1 và Turso HTTP-SQL adapter foundation cho SQLite-compatible metadata/query.
+- [x] Azure SQL Server preset dựa trên SQL Server adapter hiện có.
+- [x] CockroachDB/GaussDB/Kingbase compatibility qua PostgreSQL-compatible adapter trước.
+- [x] Redshift compatibility qua PostgreSQL-compatible adapter để chuẩn bị warehouse/cloud SQL.
+- [ ] Dameng/BigQuery/Athena/Snowflake/Databricks auth/runtime research spike và cost guard riêng.
 
-## Phase 24 — Analytics & lakehouse engines ⏳
+## Phase 24 — Analytics & lakehouse engines 🟡
 
 Mục tiêu version: `v1.13.0`.
 
-- [ ] ClickHouse adapter: database/table/view metadata, partitions, query runner.
-- [ ] Trino/Presto adapter: catalog/schema explorer và result pagination.
-- [ ] Apache Doris, Hive, Redshift, TDengine đánh giá theo mức độ tương thích JDBC/HTTP.
-- [ ] Cost/safety banner cho warehouse query lớn.
+- [x] ClickHouse HTTP-SQL adapter foundation: databases, tables/views, columns, DDL và query runner.
+- [x] Trino/Presto HTTP-SQL adapter foundation: schema/table/view/column metadata và query runner.
+- [x] Apache Doris compatibility qua MySQL-compatible adapter; Redshift compatibility qua PostgreSQL-compatible adapter.
+- [x] Warehouse query guard foundation cho query thiếu LIMIT/FETCH hoặc có full table scan pattern.
+- [ ] Partitions/materialized views, Hive/TDengine runtime path, cost estimate thật và UI banner.
 
 ## Phase 25 — Non-SQL connectors ⏳
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.12.0] - 2026-06-26
+
+### Added
+
+- Cloud/serverless SQL foundation for Cloudflare D1 and Turso through HTTP-SQL compatible metadata/query execution.
+- Azure SQL preset through the SQL Server adapter.
+- CockroachDB, GaussDB, Kingbase, and Redshift compatibility adapters through the PostgreSQL adapter.
+
+### Docs
+
+- Marked Phase 23 implementation status in the roadmap and future-features backlog.
+
 ## [1.11.0] - 2026-06-25
 
 ### Release

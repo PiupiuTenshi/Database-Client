@@ -11,7 +11,18 @@ export type DbType =
   | "duckdb"
   | "mongodb"
   | "redis"
-  | "oracle";
+  | "oracle"
+  | "cloudflare-d1"
+  | "turso"
+  | "azuresql"
+  | "cockroachdb"
+  | "gaussdb"
+  | "kingbase"
+  | "redshift"
+  | "doris"
+  | "clickhouse"
+  | "trino"
+  | "presto";
 
 /** Môi trường của connection — dùng cho production guard (docs/07). */
 export type ConnectionEnvironment = "local" | "dev" | "staging" | "production";

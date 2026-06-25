@@ -24,13 +24,13 @@ Backlog còn lại (mỗi mục là một release tương lai): hoàn thiện do
 - 🟡 **MongoDB** adapter foundation: collections, sample document fields, indexes, generated SELECT/COUNT bridge và JSON filter runner; còn thiếu document viewer/write UI/docs.
 - 🟡 **DuckDB** adapter foundation: file-based connection, metadata, query runner và read-only tag; còn thiếu usage docs/fixtures cho Parquet/CSV/JSON.
 - 🟡 **Oracle** adapter foundation: schemas/tables/views/columns/indexes/constraints/triggers/dependencies, DDL và bind query runner; còn thiếu form SID/TNS/wallet, procedures/functions và troubleshooting docs.
-- ⭐ **ClickHouse** adapter: tables, views, materialized views, partitions, sampling query.
+- 🟡 **ClickHouse** adapter foundation: HTTP-SQL metadata/query path đã có; còn thiếu partitions/materialized views và auth/runtime presets.
 - ⭐ **Db2** adapter: schemas, tables/views, indexes, routines, SQL runner.
-- ⭐ **Cloudflare D1 / Turso** adapter: SQLite-compatible cloud/serverless workflow, token auth, remote/local mode.
+- 🟡 **Cloudflare D1 / Turso** adapter foundation: SQLite-compatible HTTP-SQL metadata/query path đã có; còn thiếu auth presets và remote/local workflow đầy đủ.
 - ⭐ **Azure SQL Server** preset: SQL Server adapter + Azure auth/SSL defaults.
 - ⭐ **CockroachDB / GaussDB / Kingbase / Dameng** compatibility presets: ưu tiên qua PostgreSQL-compatible adapter trước, sau đó bổ sung dialect riêng nếu cần.
 - 💡 **Apache Doris / TDengine / Hive / Redshift / Athena / BigQuery / Snowflake / Databricks**: nhóm warehouse/lakehouse, cần driver nhẹ và metadata theo dialect.
-- 💡 **Trino / Presto** adapter: catalog/schema/table explorer, query runner, result pagination.
+- 🟡 **Trino / Presto** adapter foundation: HTTP-SQL schema/table/column metadata và query runner đã có; còn thiếu catalog-specific UX và pagination theo cluster.
 - 💡 **Cassandra / Neo4j / Elasticsearch / Loki / etcd / ZooKeeper**: nhóm NoSQL/search/infra stores, UI không phải SQL-first nên cần panel chuyên biệt.
 
 ## 1.1. Connectors không phải database SQL
@@ -158,8 +158,8 @@ Backlog còn lại (mỗi mục là một release tương lai): hoàn thiện do
 - `v1.9.0` / Phase 20 — MongoDB adapter: adapter foundation đã có; release cần document viewer/write scope hoặc docs rõ giới hạn.
 - `v1.10.0` / Phase 21 — Oracle adapter: adapter foundation đã có; release cần form SID/TNS/wallet và native driver troubleshooting.
 - `v1.11.0` / Phase 22 — tunnel/proxy: profile model + planner đã có; release cần runtime SSH/proxy/Docker behavior.
-- `v1.12.0` / Phase 23 — cloud/serverless SQL: Cloudflare D1, Turso, Azure SQL preset, Cockroach/GaussDB compatibility.
-- `v1.13.0` / Phase 24 — analytics/lakehouse: ClickHouse, Trino/Presto, Snowflake/BigQuery/Databricks/Athena nghiên cứu theo driver nhẹ.
+- `v1.12.0` / Phase 23 — cloud/serverless SQL: D1/Turso HTTP-SQL foundation, Azure SQL preset, Cockroach/GaussDB/Kingbase/Redshift compatibility.
+- `v1.13.0` / Phase 24 — analytics/lakehouse: ClickHouse/Trino/Presto HTTP-SQL foundation, Doris compatibility, warehouse query guard.
 - `v1.14.0` / Phase 25 — non-SQL connectors: S3, Kafka, RabbitMQ, Elasticsearch, Cassandra, Neo4j theo UI riêng.
 - `v2.0.0` / Phase 26 — chỉ mở khi có breaking change thật: đổi adapter contract, đổi storage profile, hoặc redesign workflow lớn có migration path.
 

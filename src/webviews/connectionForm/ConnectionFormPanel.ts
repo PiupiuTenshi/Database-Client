@@ -132,6 +132,12 @@ export class ConnectionFormPanel {
       "SQL Server",
       "MongoDB",
       "Oracle",
+      "Cloudflare D1",
+      "Turso",
+      "Azure SQL",
+      "CockroachDB",
+      "ClickHouse",
+      "Trino / Presto",
       "Redis"
     ];
     const databaseBadges = supportedDatabases

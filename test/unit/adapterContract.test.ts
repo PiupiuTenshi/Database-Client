@@ -1,6 +1,21 @@
 import { describe, expect, it } from "vitest";
 import type { DatabaseAdapter } from "../../src/adapters/DatabaseAdapter";
+import {
+  AzureSqlAdapter,
+  CockroachDbAdapter,
+  DorisAdapter,
+  GaussDbAdapter,
+  KingbaseAdapter,
+  RedshiftAdapter
+} from "../../src/adapters/compat/CompatibilityAdapters";
 import { DuckDbAdapter } from "../../src/adapters/duckdb/DuckDbAdapter";
+import {
+  ClickHouseAdapter,
+  CloudflareD1Adapter,
+  PrestoAdapter,
+  TrinoAdapter,
+  TursoAdapter
+} from "../../src/adapters/httpSql/HttpSqlAdapter";
 import { MongoDbAdapter } from "../../src/adapters/mongodb/MongoDbAdapter";
 import { MySqlAdapter } from "../../src/adapters/mysql/MySqlAdapter";
 import { OracleAdapter } from "../../src/adapters/oracle/OracleAdapter";
@@ -23,6 +38,17 @@ const adapters: { name: string; adapter: DatabaseAdapter }[] = [
   { name: "duckdb", adapter: new DuckDbAdapter() },
   { name: "mongodb", adapter: new MongoDbAdapter() },
   { name: "oracle", adapter: new OracleAdapter() },
+  { name: "cloudflare-d1", adapter: new CloudflareD1Adapter() },
+  { name: "turso", adapter: new TursoAdapter() },
+  { name: "azuresql", adapter: new AzureSqlAdapter() },
+  { name: "cockroachdb", adapter: new CockroachDbAdapter() },
+  { name: "gaussdb", adapter: new GaussDbAdapter() },
+  { name: "kingbase", adapter: new KingbaseAdapter() },
+  { name: "redshift", adapter: new RedshiftAdapter() },
+  { name: "doris", adapter: new DorisAdapter() },
+  { name: "clickhouse", adapter: new ClickHouseAdapter() },
+  { name: "trino", adapter: new TrinoAdapter() },
+  { name: "presto", adapter: new PrestoAdapter() },
   { name: "redis", adapter: new RedisAdapter() }
 ];
 
