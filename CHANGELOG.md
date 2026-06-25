@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.0] - 2026-06-25
+
+### Release
+
+- Consolidated the current implementation progress through Phase 22 into the GitHub release line.
+- Includes the Phase 19-21 adapter foundations for DuckDB, MongoDB, and Oracle.
+- Includes the Phase 22 transport planning foundation for SSH tunnel, SOCKS/HTTP proxy, Docker discovery, and JDBC bridge.
+
 ## [1.8.0] - 2026-06-25
 
 ### Added
