@@ -124,7 +124,16 @@ export class ConnectionFormPanel {
     const dbOptions = DB_TYPE_OPTIONS.map(
       (option) => `<option value="${option.value}">${option.label}</option>`
     ).join("");
-    const supportedDatabases = ["SQLite", "PostgreSQL", "MySQL / MariaDB", "SQL Server", "Redis"];
+    const supportedDatabases = [
+      "SQLite",
+      "DuckDB",
+      "PostgreSQL",
+      "MySQL / MariaDB",
+      "SQL Server",
+      "MongoDB",
+      "Oracle",
+      "Redis"
+    ];
     const databaseBadges = supportedDatabases
       .map((database) => `<span class="database-badge">${database}</span>`)
       .join("");

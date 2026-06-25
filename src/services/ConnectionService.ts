@@ -134,7 +134,11 @@ function normalizeDraft(
     filePath: emptyToUndefined(draft.filePath),
     environment: draft.environment,
     tags: draft.tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0),
-    ssl: draft.ssl ?? false
+    ssl: draft.ssl ?? false,
+    sshTunnel: draft.sshTunnel,
+    proxy: draft.proxy,
+    docker: draft.docker,
+    jdbc: draft.jdbc
   };
 }
 

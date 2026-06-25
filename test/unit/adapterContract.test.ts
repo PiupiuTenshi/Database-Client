@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { DatabaseAdapter } from "../../src/adapters/DatabaseAdapter";
+import { DuckDbAdapter } from "../../src/adapters/duckdb/DuckDbAdapter";
+import { MongoDbAdapter } from "../../src/adapters/mongodb/MongoDbAdapter";
 import { MySqlAdapter } from "../../src/adapters/mysql/MySqlAdapter";
+import { OracleAdapter } from "../../src/adapters/oracle/OracleAdapter";
 import { PostgresAdapter } from "../../src/adapters/postgresql/PostgresAdapter";
 import { RedisAdapter } from "../../src/adapters/redis/RedisAdapter";
 import { SqlServerAdapter } from "../../src/adapters/sqlserver/SqlServerAdapter";
@@ -17,6 +20,9 @@ const adapters: { name: string; adapter: DatabaseAdapter }[] = [
   { name: "mysql", adapter: new MySqlAdapter("mysql") },
   { name: "mariadb", adapter: new MySqlAdapter("mariadb") },
   { name: "sqlserver", adapter: new SqlServerAdapter() },
+  { name: "duckdb", adapter: new DuckDbAdapter() },
+  { name: "mongodb", adapter: new MongoDbAdapter() },
+  { name: "oracle", adapter: new OracleAdapter() },
   { name: "redis", adapter: new RedisAdapter() }
 ];
 
@@ -47,7 +53,7 @@ describe("DatabaseAdapter contract", () => {
 
       it("declares valid pagination and placeholder styles", () => {
         expect(["limit-offset", "offset-fetch"]).toContain(adapter.paginationStyle);
-        expect(["qmark", "numbered", "named"]).toContain(adapter.placeholderStyle);
+        expect(["qmark", "numbered", "named", "colon"]).toContain(adapter.placeholderStyle);
       });
 
       it("implements every required method", () => {

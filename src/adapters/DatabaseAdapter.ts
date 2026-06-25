@@ -36,7 +36,7 @@ export interface DatabaseAdapter {
   /** Kiểu phân trang cho table viewer (limit-offset / offset-fetch). */
   readonly paginationStyle: PaginationStyle;
 
-  /** Kiểu placeholder cho parameterized write/DDL (qmark / numbered / named). */
+  /** Kiểu placeholder cho parameterized write/DDL (qmark / numbered / named / colon). */
   readonly placeholderStyle: PlaceholderStyle;
 
   /** Bọc identifier theo dialect (double-quote / backtick / bracket) cho SQL extension tự sinh. */

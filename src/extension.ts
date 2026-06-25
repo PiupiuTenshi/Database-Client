@@ -1,6 +1,9 @@
 import * as vscode from "vscode";
 import { AdapterRegistry } from "./adapters/AdapterRegistry";
+import { DuckDbAdapter } from "./adapters/duckdb/DuckDbAdapter";
+import { MongoDbAdapter } from "./adapters/mongodb/MongoDbAdapter";
 import { MySqlAdapter } from "./adapters/mysql/MySqlAdapter";
+import { OracleAdapter } from "./adapters/oracle/OracleAdapter";
 import { PostgresAdapter } from "./adapters/postgresql/PostgresAdapter";
 import { RedisAdapter } from "./adapters/redis/RedisAdapter";
 import { SqlServerAdapter } from "./adapters/sqlserver/SqlServerAdapter";
@@ -44,6 +47,9 @@ export function activate(context: vscode.ExtensionContext): void {
   registry.register(new MySqlAdapter("mysql"));
   registry.register(new MySqlAdapter("mariadb"));
   registry.register(new SqlServerAdapter());
+  registry.register(new DuckDbAdapter());
+  registry.register(new MongoDbAdapter());
+  registry.register(new OracleAdapter());
   registry.register(new RedisAdapter());
 
   const sessionManager = new SessionManager(registry, secretStore, logService);

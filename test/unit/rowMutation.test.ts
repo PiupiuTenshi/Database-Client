@@ -18,6 +18,7 @@ describe("placeholder", () => {
     expect(placeholder("numbered", 1)).toBe("$1");
     expect(placeholder("numbered", 3)).toBe("$3");
     expect(placeholder("named", 2)).toBe("@p2");
+    expect(placeholder("colon", 2)).toBe(":p2");
   });
 });
 

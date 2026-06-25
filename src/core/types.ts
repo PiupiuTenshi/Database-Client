@@ -16,6 +16,40 @@ export type DbType =
 /** Môi trường của connection — dùng cho production guard (docs/07). */
 export type ConnectionEnvironment = "local" | "dev" | "staging" | "production";
 
+export interface SshTunnelConfig {
+  enabled: boolean;
+  host?: string;
+  port?: number;
+  username?: string;
+  privateKeyPath?: string;
+  localHost?: string;
+  localPort?: number;
+  remoteHost?: string;
+  remotePort?: number;
+}
+
+export interface ProxyConfig {
+  enabled: boolean;
+  protocol: "socks" | "http";
+  host?: string;
+  port?: number;
+  username?: string;
+}
+
+export interface DockerDiscoveryConfig {
+  enabled: boolean;
+  containerName?: string;
+  composeProject?: string;
+  service?: string;
+}
+
+export interface JdbcBridgeConfig {
+  enabled: boolean;
+  jdbcUrl?: string;
+  driverClass?: string;
+  jarPath?: string;
+}
+
 /**
  * Connection profile lưu trong globalState. CHỈ chứa metadata không nhạy cảm —
  * password KHÔNG bao giờ nằm ở đây mà ở SecretStorage (xem SecretStore).
@@ -35,6 +69,10 @@ export interface ConnectionProfile {
   color?: string;
   /** Bật TLS/SSL khi kết nối (Postgres/MySQL). SQL Server đã luôn trust cert. */
   ssl?: boolean;
+  sshTunnel?: SshTunnelConfig;
+  proxy?: ProxyConfig;
+  docker?: DockerDiscoveryConfig;
+  jdbc?: JdbcBridgeConfig;
   createdAt: string;
   updatedAt: string;
 }
@@ -56,6 +94,10 @@ export interface ConnectionDraft {
   environment: ConnectionEnvironment;
   tags: string[];
   ssl?: boolean;
+  sshTunnel?: SshTunnelConfig;
+  proxy?: ProxyConfig;
+  docker?: DockerDiscoveryConfig;
+  jdbc?: JdbcBridgeConfig;
 }
 
 export interface TestConnectionResult {
@@ -158,7 +200,7 @@ export interface QueryOptions {
 }
 
 /** Kiểu placeholder cho parameterized query theo dialect. */
-export type PlaceholderStyle = "qmark" | "numbered" | "named";
+export type PlaceholderStyle = "qmark" | "numbered" | "named" | "colon";
 
 /** Một câu SQL kèm tham số đã bind (cho data edit / DDL). */
 export interface ParamStatement {

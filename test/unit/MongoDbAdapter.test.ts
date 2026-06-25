@@ -1,0 +1,114 @@
+import { describe, expect, it } from "vitest";
+import { MongoDbAdapter, type CollectionLike, type DbLike, type MongoClientLike } from "../../src/adapters/mongodb/MongoDbAdapter";
+
+class FakeMongoClient implements MongoClientLike {
+  readonly dbs = new Map<string, FakeMongoDb>();
+
+  async connect(): Promise<MongoClientLike> {
+    return this;
+  }
+
+  db(name = "app"): DbLike {
+    if (!this.dbs.has(name)) {
+      this.dbs.set(name, new FakeMongoDb(name));
+    }
+    return this.dbs.get(name)!;
+  }
+
+  async close(): Promise<void> {}
+}
+
+class FakeMongoDb implements DbLike {
+  constructor(readonly databaseName: string) {}
+
+  admin(): { listDatabases(): Promise<{ databases: { name: string }[] }> } {
+    return { listDatabases: async () => ({ databases: [{ name: "app" }] }) };
+  }
+
+  listCollections(): { toArray(): Promise<{ name: string; type?: string }[]> } {
+    return { toArray: async () => [{ name: "users" }] };
+  }
+
+  collection(_name: string): CollectionLike {
+    return new FakeCollection();
+  }
+
+  async command(): Promise<Record<string, unknown>> {
+    return { ok: 1 };
+  }
+}
+
+class FakeCollection implements CollectionLike {
+  find(): ReturnType<CollectionLike["find"]> {
+    const docs = [{ _id: "1", name: "A" }];
+    const terminal = { toArray: async () => docs };
+    const limit = () => terminal;
+    const skip = () => ({ limit });
+    return {
+      sort: () => ({ skip }),
+      skip,
+      limit,
+      toArray: async () => docs
+    };
+  }
+
+  async findOne(): Promise<Record<string, unknown>> {
+    return { _id: "1", name: "A", age: 3 };
+  }
+
+  async countDocuments(): Promise<number> {
+    return 12;
+  }
+
+  async indexes(): Promise<Record<string, unknown>[]> {
+    return [{ name: "_id_", unique: true, key: { _id: 1 } }];
+  }
+
+  async insertOne(document: Record<string, unknown>): Promise<{ insertedId: unknown }> {
+    return { insertedId: document._id ?? "1" };
+  }
+}
+
+describe("MongoDbAdapter", () => {
+  it("lists collections and inferred document fields", async () => {
+    const adapter = new MongoDbAdapter(() => new FakeMongoClient());
+    const session = await adapter.connect({
+      id: "p1",
+      name: "Mongo",
+      dbType: "mongodb",
+      host: "localhost",
+      database: "app",
+      environment: "local",
+      tags: [],
+      createdAt: "",
+      updatedAt: ""
+    });
+
+    await expect(adapter.listTables(session, "app")).resolves.toEqual([
+      { name: "users", schema: "app", type: "base_table" }
+    ]);
+    const columns = await adapter.listColumns(session, { schema: "app", name: "users" });
+    expect(columns.map((column) => column.name)).toEqual(["_id", "name", "age"]);
+  });
+
+  it("translates generated table viewer SQL to find/count", async () => {
+    const adapter = new MongoDbAdapter(() => new FakeMongoClient());
+    const session = await adapter.connect({
+      id: "p1",
+      name: "Mongo",
+      dbType: "mongodb",
+      host: "localhost",
+      database: "app",
+      environment: "local",
+      tags: [],
+      createdAt: "",
+      updatedAt: ""
+    });
+
+    const page = await adapter.executeQuery(session, 'SELECT * FROM "app"."users" LIMIT 10 OFFSET 0');
+    expect(page.rows).toEqual([{ _id: "1", name: "A" }]);
+
+    const count = await adapter.executeQuery(session, 'SELECT COUNT(*) AS count FROM "app"."users"');
+    expect(count.rows).toEqual([{ count: 12 }]);
+  });
+});

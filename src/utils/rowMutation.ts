@@ -30,6 +30,8 @@ export function placeholder(style: PlaceholderStyle, index: number): string {
       return `$${index}`;
     case "named":
       return `@p${index}`;
+    case "colon":
+      return `:p${index}`;
     case "qmark":
     default:
       return "?";

@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.8.0] - 2026-06-25
+
+### Added
+
+- **DuckDB adapter foundation** with file-based connections, metadata, query runner, qmark placeholders, and read-only safety via the `readonly` tag.
+- **MongoDB adapter foundation** with database/collection browsing, sample field inference, indexes, generated `SELECT`/`COUNT` bridge, and JSON filter queries.
+- **Oracle adapter foundation** with schema/table/view metadata, columns, indexes, constraints, triggers, DDL, bind variables, and Oracle pagination contract.
+- **Transport planning foundation** for SSH tunnel, SOCKS/HTTP proxy, Docker discovery, and JDBC bridge profile metadata.
+
+### Changed
+
+- Added `colon` placeholder support for Oracle-style bind variables.
+- Updated roadmap, future-feature, and GitHub phase docs for phases 19-22.
+- Switched DuckDB integration to `@duckdb/node-api` to avoid the deprecated `duckdb` package and keep audit clean.
+
 ## [1.7.2] - 2026-06-23
 
 ### Fixed

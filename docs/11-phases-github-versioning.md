@@ -75,12 +75,14 @@ Không tăng version hay tạo tag chỉ vì thay đổi backlog/docs. Version p
 | 16    | `v1.6.0`        | Query/schema/graph quality                                      | `feature/query-schema-graph`    |
 | 17    | `v1.7.0`        | Adapter contract, SSL/TLS, test/UX/release quality              | `feature/platform-coverage`     |
 | 18    | `v1.7.2`        | Startup/tree responsiveness và patch UX                         | `fix/tree-startup-loading`      |
-| 19    | `v1.8.0`        | Adapter wave 1: DuckDB, MongoDB, Oracle                         | `feature/adapter-wave-1`        |
-| 20    | `v1.9.0`        | SSH tunnel, Socks/HTTP proxy, Docker discovery, JDBC bridge      | `feature/tunnel-proxy`          |
-| 21    | `v1.10.0`       | Cloud/serverless SQL: D1, Turso, Azure SQL, compatibility modes  | `feature/cloud-sql`             |
-| 22    | `v1.11.0`       | Analytics/lakehouse: ClickHouse, Trino/Presto, warehouse guards  | `feature/analytics-engines`     |
-| 23    | `v1.12.0`       | Non-SQL connectors: S3, Kafka, RabbitMQ, search/document stores  | `feature/non-sql-connectors`    |
-| 24    | `v2.0.0`        | Chỉ khi có breaking change rõ ràng và migration path             | `release/v2.0.0`                |
+| 19    | `v1.8.0`        | DuckDB adapter                                                   | `feature/duckdb-adapter`        |
+| 20    | `v1.9.0`        | MongoDB adapter                                                  | `feature/mongodb-adapter`       |
+| 21    | `v1.10.0`       | Oracle adapter                                                   | `feature/oracle-adapter`        |
+| 22    | `v1.11.0`       | SSH tunnel, Socks/HTTP proxy, Docker discovery, JDBC bridge      | `feature/tunnel-proxy`          |
+| 23    | `v1.12.0`       | Cloud/serverless SQL: D1, Turso, Azure SQL, compatibility modes  | `feature/cloud-sql`             |
+| 24    | `v1.13.0`       | Analytics/lakehouse: ClickHouse, Trino/Presto, warehouse guards  | `feature/analytics-engines`     |
+| 25    | `v1.14.0`       | Non-SQL connectors: S3, Kafka, RabbitMQ, search/document stores  | `feature/non-sql-connectors`    |
+| 26    | `v2.0.0`        | Chỉ khi có breaking change rõ ràng và migration path             | `release/v2.0.0`                |
 
 ## 4. Branch strategy
 
@@ -201,13 +203,13 @@ Feature release mẫu cho Phase 19 / `v1.8.0`:
 ```bash
 git checkout develop
 git pull origin develop
-git checkout -b feature/adapter-wave-1
-# implement DuckDB, MongoDB, Oracle theo acceptance criteria trong docs/08
+git checkout -b feature/duckdb-adapter
+# implement DuckDB theo acceptance criteria trong docs/08
 npm run check
 git add package.json package-lock.json CHANGELOG.md docs src test
-git commit -m "feat(adapter): add duckdb mongodb and oracle wave"
-git push -u origin feature/adapter-wave-1
-gh pr create --base develop --head feature/adapter-wave-1 --title "Phase 19 adapter wave 1" --body "Adds DuckDB, MongoDB, and Oracle adapter coverage."
+git commit -m "feat(adapter): add duckdb support"
+git push -u origin feature/duckdb-adapter
+gh pr create --base develop --head feature/duckdb-adapter --title "Phase 19 DuckDB adapter" --body "Adds DuckDB connection, metadata, query runner, tests, and docs."
 
 git checkout develop
 git pull origin develop
@@ -218,7 +220,33 @@ npm run package:vsix
 git add package.json package-lock.json CHANGELOG.md docs open-db-nexus-1.8.0.vsix
 git commit -m "build(release): prepare v1.8.0"
 git push -u origin release/v1.8.0
-gh pr create --base main --head release/v1.8.0 --title "Release v1.8.0" --body "Phase 19 adapter wave 1 release."
+gh pr create --base main --head release/v1.8.0 --title "Release v1.8.0" --body "Phase 19 DuckDB adapter release."
+```
+
+Feature branch mẫu cho các adapter kế tiếp:
+
+```bash
+# Phase 20 / v1.9.0
+git checkout -b feature/mongodb-adapter develop
+git commit -m "feat(adapter): add mongodb support"
+
+# Phase 21 / v1.10.0
+git checkout -b feature/oracle-adapter develop
+git commit -m "feat(adapter): add oracle support"
+
+# Phase 22 / v1.11.0
+git checkout -b feature/tunnel-proxy develop
+git commit -m "feat(transport): add tunnel proxy planning"
+```
+
+Nếu gom nhiều phase vào một nhánh tích hợp tạm thời, vẫn tách commit theo scope để release notes không bị mơ hồ:
+
+```txt
+feat(adapter): add duckdb support
+feat(adapter): add mongodb support
+feat(adapter): add oracle support
+feat(transport): add tunnel proxy planning
+docs(roadmap): mark phase 19-22 implementation status
 ```
 
 ## 7. Issue và PR checklist
@@ -290,22 +318,26 @@ Tạo milestone theo phase/release, gắn issue/PR đúng scope:
 | Milestone | Title                                 | Label gợi ý                                      |
 | --------- | ------------------------------------- | ------------------------------------------------ |
 | `v1.7.2`  | Phase 18 — Startup & connection UX    | `phase:18`, `type:fix`, `area:tree`, `release`   |
-| `v1.8.0`  | Phase 19 — Adapter wave 1             | `phase:19`, `type:feature`, `area:adapter`       |
-| `v1.9.0`  | Phase 20 — Tunnel/proxy/local connect | `phase:20`, `area:tunnel`, `area:docker`         |
-| `v1.10.0` | Phase 21 — Cloud/serverless SQL       | `phase:21`, `area:cloud`, `area:adapter`         |
-| `v1.11.0` | Phase 22 — Analytics/lakehouse        | `phase:22`, `area:warehouse`, `area:query`       |
-| `v1.12.0` | Phase 23 — Non-SQL connectors         | `phase:23`, `area:connector`, `area:non-sql`     |
-| `v2.0.0`  | Phase 24 — Major version              | chỉ tạo khi có breaking change + migration path  |
+| `v1.8.0`  | Phase 19 — DuckDB adapter             | `phase:19`, `type:feature`, `area:adapter`       |
+| `v1.9.0`  | Phase 20 — MongoDB adapter            | `phase:20`, `type:feature`, `area:adapter`       |
+| `v1.10.0` | Phase 21 — Oracle adapter             | `phase:21`, `type:feature`, `area:adapter`       |
+| `v1.11.0` | Phase 22 — Tunnel/proxy/local connect | `phase:22`, `area:tunnel`, `area:docker`         |
+| `v1.12.0` | Phase 23 — Cloud/serverless SQL       | `phase:23`, `area:cloud`, `area:adapter`         |
+| `v1.13.0` | Phase 24 — Analytics/lakehouse        | `phase:24`, `area:warehouse`, `area:query`       |
+| `v1.14.0` | Phase 25 — Non-SQL connectors         | `phase:25`, `area:connector`, `area:non-sql`     |
+| `v2.0.0`  | Phase 26 — Major version              | chỉ tạo khi có breaking change + migration path  |
 
 Lệnh tạo milestone bằng `gh`:
 
 ```bash
 gh api repos/PiupiuTenshi/Database-Client/milestones -f title="v1.7.2" -f description="Phase 18 — Startup & connection UX"
-gh api repos/PiupiuTenshi/Database-Client/milestones -f title="v1.8.0" -f description="Phase 19 — Adapter wave 1"
-gh api repos/PiupiuTenshi/Database-Client/milestones -f title="v1.9.0" -f description="Phase 20 — Tunnel/proxy/local connect"
-gh api repos/PiupiuTenshi/Database-Client/milestones -f title="v1.10.0" -f description="Phase 21 — Cloud/serverless SQL"
-gh api repos/PiupiuTenshi/Database-Client/milestones -f title="v1.11.0" -f description="Phase 22 — Analytics/lakehouse"
-gh api repos/PiupiuTenshi/Database-Client/milestones -f title="v1.12.0" -f description="Phase 23 — Non-SQL connectors"
+gh api repos/PiupiuTenshi/Database-Client/milestones -f title="v1.8.0" -f description="Phase 19 — DuckDB adapter"
+gh api repos/PiupiuTenshi/Database-Client/milestones -f title="v1.9.0" -f description="Phase 20 — MongoDB adapter"
+gh api repos/PiupiuTenshi/Database-Client/milestones -f title="v1.10.0" -f description="Phase 21 — Oracle adapter"
+gh api repos/PiupiuTenshi/Database-Client/milestones -f title="v1.11.0" -f description="Phase 22 — Tunnel/proxy/local connect"
+gh api repos/PiupiuTenshi/Database-Client/milestones -f title="v1.12.0" -f description="Phase 23 — Cloud/serverless SQL"
+gh api repos/PiupiuTenshi/Database-Client/milestones -f title="v1.13.0" -f description="Phase 24 — Analytics/lakehouse"
+gh api repos/PiupiuTenshi/Database-Client/milestones -f title="v1.14.0" -f description="Phase 25 — Non-SQL connectors"
 ```
 
 Không tạo milestone `v2.0.0` cho đến khi breaking change được quyết định và mô tả migration path.

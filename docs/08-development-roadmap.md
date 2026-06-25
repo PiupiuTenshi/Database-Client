@@ -135,52 +135,75 @@ docs(roadmap): add phase 18 startup responsiveness scope
 chore(release): bump version to 1.7.2
 ```
 
-## Phase 19 — Adapter wave 1 ⏳
+## Phase 19 — DuckDB adapter 🟡
 
 Mục tiêu version: `v1.8.0`.
 
-- [ ] DuckDB: file-based adapter, query Parquet/CSV/JSON, read-only safety option.
-- [ ] MongoDB: collections/documents/indexes, JSON filter runner, document viewer.
-- [ ] Oracle: connection form fields, schemas/tables/views/procedures, query runner.
-- [ ] Mỗi adapter phải có contract test, docs usage và Docker/local fixture nếu khả thi.
+- [x] DuckDB: file-based adapter, real connection/test path, read-only safety option qua `readonly` tag.
+- [x] Metadata: schemas, tables/views, columns, indexes và DDL fallback.
+- [x] Query runner với pagination/maxRows và qmark placeholder contract.
+- [x] Unit coverage cho adapter và contract placeholder.
+- [ ] Usage docs chi tiết cho Parquet/CSV/JSON và fixture file local.
 
-## Phase 20 — Tunnel, proxy & local discovery ⏳
+## Phase 20 — MongoDB adapter 🟡
 
 Mục tiêu version: `v1.9.0`.
 
-- [ ] SSH tunnel per-connection: local port, host key policy, reconnect, password/key auth.
-- [ ] Socks Proxy và HTTP Proxy config cho driver hỗ trợ hoặc tunnel helper fallback.
-- [ ] Docker discovery: phát hiện container database local và tạo connection từ port mapping.
-- [ ] JDBC bridge proof-of-concept cho engine hiếm/nặng mà Node driver không phù hợp.
+- [x] MongoDB connection profile qua URI hoặc host/port/database/SSL.
+- [x] Explorer foundation: databases, collections, sample fields và indexes.
+- [x] JSON query bridge: generated table SELECT/COUNT và JSON `{ collection, filter, projection, sort, limit }`.
+- [x] Unit coverage cho non-SQL adapter shape.
+- [ ] Dedicated document viewer, safe document writes, Docker fixture và docs usage.
 
-## Phase 21 — Cloud/serverless SQL ⏳
+## Phase 21 — Oracle adapter 🟡
 
 Mục tiêu version: `v1.10.0`.
+
+- [x] Oracle adapter basic mode: username/password + connect string hoặc host/port/XE default.
+- [x] Metadata: schemas, tables/views, columns, indexes, foreign keys, checks, triggers, view dependencies và DDL.
+- [x] Query runner với bind variables `:p1`, Oracle pagination contract và result metadata.
+- [x] Unit coverage cho metadata/query paths.
+- [ ] Dedicated connection form fields cho SID/service/TNS/wallet, procedures/functions, Docker/local fixture và troubleshooting docs.
+
+## Phase 22 — Tunnel, proxy & local discovery 🟡
+
+Mục tiêu version: `v1.11.0`.
+
+- [x] Profile model cho SSH tunnel, Socks/HTTP proxy, Docker discovery và JDBC bridge.
+- [x] Transport planner/validator: resolve endpoint, composite mode, warnings và unit coverage.
+- [ ] Runtime SSH tunnel lifecycle: local port allocation, host key policy, reconnect, password/key auth.
+- [ ] Driver proxy integration hoặc tunnel helper fallback.
+- [ ] Docker discovery thật từ local container port mapping.
+- [ ] JDBC bridge proof-of-concept cho engine hiếm/nặng mà Node driver không phù hợp.
+
+## Phase 23 — Cloud/serverless SQL ⏳
+
+Mục tiêu version: `v1.12.0`.
 
 - [ ] Cloudflare D1 và Turso (SQLite-compatible remote/local workflow).
 - [ ] Azure SQL Server preset dựa trên SQL Server adapter hiện có.
 - [ ] CockroachDB/GaussDB/Kingbase/Dameng compatibility qua PostgreSQL-compatible adapter trước.
 - [ ] BigQuery/Athena/Snowflake/Databricks research spike: driver, auth, pagination, cost guard.
 
-## Phase 22 — Analytics & lakehouse engines ⏳
+## Phase 24 — Analytics & lakehouse engines ⏳
 
-Mục tiêu version: `v1.11.0`.
+Mục tiêu version: `v1.13.0`.
 
 - [ ] ClickHouse adapter: database/table/view metadata, partitions, query runner.
 - [ ] Trino/Presto adapter: catalog/schema explorer và result pagination.
 - [ ] Apache Doris, Hive, Redshift, TDengine đánh giá theo mức độ tương thích JDBC/HTTP.
 - [ ] Cost/safety banner cho warehouse query lớn.
 
-## Phase 23 — Non-SQL connectors ⏳
+## Phase 25 — Non-SQL connectors ⏳
 
-Mục tiêu version: `v1.12.0`.
+Mục tiêu version: `v1.14.0`.
 
 - [ ] S3 browser + preview CSV/JSON/Parquet, mở query qua DuckDB khi có thể.
 - [ ] Kafka/RabbitMQ explorer: topics/queues, preview/publish test message, schema registry nếu có.
 - [ ] Elasticsearch/Loki/Cassandra/Neo4j: UI riêng theo document/graph/log thay vì ép vào SQL grid.
 - [ ] FTP/WebDAV chỉ dùng cho import/export hoặc file browser phụ trợ.
 
-## Phase 24 — Major version preparation
+## Phase 26 — Major version preparation
 
 Mục tiêu version: `v2.0.0` khi có breaking change ở adapter contract, storage format hoặc UI workflow.
 
