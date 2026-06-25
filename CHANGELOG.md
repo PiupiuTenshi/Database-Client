@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.13.0] - 2026-06-26
+
+### Added
+
+- Analytics/lakehouse foundation for ClickHouse, Trino, and Presto through HTTP-SQL compatible metadata/query execution.
+- Apache Doris compatibility through the MySQL adapter.
+- Warehouse query guard foundation for large-query warning flows.
+
+### Docs
+
+- Marked Phase 24 implementation status in the roadmap and future-features backlog.
+
 ## [1.12.0] - 2026-06-26
 
 ### Added
