@@ -28,7 +28,7 @@ A VS Code multi-database client with a schema explorer, SQL query runner, result
 
 ## Update from VS Code UI
 
-Open the **Open DB Nexus** view and click **Check for Updates** (cloud download icon), or run **Open DB Nexus: Check for Updates** from the Command Palette. The extension checks GitHub Releases, downloads the newest `.vsix`, starts VS Code's install flow, and prompts for reload.
+Open the **Open DB Nexus** view and click **Check for Updates** (cloud download icon), or run **Open DB Nexus: Check for Updates** from the Command Palette. The extension checks GitHub Releases, downloads the newest `.vsix`, starts VS Code's install flow, and prompts for reload. If VS Code cannot start the automatic installer, Open DB Nexus keeps the downloaded VSIX and offers **Open VSIX**, **Reveal File**, **Copy Path**, or **Open Release**.
 
 Settings:
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.5] - 2026-06-27
+
+### Fixed
+
+- Update UI no longer dead-ends when VS Code rejects automatic VSIX installation with errors such as `No Servers`.
+- Downloaded update VSIX files now offer manual fallbacks: open the VSIX, reveal the downloaded file, copy the path, or open the GitHub Release.
+
 ## [1.13.4] - 2026-06-27
 
 ### Changed

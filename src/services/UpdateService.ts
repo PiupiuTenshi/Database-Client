@@ -5,6 +5,11 @@ const LATEST_RELEASE_URL = "https://api.github.com/repos/PiupiuTenshi/Database-C
 const RELEASES_PAGE = "https://github.com/PiupiuTenshi/Database-Client/releases/latest";
 const LAST_CHECK_KEY = "openDbNexus.updates.lastCheckAt";
 const DEFAULT_CHECK_INTERVAL_HOURS = 24;
+const INSTALL_UPDATE = "Install Update";
+const OPEN_RELEASE = "Open Release";
+const OPEN_VSIX = "Open VSIX";
+const REVEAL_FILE = "Reveal File";
+const COPY_PATH = "Copy Path";
 
 interface GitHubReleaseAsset {
   name: string;
@@ -65,17 +70,15 @@ export class UpdateService {
     }
 
     const asset = release.assets.find((item) => item.name.endsWith(".vsix"));
-    const install = "Install Update";
-    const open = "Open Release";
     const choice = await vscode.window.showInformationMessage(
       `Open DB Nexus ${latestVersion} is available. Current version: ${currentVersion}.`,
-      install,
-      open,
+      INSTALL_UPDATE,
+      OPEN_RELEASE,
       "Later"
     );
-    if (choice === install && asset) {
+    if (choice === INSTALL_UPDATE && asset) {
       await this.downloadAndInstall(release, asset);
-    } else if (choice === open || (choice === install && !asset)) {
+    } else if (choice === OPEN_RELEASE || (choice === INSTALL_UPDATE && !asset)) {
       await vscode.env.openExternal(vscode.Uri.parse(release.html_url || RELEASES_PAGE));
     }
   }
@@ -104,7 +107,10 @@ export class UpdateService {
         }
       );
 
-      await vscode.commands.executeCommand("workbench.extensions.installExtension", file);
+      const installed = await this.installDownloadedVsix(file);
+      if (!installed) {
+        return;
+      }
       const reload = await vscode.window.showInformationMessage(
         `Open DB Nexus ${normalizeVersion(release.tag_name)} was installed. Reload VS Code to activate it.`,
         "Reload Window",
@@ -115,13 +121,50 @@ export class UpdateService {
       }
     } catch (error) {
       this.logger.error(`Update install failed: ${toErrorMessage(error)}`);
-      const open = await vscode.window.showErrorMessage(
-        `Could not install the update automatically: ${toErrorMessage(error)}`,
-        "Open Release"
-      );
-      if (open === "Open Release") {
-        await vscode.env.openExternal(vscode.Uri.parse(release.html_url || RELEASES_PAGE));
-      }
+      await this.showManualInstallFallback(release, error);
+    }
+  }
+
+  private async installDownloadedVsix(file: vscode.Uri): Promise<boolean> {
+    try {
+      await vscode.commands.executeCommand("workbench.extensions.installExtension", file);
+      return true;
+    } catch (error) {
+      this.logger.error(`VSIX command install failed: ${toErrorMessage(error)}`);
+      await this.showDownloadedVsixFallback(file, error);
+      return false;
+    }
+  }
+
+  private async showDownloadedVsixFallback(file: vscode.Uri, error: unknown): Promise<void> {
+    const path = file.fsPath;
+    const choice = await vscode.window.showWarningMessage(
+      `VS Code could not start the automatic installer (${toErrorMessage(error)}). The update was downloaded to: ${path}`,
+      OPEN_VSIX,
+      REVEAL_FILE,
+      COPY_PATH
+    );
+
+    if (choice === OPEN_VSIX) {
+      await vscode.env.openExternal(file);
+    } else if (choice === REVEAL_FILE) {
+      await vscode.commands.executeCommand("revealFileInOS", file);
+    } else if (choice === COPY_PATH) {
+      await vscode.env.clipboard.writeText(path);
+      void vscode.window.showInformationMessage("VSIX path copied to clipboard.");
+    }
+  }
+
+  private async showManualInstallFallback(
+    release: GitHubRelease,
+    error: unknown
+  ): Promise<void> {
+    const choice = await vscode.window.showErrorMessage(
+      `Could not install the update automatically: ${toErrorMessage(error)}`,
+      OPEN_RELEASE
+    );
+    if (choice === OPEN_RELEASE) {
+      await vscode.env.openExternal(vscode.Uri.parse(release.html_url || RELEASES_PAGE));
     }
   }
 
