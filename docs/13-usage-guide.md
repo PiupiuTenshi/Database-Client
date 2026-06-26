@@ -122,10 +122,15 @@ Chuột phải một **connection**:
 Chuột phải một **table** → **Open Dependency Graph**:
 
 - Chọn **Direction** (inbound / outbound / both) và **Depth** (1/2/3/all).
-- **Search** để highlight node; **double-click** node để mở Table Data.
-- **Export JSON** / **Export SVG** để lưu graph.
+- Thanh thống kê hiển thị tổng **nodes**, **edges**, tỉ lệ **tables/views** và **FK/view reference**.
+- Layout tách hướng phụ thuộc: inbound nằm bên trái, outbound nằm bên phải, quan hệ hai chiều/chu trình được gom nổi bật phía dưới.
+- **Search** để highlight node theo table/view/schema; node và cạnh không liên quan sẽ mờ đi.
+- Click **node** để xem schema, inbound/outbound count và danh sách cạnh liên quan ở panel bên phải.
+- Click **edge** để xem source, target, loại quan hệ và column mapping; có nút mở source/target table.
+- **Double-click** node để mở Table Data.
+- **Export JSON** / **SVG** để lưu graph kèm style trực quan hơn.
 - **Report** (hoặc menu **Open Dependency Report**) sinh báo cáo Markdown: bảng phụ thuộc ai, ai phụ thuộc nó, impact lan truyền, và **chu trình** (nếu có).
-- Cạnh nét đứt = **view dependency** (Postgres/SQL Server).
+- Cạnh liền = **foreign key**; cạnh nét đứt màu xanh = **view dependency** (Postgres/SQL Server).
 
 ## 9. Dùng Redis
 

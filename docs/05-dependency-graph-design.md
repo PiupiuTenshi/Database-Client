@@ -316,25 +316,28 @@ Nên dùng Webview vì graph cần canvas/SVG và interaction phức tạp.
 Đề xuất:
 
 ```txt
-MVP: Cytoscape.js
-UI đẹp hơn sau này: React Flow
+Hiện tại: custom SVG Webview, không thêm dependency runtime.
+Nếu graph cực lớn: cân nhắc Cytoscape.js cho layout/virtualization.
+Nếu cần workflow editor: cân nhắc React Flow.
 ```
 
 ## 11. Tính năng UI cần có
 
-- Zoom in/out.
-- Fit view.
-- Search node.
-- Click node mở detail.
-- Double click mở table.
+- Zoom in/out và pan canvas.
+- Fit view theo bounding box thực tế.
+- Search node theo table/view/schema.
+- Click node mở detail panel.
+- Click edge mở source/target/column mapping.
+- Double click node mở table.
 - Filter object type.
 - Toggle inbound/outbound.
 - Toggle depth.
-- Export PNG/SVG.
-- Copy graph JSON.
-- Highlight path.
+- Export SVG.
+- Copy/export graph JSON.
+- Highlight quan hệ trực tiếp của node/edge đang chọn.
 - Show mini-map nếu dùng React Flow.
-- Legend giải thích màu/icon.
+- Legend giải thích FK/view-reference.
+- Header stats: nodes, edges, tables/views, FK/view-reference.
 
 ## 12. Node Detail Panel
 
@@ -343,15 +346,13 @@ Khi click node:
 ```txt
 Name: public.orders
 Type: table
-Columns: 12
-Primary Key: id
 Incoming Dependencies: 2
 Outgoing Dependencies: 1
 Actions:
   - Open Table
-  - Open DDL
-  - Generate SELECT
-  - Focus Dependency
+Related edges:
+  - order_items -> orders via order_id -> id
+  - user_order_counts -> orders via view reference
 ```
 
 ## 13. Edge Detail Panel
@@ -363,10 +364,7 @@ Type: foreign_key
 Name: fk_order_items_order_id
 From: order_items.order_id
 To: orders.id
-On Delete: CASCADE
-On Update: NO ACTION
 Actions:
-  - Copy Constraint Name
   - Open Source Table
   - Open Target Table
 ```

@@ -128,7 +128,7 @@ Kiểm tra version đang chạy:
 
    ```powershell
    code --list-extensions --show-versions | Select-String open-db-nexus
-   # ví dụ: piupiutenshi.open-db-nexus@1.13.1
+   # ví dụ: piupiutenshi.open-db-nexus@1.13.3
    ```
 
    Hoặc xem ở tab Extensions, mục **Open DB Nexus** sẽ hiển thị số phiên bản.

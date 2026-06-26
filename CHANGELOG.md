@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.13.3] - 2026-06-27
+
+### Improved
+
+- Dependency Graph now has a richer visual layout with inbound/outbound grouping, stronger node cards, arrowed FK/view-reference edges, edge labels, and relation highlighting.
+- Added node and edge detail panels for schema, inbound/outbound counts, related edges, source/target objects, and column mapping.
+
+### Docs
+
+- Updated dependency graph usage and design docs for the new visual/detail UI.
+
 ## [1.13.2] - 2026-06-26
 
 ### Fixed
