@@ -164,4 +164,8 @@ code --uninstall-extension piupiutenshi.open-db-nexus
 3. **Test Connection** → thấy "Connected".
 4. Mở rộng connection để xem Tables/Columns; chuột phải bảng → **Open Table (Data & Properties)**.
 
+### Nếu mở rộng database bị `Loading...` lâu
+
+Tree schema có timeout qua setting `openDbNexus.metadata.loadTimeoutSeconds` (mặc định 15 giây). Nếu DB ở xa, cold start hoặc có metadata lớn, tăng lên 30-60 giây trong Settings. Nếu vẫn timeout, kiểm tra host/port, VPN/proxy, container Docker, quyền đọc schema/catalog và thử **Test Connection** trước khi mở tree.
+
 > Hướng dẫn dùng chi tiết nằm trong `docs/13-usage-guide.md` của source (không kèm trong gói `.vsix`).

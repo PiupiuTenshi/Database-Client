@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import type { ConnectionService } from "../../services/ConnectionService";
 import type { SchemaService } from "../../services/SchemaService";
 import type { SessionManager } from "../../services/SessionManager";
+import { withTimeout } from "../../utils/asyncTimeout";
 import { ConnectionNode } from "./nodes/ConnectionNode";
 import { DbTreeNode } from "./nodes/DbTreeNode";
 import { ErrorNode } from "./nodes/ErrorNode";
@@ -10,6 +11,8 @@ import { InfoNode } from "./nodes/InfoNode";
 interface ChildCacheEntry {
   children: DbTreeNode[];
 }
+
+const DEFAULT_TREE_LOAD_TIMEOUT_SECONDS = 15;
 
 /** TreeDataProvider cho view "Connections". */
 export class DatabaseTreeProvider
@@ -70,7 +73,11 @@ export class DatabaseTreeProvider
   private async loadChildrenInBackground(element: DbTreeNode, key: string): Promise<void> {
     let children: DbTreeNode[];
     try {
-      children = await element.getChildren(this.treeContext());
+      children = await withTimeout(
+        Promise.resolve(element.getChildren(this.treeContext())),
+        this.loadTimeoutMs(),
+        `Database metadata load timed out after ${this.loadTimeoutSeconds()}s. Check host/port/network or refresh to retry.`
+      );
     } catch (error) {
       children = [new ErrorNode(error instanceof Error ? error.message : String(error))];
     }
@@ -85,5 +92,18 @@ export class DatabaseTreeProvider
       schemaService: this.schemaService,
       sessionManager: this.sessionManager
     };
+  }
+
+  private loadTimeoutMs(): number {
+    return this.loadTimeoutSeconds() * 1000;
+  }
+
+  private loadTimeoutSeconds(): number {
+    return Math.max(
+      1,
+      vscode.workspace
+        .getConfiguration("openDbNexus")
+        .get<number>("metadata.loadTimeoutSeconds", DEFAULT_TREE_LOAD_TIMEOUT_SECONDS)
+    );
   }
 }

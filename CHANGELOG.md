@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.13.2] - 2026-06-26
+
+### Fixed
+
+- Schema tree no longer stays on `Loading...` indefinitely when database metadata is slow or the server/network hangs.
+- Added `openDbNexus.metadata.loadTimeoutSeconds` to control how long the tree waits before showing a retryable timeout error.
+
+### Docs
+
+- Added troubleshooting notes for slow database metadata loading.
+
 ## [1.13.1] - 2026-06-26
 
 ### Added

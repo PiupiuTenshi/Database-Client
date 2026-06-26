@@ -2,7 +2,7 @@
   "name": "open-db-nexus",
   "displayName": "Open DB Nexus",
   "description": "A VS Code multi-database client extension with schema explorer, query runner, and dependency graph tooling.",
-  "version": "1.13.1",
+  "version": "1.13.2",
   "publisher": "piupiutenshi",
   "license": "MIT",
   "private": true,
@@ -273,6 +273,12 @@
           "type": "number",
           "default": 200,
           "description": "Maximum number of query-history entries to retain (favorites are always kept)."
+        },
+        "openDbNexus.metadata.loadTimeoutSeconds": {
+          "type": "number",
+          "default": 15,
+          "minimum": 1,
+          "description": "Maximum seconds the schema tree waits for database metadata before showing a retryable timeout error."
         },
         "openDbNexus.security.disableWriteOnProduction": {
           "type": "boolean",

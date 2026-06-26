@@ -34,6 +34,7 @@ Settings:
 
 - `openDbNexus.updates.autoCheckOnStartup` - automatically check on startup.
 - `openDbNexus.updates.checkIntervalHours` - minimum hours between automatic checks.
+- `openDbNexus.metadata.loadTimeoutSeconds` - maximum seconds the schema tree waits for metadata before showing a timeout error.
 
 ## Supported databases
 

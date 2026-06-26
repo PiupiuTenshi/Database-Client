@@ -52,6 +52,24 @@ Connection
 - **Refresh** (góc view) nạp lại schema và đóng các session cũ.
 - Connection `production` hiện icon ⚠️ để cảnh báo.
 
+### Khi tree cứ hiện `Loading...`
+
+Từ bản mới, tree sẽ tự dừng sau `openDbNexus.metadata.loadTimeoutSeconds` giây (mặc định 15s) và hiện lỗi timeout để bạn biết DB/metadata đang chậm thay vì treo mãi.
+
+Các nguyên nhân thường gặp:
+
+- Host/port sai, VPN/proxy chưa kết nối hoặc DB container chưa expose port.
+- DB ở xa hoặc cold start, nhất là cloud/serverless.
+- User DB không có quyền đọc catalog/schema nên metadata query chờ lâu hoặc lỗi.
+- Oracle/MongoDB/warehouse có nhiều schema/database, metadata đầu tiên cần nhiều thời gian.
+
+Cách xử lý nhanh:
+
+- Bấm **Refresh** trên view **Connections** để thử lại.
+- Dùng **Test Connection** trước khi mở rộng schema.
+- Với DB rất lớn/ở xa, tăng `openDbNexus.metadata.loadTimeoutSeconds` lên 30-60.
+- Với cloud/warehouse, ưu tiên điền đúng database/schema mặc định để giảm lượng metadata cần quét.
+
 ## 4. Xem/sửa dữ liệu và properties của bảng
 
 Chuột phải một **table** → **Open Table Data**. Webview mở panel tab:
