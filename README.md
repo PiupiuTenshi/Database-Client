@@ -26,16 +26,30 @@ A VS Code multi-database client with a schema explorer, SQL query runner, result
 - **Dependency Graph** — visualize foreign-key relationships (inbound / outbound / both, depth 1/2/3/all), search nodes, open a table from the graph, export as JSON or SVG, plus circular-dependency detection and a Markdown impact report.
 - **Per-connection SSL/TLS** — toggle TLS (allowing self-signed certs) for PostgreSQL and MySQL/MariaDB.
 
+## Update from VS Code UI
+
+Open the **Open DB Nexus** view and click **Check for Updates** (cloud download icon), or run **Open DB Nexus: Check for Updates** from the Command Palette. The extension checks GitHub Releases, downloads the newest `.vsix`, starts VS Code's install flow, and prompts for reload.
+
+Settings:
+
+- `openDbNexus.updates.autoCheckOnStartup` - automatically check on startup.
+- `openDbNexus.updates.checkIntervalHours` - minimum hours between automatic checks.
+
 ## Supported databases
 
-| Engine          | Driver           | Status                      |
-| --------------- | ---------------- | --------------------------- |
-| SQLite          | `better-sqlite3` | ✅                          |
-| PostgreSQL      | `pg`             | ✅                          |
-| MySQL / MariaDB | `mysql2`         | ✅                          |
-| SQL Server      | `mssql`          | ✅                          |
-| Redis           | `redis`          | ✅ (keys + command console) |
-| MongoDB         | —                | planned                     |
+| Engine          | Driver/foundation  | Status                 |
+| --------------- | ------------------ | ---------------------- |
+| SQLite          | `better-sqlite3`   | stable                 |
+| PostgreSQL      | `pg`               | stable                 |
+| MySQL / MariaDB | `mysql2`           | stable                 |
+| SQL Server      | `mssql`            | stable                 |
+| Redis           | `redis`            | keys + command console |
+| DuckDB          | `@duckdb/node-api` | foundation             |
+| MongoDB         | `mongodb`          | foundation             |
+| Oracle          | `oracledb`         | foundation             |
+| D1 / Turso      | HTTP-SQL           | foundation             |
+| ClickHouse      | HTTP-SQL           | foundation             |
+| Trino / Presto  | HTTP-SQL           | foundation             |
 
 > **Redis** is a key-value store, not SQL: use the **Query Editor** to run commands (`SET`, `GET`, `KEYS *`, …); keys are listed under "Tables". SQL-only features (paginated table viewer, dependency graph) do not apply to Redis.
 

@@ -15,16 +15,16 @@ Ba cách dùng extension: **tải `.vsix` từ GitHub Releases** (dễ nhất), 
 
 1. Vào trang **Releases**: <https://github.com/PiupiuTenshi/Database-Client/releases/latest>
 2. Tải file `open-db-nexus-<version>.vsix` ở mục **Assets**.
-3. Cài bằng dòng lệnh:
+3. Cài bằng dòng lệnh nếu muốn:
 
    ```powershell
-   code --install-extension .\open-db-nexus-1.7.2.vsix
+   code --install-extension .\open-db-nexus-<version>.vsix
    ```
 
    Nếu terminal đang đứng ở thư mục cha chứa `vscode-db-client/`, dùng:
 
    ```powershell
-   code --install-extension .\vscode-db-client\open-db-nexus-1.7.2.vsix
+   code --install-extension .\vscode-db-client\open-db-nexus-<version>.vsix
    ```
 
    Hoặc trong VS Code UI: tab **Extensions** (`Ctrl+Shift+X`) → menu `...` góc trên phải → **Install from VSIX...** → chọn file.
@@ -79,31 +79,56 @@ Rồi cài như Cách 1, bước 3.
 
 ---
 
-## Cập nhật lên bản mới (đã cài trước đó)
+## Cập nhật lên bản mới bằng giao diện
 
-Extension này **chưa lên Marketplace** nên VS Code **không tự cập nhật**. Khi có bản mới, cài đè là xong — connection profile và mật khẩu **được giữ nguyên** (lưu ở `globalState` + `SecretStorage`, không bị mất khi update).
+Từ bản mới, Open DB Nexus có luồng update ngay trong VS Code, không cần tự gõ PowerShell cho mỗi lần cập nhật.
 
-1. Tải file `.vsix` **bản mới** từ [Releases](https://github.com/PiupiuTenshi/Database-Client/releases/latest) (hoặc tự đóng gói lại bằng Cách 3 sau khi `git pull`).
-2. Cài đè bản cũ:
+### Cách khuyến nghị
+
+1. Mở view **Open DB Nexus** ở Activity Bar.
+2. Bấm nút **Check for Updates** (icon cloud download) trên title của view **Connections**.
+3. Nếu có bản mới trên GitHub Releases, chọn **Install Update**.
+4. Extension sẽ tải file `.vsix`, mở luồng cài đặt của VS Code, rồi hỏi **Reload Window**.
+
+Bạn cũng có thể mở Command Palette (`Ctrl+Shift+P`) và chạy:
+
+```txt
+Open DB Nexus: Check for Updates
+```
+
+### Tự kiểm tra khi mở VS Code
+
+Mặc định extension tự kiểm tra GitHub Releases mỗi 24 giờ khi VS Code khởi động. Có thể chỉnh trong Settings:
+
+- `openDbNexus.updates.autoCheckOnStartup`: bật/tắt tự check update.
+- `openDbNexus.updates.checkIntervalHours`: số giờ tối thiểu giữa hai lần tự check.
+
+Connection profile và mật khẩu **được giữ nguyên** khi update (metadata lưu ở `globalState`, mật khẩu lưu ở VS Code `SecretStorage`).
+
+### Cài đè thủ công nếu cần
+
+Nếu update tự động bị chặn bởi mạng/proxy hoặc chính sách VS Code, tải file `.vsix` bản mới từ [Releases](https://github.com/PiupiuTenshi/Database-Client/releases/latest), rồi cài bằng UI:
+
+**Extensions** → menu `...` → **Install from VSIX...** → chọn file mới.
+
+Hoặc cài bằng CLI:
 
    ```powershell
-   code --install-extension .\open-db-nexus-1.7.2.vsix
+   code --install-extension .\open-db-nexus-<version>.vsix
    ```
 
    - VS Code tự thay phiên bản cũ bằng phiên bản trong file `.vsix`.
    - Nếu cài lại **cùng version** (hoặc version thấp hơn) và bị từ chối, thêm `--force`:
 
      ```powershell
-     code --install-extension .\open-db-nexus-1.7.2.vsix --force
+     code --install-extension .\open-db-nexus-<version>.vsix --force
      ```
 
-   - Hoặc dùng UI: **Extensions** → `...` → **Install from VSIX...** → chọn file mới.
-3. **Reload Window** (`Ctrl+Shift+P` → *Developer: Reload Window*) hoặc khởi động lại VS Code để bản mới có hiệu lực.
-4. Kiểm tra version đang chạy:
+Kiểm tra version đang chạy:
 
    ```powershell
    code --list-extensions --show-versions | Select-String open-db-nexus
-   # ví dụ: piupiutenshi.open-db-nexus@1.7.2
+   # ví dụ: piupiutenshi.open-db-nexus@1.13.1
    ```
 
    Hoặc xem ở tab Extensions, mục **Open DB Nexus** sẽ hiển thị số phiên bản.

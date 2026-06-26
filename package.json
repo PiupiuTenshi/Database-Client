@@ -2,7 +2,7 @@
   "name": "open-db-nexus",
   "displayName": "Open DB Nexus",
   "description": "A VS Code multi-database client extension with schema explorer, query runner, and dependency graph tooling.",
-  "version": "1.13.0",
+  "version": "1.13.1",
   "publisher": "piupiutenshi",
   "license": "MIT",
   "private": true,
@@ -131,6 +131,11 @@
       {
         "command": "openDbNexus.showQueryHistory",
         "title": "Open DB Nexus: Show Query History"
+      },
+      {
+        "command": "openDbNexus.checkForUpdates",
+        "title": "Open DB Nexus: Check for Updates",
+        "icon": "$(cloud-download)"
       }
     ],
     "menus": {
@@ -144,6 +149,11 @@
           "command": "openDbNexus.refreshConnections",
           "when": "view == openDbNexus.connections",
           "group": "navigation@2"
+        },
+        {
+          "command": "openDbNexus.checkForUpdates",
+          "when": "view == openDbNexus.connections",
+          "group": "navigation@3"
         }
       ],
       "view/item/context": [
@@ -273,6 +283,17 @@
           "type": "boolean",
           "default": false,
           "description": "Hard-block data export and backup on connections marked as 'production'."
+        },
+        "openDbNexus.updates.autoCheckOnStartup": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically check GitHub Releases for Open DB Nexus updates when VS Code starts."
+        },
+        "openDbNexus.updates.checkIntervalHours": {
+          "type": "number",
+          "default": 24,
+          "minimum": 1,
+          "description": "Minimum hours between automatic update checks."
         }
       }
     }

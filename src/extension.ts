@@ -41,6 +41,7 @@ import { QueryRunner } from "./services/QueryRunner";
 import { QueryService } from "./services/QueryService";
 import { SchemaService } from "./services/SchemaService";
 import { SessionManager } from "./services/SessionManager";
+import { UpdateService } from "./services/UpdateService";
 import { ProfileStore } from "./storage/ProfileStore";
 import { QueryHistoryStore } from "./storage/QueryHistoryStore";
 import { SecretStore } from "./storage/SecretStore";
@@ -98,6 +99,7 @@ export function activate(context: vscode.ExtensionContext): void {
   });
   const schemaSearchService = new SchemaSearchService(schemaService);
   const graphService = new DependencyGraphService(schemaService);
+  const updateService = new UpdateService(context, logService);
 
   const historyStore = new QueryHistoryStore(context.globalState, () =>
     vscode.workspace.getConfiguration("openDbNexus").get<number>("history.maxItems", 200)
@@ -143,9 +145,11 @@ export function activate(context: vscode.ExtensionContext): void {
     queryDocs,
     queryRunner,
     historyStore,
-    graphService
+    graphService,
+    updateService
   });
 
+  updateService.checkOnStartup();
   logService.info(`${EXTENSION_DISPLAY_NAME} activated.`);
 }
 

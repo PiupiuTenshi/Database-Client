@@ -30,7 +30,8 @@ export const COMMANDS = {
   runQuery: "openDbNexus.runQuery",
   runAllQueries: "openDbNexus.runAllQueries",
   changeQueryConnection: "openDbNexus.changeQueryConnection",
-  showQueryHistory: "openDbNexus.showQueryHistory"
+  showQueryHistory: "openDbNexus.showQueryHistory",
+  checkForUpdates: "openDbNexus.checkForUpdates"
 } as const;
 
 /** contextValue gắn lên TreeItem để điều khiển hiển thị context menu (when: viewItem == ...). */

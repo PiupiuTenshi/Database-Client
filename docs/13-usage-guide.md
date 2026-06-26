@@ -6,6 +6,13 @@ Hướng dẫn dùng Open DB Nexus sau khi đã cài (xem [INSTALL.md](../INSTAL
 
 Bấm icon **Open DB Nexus** (🛢️) trên Activity Bar. View **Connections** hiện ở sidebar.
 
+### Kiểm tra cập nhật
+
+- Bấm nút **Check for Updates** (icon cloud download) trên title của view **Connections**.
+- Hoặc mở Command Palette (`Ctrl+Shift+P`) → **Open DB Nexus: Check for Updates**.
+- Khi có bản mới trên GitHub Releases, chọn **Install Update** để extension tải `.vsix`, chạy luồng cài đặt của VS Code và hỏi reload.
+- Tự kiểm tra khi khởi động được điều khiển bằng `openDbNexus.updates.autoCheckOnStartup` và `openDbNexus.updates.checkIntervalHours`.
+
 ## 2. Tạo connection
 
 1. Bấm **＋ Add Connection** (góc trên view) → form mở ra.
@@ -115,16 +122,16 @@ Redis là key-value, không phải SQL:
   ```
 - Các tính năng SQL (table viewer phân trang, dependency graph) **không áp dụng** cho Redis.
 
-## 10. Tính năng chưa có trong bản 1.7.0
+## 10. Trạng thái adapter nâng cao
 
-Những mục này vẫn là backlog dù có nhắc trong roadmap:
+Các adapter sau đã có nền tảng kết nối/metadata/query nhưng vẫn còn thiếu một số UI chuyên biệt hoặc preset auth nâng cao:
 
-- DuckDB, MongoDB, Oracle adapters.
-- SSH tunnel, workspace profiles, cloud secret provider.
-- XLSX import/export.
-- Process/session monitor, role/privilege editor.
-- Explain-plan visualizer, PNG graph export, procedure/trigger dependency graph, JSON/blob viewer nâng cao.
-- Phase 18 / v2.0.0: chưa phát hành vì hiện chưa có breaking change thật sự.
+- DuckDB, MongoDB, Oracle.
+- Cloudflare D1, Turso, Azure SQL, CockroachDB, GaussDB, Kingbase, Redshift.
+- ClickHouse, Trino, Presto, Apache Doris.
+- SSH tunnel/proxy/Docker/JDBC hiện đã có model và planner; runtime tunnel/proxy thật vẫn nằm trong backlog.
+
+Các mục như XLSX import/export, process/session monitor, role/privilege editor, explain-plan visualizer, PNG graph export và JSON/blob viewer nâng cao vẫn xem ở [12-future-features.md](12-future-features.md).
 
 ## 11. Mẹo
 

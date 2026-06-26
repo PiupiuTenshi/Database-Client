@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.13.1] - 2026-06-26
+
+### Added
+
+- Update checker UI: **Open DB Nexus: Check for Updates** checks GitHub Releases, downloads the latest VSIX, and starts VS Code's install flow.
+- Automatic startup update checks with `openDbNexus.updates.autoCheckOnStartup` and `openDbNexus.updates.checkIntervalHours`.
+
+### Docs
+
+- Updated install and usage docs so updates can be done from VS Code UI instead of terminal commands.
+
 ## [1.13.0] - 2026-06-26
 
 ### Added
