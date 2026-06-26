@@ -194,8 +194,6 @@ Press `F5` in VS Code to launch the Extension Development Host.
 
 Local test databases (Docker) for PostgreSQL / MySQL / SQL Server are in [`test/docker/`](test/docker/README.md).
 
-Release notes, phase tracking, GitHub CLI setup, and commit/push/release commands are in [`docs/11-phases-github-versioning.md`](docs/11-phases-github-versioning.md).
-
 ### Build a VSIX
 
 ```bash
@@ -245,7 +243,7 @@ gh release create v<version> .\open-db-nexus-<version>.vsix --title "Open DB Nex
 
 ## Repository Notes
 
-The `docs/` folder is intentionally ignored. Keep long-form planning notes local and put user-facing setup, usage, development, and release instructions in this README.
+The public repo intentionally does not publish the long-form planning docs. Keep private planning notes outside tracked files and put user-facing setup, usage, development, and release instructions in this README, `INSTALL.md`, `CHANGELOG.md`, and `SECURITY.md`.
 
 ## License
 

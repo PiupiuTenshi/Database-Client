@@ -104,7 +104,7 @@ export class ConnectionFormPanel {
       type: "init",
       payload: {
         isEdit: Boolean(this.profile),
-        // Không gửi password ra webview (docs/07). Chỉ báo có hay không.
+        // Không gửi password ra webview. Chỉ báo có hay không.
         hasPassword: false,
         profile: this.profile
       }

@@ -1,7 +1,4 @@
-/**
- * Database engine được hỗ trợ qua adapter layer (xem docs/04). Phase 3 mới
- * implement adapter cho SQLite; các engine khác sẽ tới sau.
- */
+/** Database engine được hỗ trợ qua adapter layer. */
 export type DbType =
   | "sqlite"
   | "postgresql"
@@ -24,7 +21,7 @@ export type DbType =
   | "trino"
   | "presto";
 
-/** Môi trường của connection — dùng cho production guard (docs/07). */
+/** Môi trường của connection, dùng cho production guard. */
 export type ConnectionEnvironment = "local" | "dev" | "staging" | "production";
 
 export interface SshTunnelConfig {
@@ -117,7 +114,7 @@ export interface TestConnectionResult {
 }
 
 // ---------------------------------------------------------------------------
-// Metadata models (chuẩn hóa từ mọi DBMS — docs/04 §7)
+// Metadata models, chuẩn hóa từ mọi DBMS.
 // ---------------------------------------------------------------------------
 
 /** Tham chiếu một đối tượng schema (table/view). */
@@ -179,7 +176,7 @@ export interface ForeignKeyInfo {
 }
 
 // ---------------------------------------------------------------------------
-// Query models (docs/06)
+// Query models.
 // ---------------------------------------------------------------------------
 
 export interface QueryColumn {
@@ -219,7 +216,7 @@ export interface ParamStatement {
   params: unknown[];
 }
 
-/** Lỗi DB đã chuẩn hóa (docs/04 §10). Không lộ stack dài cho user. */
+/** Lỗi DB đã chuẩn hóa. Không lộ stack dài cho user. */
 export interface DbError {
   message: string;
   code?: string;
@@ -229,7 +226,7 @@ export interface DbError {
 export type QueryStatus = "success" | "error" | "cancelled";
 
 // ---------------------------------------------------------------------------
-// Dependency graph (docs/05)
+// Dependency graph.
 // ---------------------------------------------------------------------------
 
 export type GraphDirection = "inbound" | "outbound" | "both";
@@ -259,7 +256,7 @@ export interface ViewDependency {
   references: ObjectRef[];
 }
 
-/** "source depends on target" (docs/05 §4). FK: child -> parent. */
+/** "source depends on target". FK: child -> parent. */
 export interface DependencyGraph {
   center?: string;
   nodes: GraphNode[];
@@ -267,7 +264,7 @@ export interface DependencyGraph {
   warnings?: string[];
 }
 
-/** Một dòng lịch sử query (docs/06 §11). */
+/** Một dòng lịch sử query. */
 export interface QueryHistoryItem {
   id: string;
   connectionId: string;

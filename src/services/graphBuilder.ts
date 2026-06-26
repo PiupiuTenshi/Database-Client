@@ -20,7 +20,7 @@ function makeNode(
   return { id, label: name, type, schema, objectName: name };
 }
 
-/** Dựng graph FK đầy đủ từ danh sách ForeignKeyInfo (docs/05 §8). */
+/** Dựng graph FK đầy đủ từ danh sách ForeignKeyInfo. */
 export function buildFkGraph(fks: ForeignKeyInfo[]): DependencyGraph {
   const nodes = new Map<string, GraphNode>();
   const edges: GraphEdge[] = [];
@@ -63,7 +63,7 @@ function buildAdjacency(edges: GraphEdge[], direction: GraphDirection): Map<stri
 }
 
 /**
- * Lấy subgraph quanh centerId theo direction + depth (docs/05 §9).
+ * Lấy subgraph quanh centerId theo direction + depth.
  * depth = Number.POSITIVE_INFINITY nghĩa là "all".
  */
 export function getSubgraph(
@@ -181,7 +181,7 @@ function labelOf(graph: DependencyGraph, id: string): string {
   return graph.nodes.find((n) => n.id === id)?.label ?? id;
 }
 
-/** Sinh báo cáo Markdown impact analysis quanh centerId (docs/05 §16). */
+/** Sinh báo cáo Markdown impact analysis quanh centerId. */
 export function buildImpactReport(graph: DependencyGraph, centerId: string): string {
   const centerLabel = labelOf(graph, centerId);
   const dependsOn = graph.edges.filter((e) => e.source === centerId);

@@ -7,7 +7,7 @@ export interface SqlStatement {
 
 /**
  * Tách SQL theo dấu `;`, có tôn trọng chuỗi '...' / "..." và comment (-- , block).
- * MVP đơn giản (docs/06 §3) — chưa xử lý dollar-quote của PostgreSQL.
+ * MVP đơn giản, chưa xử lý dollar-quote của PostgreSQL.
  */
 export function splitStatements(sql: string): SqlStatement[] {
   const statements: SqlStatement[] = [];

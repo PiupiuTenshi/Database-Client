@@ -6,7 +6,7 @@ interface DriverErrorLike {
 }
 
 /**
- * Chuẩn hóa lỗi driver thành DbError gọn (docs/04 §10). Không giữ stack dài;
+ * Chuẩn hóa lỗi driver thành DbError gọn. Không giữ stack dài;
  * UI có thể hiển thị message + code.
  */
 export function normalizeError(error: unknown): DbError {

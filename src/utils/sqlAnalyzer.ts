@@ -1,5 +1,5 @@
 /**
- * Phát hiện câu SQL nguy hiểm để cảnh báo trước khi chạy (docs/06 §10).
+ * Phát hiện câu SQL nguy hiểm để cảnh báo trước khi chạy.
  * Heuristic dựa trên từ khóa — không phải parser đầy đủ; mục tiêu là chặn các
  * thao tác phá hủy phổ biến (DROP/TRUNCATE/DELETE|UPDATE thiếu WHERE).
  */

@@ -147,7 +147,7 @@ gh auth login
 gh auth status
 ```
 
-Quy trình phase/release đầy đủ nằm trong `docs/11-phases-github-versioning.md`.
+Quy trình release tối thiểu nằm trong `README.md` mục **Release Workflow**.
 
 ### Gỡ cài đặt
 
@@ -168,4 +168,4 @@ code --uninstall-extension piupiutenshi.open-db-nexus
 
 Tree schema có timeout qua setting `openDbNexus.metadata.loadTimeoutSeconds` (mặc định 15 giây). Nếu DB ở xa, cold start hoặc có metadata lớn, tăng lên 30-60 giây trong Settings. Nếu vẫn timeout, kiểm tra host/port, VPN/proxy, container Docker, quyền đọc schema/catalog và thử **Test Connection** trước khi mở tree.
 
-> Hướng dẫn dùng chi tiết nằm trong `docs/13-usage-guide.md` của source (không kèm trong gói `.vsix`).
+> Hướng dẫn dùng nhanh nằm trong `README.md`; gói `.vsix` chỉ chứa tài liệu người dùng tối thiểu.

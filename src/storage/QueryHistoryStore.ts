@@ -6,8 +6,8 @@ const DEFAULT_MAX_ITEMS = 200;
 
 /**
  * Lưu lịch sử query trong globalState (mới nhất đứng đầu). Áp retention limit
- * cho mục thường nhưng KHÔNG bao giờ xóa mục favorite. docs/06 gợi ý JSONL;
- * bản này dùng Memento cho đơn giản và test được.
+ * cho mục thường nhưng KHÔNG bao giờ xóa mục favorite. Bản này dùng Memento
+ * cho đơn giản và test được.
  */
 export class QueryHistoryStore {
   constructor(
