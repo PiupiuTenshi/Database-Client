@@ -4,6 +4,13 @@
 
 _No unreleased changes._
 
+## [1.13.7] - 2026-06-28
+
+### Fixed
+
+- Update installation now falls back to the VS Code executable CLI when the built-in extension installer fails with `No Servers`.
+- Manual update fallback now includes a copyable PowerShell install command when both installer paths fail.
+
 ## [1.13.6] - 2026-06-27
 
 ### Improved

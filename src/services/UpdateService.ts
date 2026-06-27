@@ -1,4 +1,6 @@
 import * as vscode from "vscode";
+import { execFile } from "child_process";
+import { promisify } from "util";
 import type { Logger } from "./ConnectionService";
 
 const LATEST_RELEASE_URL = "https://api.github.com/repos/PiupiuTenshi/Database-Client/releases/latest";
@@ -10,6 +12,8 @@ const OPEN_RELEASE = "Open Release";
 const OPEN_VSIX = "Open VSIX";
 const REVEAL_FILE = "Reveal File";
 const COPY_PATH = "Copy Path";
+const COPY_COMMAND = "Copy Command";
+const execFileAsync = promisify(execFile);
 
 interface GitHubReleaseAsset {
   name: string;
@@ -131,18 +135,45 @@ export class UpdateService {
       return true;
     } catch (error) {
       this.logger.error(`VSIX command install failed: ${toErrorMessage(error)}`);
-      await this.showDownloadedVsixFallback(file, error);
-      return false;
+      try {
+        await this.installDownloadedVsixWithCli(file);
+        return true;
+      } catch (cliError) {
+        this.logger.error(`VSIX CLI install failed: ${toErrorMessage(cliError)}`);
+        await this.showDownloadedVsixFallback(file, error, cliError);
+        return false;
+      }
     }
   }
 
-  private async showDownloadedVsixFallback(file: vscode.Uri, error: unknown): Promise<void> {
+  private async installDownloadedVsixWithCli(file: vscode.Uri): Promise<void> {
+    const codeExecutable = process.execPath;
+    const { stderr } = await execFileAsync(
+      codeExecutable,
+      ["--install-extension", file.fsPath, "--force"],
+      {
+        timeout: 120_000,
+        windowsHide: true
+      }
+    );
+    if (stderr.trim()) {
+      this.logger.info(`VSIX CLI install stderr: ${stderr.trim()}`);
+    }
+  }
+
+  private async showDownloadedVsixFallback(
+    file: vscode.Uri,
+    commandError: unknown,
+    cliError: unknown
+  ): Promise<void> {
     const path = file.fsPath;
+    const command = buildInstallCommand(process.execPath, path);
     const choice = await vscode.window.showWarningMessage(
-      `VS Code could not start the automatic installer (${toErrorMessage(error)}). The update was downloaded to: ${path}`,
+      `VS Code could not start the automatic installer (${toErrorMessage(commandError)}), and CLI fallback also failed (${toErrorMessage(cliError)}). The update was downloaded to: ${path}`,
       OPEN_VSIX,
       REVEAL_FILE,
-      COPY_PATH
+      COPY_PATH,
+      COPY_COMMAND
     );
 
     if (choice === OPEN_VSIX) {
@@ -152,6 +183,9 @@ export class UpdateService {
     } else if (choice === COPY_PATH) {
       await vscode.env.clipboard.writeText(path);
       void vscode.window.showInformationMessage("VSIX path copied to clipboard.");
+    } else if (choice === COPY_COMMAND) {
+      await vscode.env.clipboard.writeText(command);
+      void vscode.window.showInformationMessage("VSIX install command copied to clipboard.");
     }
   }
 
@@ -214,4 +248,12 @@ export function compareVersions(a: string, b: string): number {
 
 function toErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+function buildInstallCommand(codeExecutable: string, vsixPath: string): string {
+  return `& ${quotePowerShellArg(codeExecutable)} --install-extension ${quotePowerShellArg(vsixPath)} --force`;
+}
+
+function quotePowerShellArg(value: string): string {
+  return `'${value.replace(/'/g, "''")}'`;
 }
