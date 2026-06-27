@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+_No unreleased changes._
+
+## [1.13.6] - 2026-06-27
+
+### Improved
+
+- Refreshed shared webview styling for smoother toolbar, tabs, buttons, inputs, tables, focus states, hover states, and toast transitions.
+- Improved the connection form with clearer spacing, softer badges, stronger input focus, and more responsive layout.
+- Polished dashboard metric cards and dependency graph surfaces so dense database views are easier to scan.
+
 ### Changed
 
 - Retired old public release branches/tags that still exposed the local-only `docs/` folder.

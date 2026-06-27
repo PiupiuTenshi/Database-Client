@@ -173,7 +173,8 @@ export class DependencyGraphPanel {
   body {
     font-family: var(--vscode-font-family);
     color: var(--vscode-foreground);
-    background: var(--vscode-editor-background);
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--vscode-editor-background) 86%, var(--vscode-sideBar-background) 14%), var(--vscode-editor-background) 180px);
     margin: 0;
     overflow: hidden;
   }
@@ -182,36 +183,45 @@ export class DependencyGraphPanel {
     display: flex;
     gap: 8px;
     align-items: center;
-    padding: 8px 10px;
-    border-bottom: 1px solid var(--vscode-panel-border);
-    background: var(--vscode-sideBar-background);
+    padding: 9px 12px;
+    border-bottom: 1px solid color-mix(in srgb, var(--vscode-panel-border) 78%, transparent);
+    background: color-mix(in srgb, var(--vscode-sideBar-background) 82%, var(--vscode-editor-background) 18%);
     font-size: 12px;
     flex-wrap: wrap;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset;
   }
   .toolbar label { color: var(--vscode-descriptionForeground); }
   select, input, button {
     background: var(--vscode-input-background);
     color: var(--vscode-input-foreground);
     border: 1px solid var(--vscode-input-border, transparent);
-    border-radius: 4px;
-    padding: 4px 7px;
+    border-radius: 7px;
+    padding: 5px 8px;
     font-size: 12px;
+    min-height: 28px;
+    transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+  }
+  select:focus, input:focus {
+    outline: none;
+    border-color: var(--vscode-focusBorder);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--vscode-focusBorder) 24%, transparent);
   }
   button {
     background: var(--vscode-button-secondaryBackground);
     color: var(--vscode-button-secondaryForeground);
     cursor: pointer;
     border: none;
+    transition: transform 120ms ease, background 120ms ease;
   }
-  button:hover { background: var(--vscode-button-secondaryHoverBackground); }
+  button:hover { background: var(--vscode-button-secondaryHoverBackground); transform: translateY(-1px); }
   .spacer { flex: 1 1 auto; }
   .metrics { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
   .metric {
     min-width: 76px;
-    border: 1px solid var(--vscode-panel-border);
-    border-radius: 6px;
-    padding: 4px 8px;
-    background: var(--vscode-editorWidget-background);
+    border: 1px solid color-mix(in srgb, var(--vscode-panel-border) 72%, transparent);
+    border-radius: 8px;
+    padding: 5px 9px;
+    background: color-mix(in srgb, var(--vscode-editorWidget-background) 80%, transparent);
   }
   .metric strong { display: block; font-size: 13px; line-height: 16px; }
   .metric span {
@@ -232,7 +242,7 @@ export class DependencyGraphPanel {
     color: var(--vscode-editorWarning-foreground);
     background: var(--vscode-editorWidget-background);
     border: 1px solid var(--vscode-editorWarning-border, var(--vscode-panel-border));
-    border-radius: 6px;
+    border-radius: 8px;
     padding: 7px 9px;
     font-size: 12px;
   }
@@ -242,9 +252,9 @@ export class DependencyGraphPanel {
     display: block;
     cursor: grab;
     background:
-      linear-gradient(var(--vscode-editorIndentGuide-background, rgba(127,127,127,0.10)) 1px, transparent 1px),
-      linear-gradient(90deg, var(--vscode-editorIndentGuide-background, rgba(127,127,127,0.10)) 1px, transparent 1px);
-    background-size: 28px 28px;
+      linear-gradient(var(--vscode-editorIndentGuide-background, rgba(127,127,127,0.075)) 1px, transparent 1px),
+      linear-gradient(90deg, var(--vscode-editorIndentGuide-background, rgba(127,127,127,0.075)) 1px, transparent 1px);
+    background-size: 30px 30px;
   }
   svg.grabbing { cursor: grabbing; }
   .edge {
@@ -253,6 +263,7 @@ export class DependencyGraphPanel {
     stroke-width: 1.6;
     opacity: 0.68;
     cursor: pointer;
+    transition: opacity 140ms ease, stroke-width 140ms ease, stroke 140ms ease;
   }
   .edge.view { stroke: var(--vscode-charts-blue, #3794ff); stroke-dasharray: 7 4; }
   .edge.selected { stroke: var(--vscode-focusBorder); stroke-width: 3; opacity: 1; }
@@ -260,8 +271,8 @@ export class DependencyGraphPanel {
   .edge.dim { opacity: 0.12; }
   .edge-label rect {
     fill: var(--vscode-editorWidget-background);
-    stroke: var(--vscode-panel-border);
-    rx: 4;
+    stroke: color-mix(in srgb, var(--vscode-panel-border) 72%, transparent);
+    rx: 5;
   }
   .edge-label text { fill: var(--vscode-descriptionForeground); font-size: 10px; pointer-events: none; }
   .node { cursor: pointer; }
@@ -271,6 +282,7 @@ export class DependencyGraphPanel {
     stroke-width: 1;
     rx: 7;
     filter: url(#nodeShadow);
+    transition: stroke 140ms ease, stroke-width 140ms ease, fill 140ms ease;
   }
   .node text { fill: var(--vscode-foreground); font-size: 11px; pointer-events: none; }
   .node .title { font-size: 13px; font-weight: 700; }
@@ -283,6 +295,7 @@ export class DependencyGraphPanel {
   .node.related rect.outer { stroke: var(--vscode-charts-green, #89d185); stroke-width: 2; }
   .node.match rect.outer { stroke: var(--vscode-charts-yellow, #cca700); stroke-width: 3; }
   .node.dim { opacity: 0.22; }
+  .node { transition: opacity 140ms ease; }
   .legend {
     position: absolute;
     left: 10px;
@@ -292,8 +305,8 @@ export class DependencyGraphPanel {
     align-items: center;
     color: var(--vscode-descriptionForeground);
     background: var(--vscode-editorWidget-background);
-    border: 1px solid var(--vscode-panel-border);
-    border-radius: 6px;
+    border: 1px solid color-mix(in srgb, var(--vscode-panel-border) 72%, transparent);
+    border-radius: 8px;
     padding: 6px 8px;
     font-size: 11px;
   }
@@ -311,8 +324,8 @@ export class DependencyGraphPanel {
   }
   aside {
     min-width: 0;
-    border-left: 1px solid var(--vscode-panel-border);
-    background: var(--vscode-sideBar-background);
+    border-left: 1px solid color-mix(in srgb, var(--vscode-panel-border) 78%, transparent);
+    background: color-mix(in srgb, var(--vscode-sideBar-background) 88%, var(--vscode-editor-background) 12%);
     overflow: auto;
   }
   .details { padding: 12px; }
@@ -328,20 +341,26 @@ export class DependencyGraphPanel {
   .kv span:nth-child(odd) { color: var(--vscode-descriptionForeground); }
   .pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
   .pill {
-    border: 1px solid var(--vscode-panel-border);
+    border: 1px solid color-mix(in srgb, var(--vscode-panel-border) 72%, transparent);
     border-radius: 999px;
     padding: 3px 7px;
-    background: var(--vscode-editorWidget-background);
+    background: color-mix(in srgb, var(--vscode-editorWidget-background) 78%, transparent);
     font-size: 11px;
   }
   .edge-list { display: grid; gap: 7px; }
   .edge-item {
-    border: 1px solid var(--vscode-panel-border);
-    border-radius: 6px;
+    border: 1px solid color-mix(in srgb, var(--vscode-panel-border) 72%, transparent);
+    border-radius: 8px;
     padding: 7px;
-    background: var(--vscode-editorWidget-background);
+    background: color-mix(in srgb, var(--vscode-editorWidget-background) 82%, transparent);
     font-size: 11px;
     cursor: pointer;
+    transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+  }
+  .edge-item:hover {
+    transform: translateY(-1px);
+    border-color: var(--vscode-focusBorder);
+    background: color-mix(in srgb, var(--vscode-editorWidget-background) 92%, var(--vscode-editor-background) 8%);
   }
   .edge-item strong { display: block; margin-bottom: 3px; font-size: 12px; }
   .edge-item span { color: var(--vscode-descriptionForeground); }

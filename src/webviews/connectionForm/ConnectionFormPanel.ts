@@ -158,41 +158,108 @@ export class ConnectionFormPanel {
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>${EXTENSION_DISPLAY_NAME}</title>
 <style nonce="${nonce}">
-  body { font-family: var(--vscode-font-family); color: var(--vscode-foreground); padding: 16px; }
-  h2 { margin: 0; font-weight: 600; }
-  .connection-header { margin-bottom: 22px; }
-  .brand { display: flex; align-items: center; gap: 10px; margin: 10px 0 12px; }
-  .brand-logo { width: 38px; height: 38px; flex: 0 0 auto; }
-  .brand-name { font-size: 14px; font-weight: 600; }
-  .brand-description { margin-top: 2px; font-size: 12px; opacity: 0.75; }
-  .supported-databases { display: flex; flex-wrap: wrap; gap: 6px; }
-  .database-badge {
-    padding: 3px 7px; border: 1px solid var(--vscode-widget-border, var(--vscode-input-border, transparent));
-    border-radius: 999px; font-size: 11px; color: var(--vscode-descriptionForeground);
+  * { box-sizing: border-box; }
+  body {
+    font-family: var(--vscode-font-family);
+    color: var(--vscode-foreground);
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--vscode-editor-background) 82%, var(--vscode-sideBar-background) 18%), var(--vscode-editor-background) 210px);
+    margin: 0;
+    padding: 18px;
   }
-  .field { margin-bottom: 12px; display: flex; flex-direction: column; }
-  label { font-size: 12px; margin-bottom: 4px; opacity: 0.85; }
+  h2 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: 0.01em; }
+  .connection-header {
+    margin-bottom: 18px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--vscode-panel-border);
+  }
+  .brand { display: flex; align-items: center; gap: 12px; margin: 12px 0 14px; }
+  .brand-logo {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 auto;
+    padding: 5px;
+    border: 1px solid var(--vscode-panel-border);
+    border-radius: 8px;
+    background: var(--vscode-editorWidget-background);
+  }
+  .brand-name { font-size: 14px; font-weight: 700; }
+  .brand-description { margin-top: 3px; font-size: 12px; color: var(--vscode-descriptionForeground); }
+  .supported-databases { display: flex; flex-wrap: wrap; gap: 6px; max-width: 860px; }
+  .database-badge {
+    padding: 3px 8px;
+    border: 1px solid var(--vscode-widget-border, var(--vscode-input-border, transparent));
+    border-radius: 999px;
+    font-size: 11px;
+    color: var(--vscode-descriptionForeground);
+    background: color-mix(in srgb, var(--vscode-editorWidget-background) 76%, transparent);
+  }
+  .field { margin-bottom: 13px; display: flex; flex-direction: column; min-width: 0; }
+  label { font-size: 12px; margin-bottom: 5px; color: var(--vscode-descriptionForeground); }
   input, select {
     background: var(--vscode-input-background); color: var(--vscode-input-foreground);
-    border: 1px solid var(--vscode-input-border, transparent); padding: 6px 8px; border-radius: 2px;
+    border: 1px solid var(--vscode-input-border, var(--vscode-panel-border));
+    padding: 7px 9px;
+    border-radius: 7px;
     font-size: 13px;
+    min-height: 32px;
+    transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
   }
-  input:focus, select:focus { outline: 1px solid var(--vscode-focusBorder); }
-  .row { display: flex; gap: 12px; }
+  input:hover, select:hover {
+    border-color: var(--vscode-focusBorder, var(--vscode-input-border));
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--vscode-focusBorder);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--vscode-focusBorder) 24%, transparent);
+  }
+  input::placeholder { color: color-mix(in srgb, var(--vscode-input-foreground) 42%, transparent); }
+  .row { display: flex; gap: 14px; align-items: flex-start; }
   .row .field { flex: 1; }
-  .actions { display: flex; gap: 8px; margin-top: 20px; }
+  #serverFields,
+  #fileField,
+  .field:has(#tags) {
+    max-width: 860px;
+  }
+  .actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+    padding-top: 14px;
+    border-top: 1px solid var(--vscode-panel-border);
+    flex-wrap: wrap;
+  }
   button {
     background: var(--vscode-button-background); color: var(--vscode-button-foreground);
-    border: none; padding: 6px 14px; border-radius: 2px; cursor: pointer; font-size: 13px;
+    border: 1px solid transparent;
+    padding: 7px 14px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 13px;
+    min-height: 32px;
+    transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
   }
-  button:hover { background: var(--vscode-button-hoverBackground); }
+  button:hover { background: var(--vscode-button-hoverBackground); transform: translateY(-1px); }
+  button:focus-visible { outline: 1px solid var(--vscode-focusBorder); outline-offset: 2px; }
   button.secondary {
     background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground);
   }
-  #result { margin-top: 14px; padding: 8px 10px; border-radius: 2px; font-size: 12px; display: none; }
+  button.secondary:hover { background: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-secondaryBackground)); }
+  #result {
+    margin-top: 14px;
+    padding: 10px 12px;
+    border-radius: 7px;
+    font-size: 12px;
+    display: none;
+    max-width: 860px;
+  }
   #result.ok { display: block; background: var(--vscode-inputValidation-infoBackground); border: 1px solid var(--vscode-inputValidation-infoBorder); }
   #result.err { display: block; background: var(--vscode-inputValidation-errorBackground); border: 1px solid var(--vscode-inputValidation-errorBorder); }
   .hidden { display: none !important; }
+  @media (max-width: 640px) {
+    body { padding: 14px; }
+    .row { flex-direction: column; gap: 0; }
+  }
 </style>
 </head>
 <body>

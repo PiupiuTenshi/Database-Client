@@ -17,6 +17,7 @@ A VS Code multi-database client with a schema explorer, SQL query runner, result
 - **Schema explorer** — Connections → (Schema) → Tables / Views → Columns / Indexes / Foreign Keys.
 - **Query editor** — open a SQL document bound to a connection, run the selection or the current statement (`Ctrl+Enter`) or the whole file (`Ctrl+Shift+Enter`), with a result grid and query history.
 - **Object panel with tabs** — Data (editable), Columns, Constraints, Triggers and DDL in one tabbed view with a refreshed, theme-aware UI.
+- **Polished VS Code-native webviews** — smoother spacing, focus states, hover feedback, and readable dense tables across the connection form, dashboard, result grid, object panel, and dependency graph.
 - **Editable data grid** — action buttons and double-click editing, add rows, delete keyed rows, add/drop columns with a DDL preview. Updates/deletes are primary-key guarded; inserts work even before a key exists.
 - **Import / export** — export the page or whole table to CSV / JSON / SQL Insert (and from the Query Result panel); import a CSV file with header auto-mapping.
 - **Mock data & code generators** — seeded, type-aware mock rows, plus TypeScript / C# / CRUD SQL generated from a table.

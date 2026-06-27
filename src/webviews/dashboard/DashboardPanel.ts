@@ -80,11 +80,37 @@ export class DashboardPanel {
 <title>${EXTENSION_DISPLAY_NAME}</title>
 ${commonStyles(nonce)}
 <style nonce="${nonce}">
-  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; padding: 16px; }
-  .card { border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
-  .card .num { font-size: 26px; font-weight: 600; }
-  .card .lbl { color: var(--muted); font-size: 12px; margin-top: 4px; }
-  .meta { padding: 0 16px 16px; color: var(--muted); font-size: 12px; word-break: break-word; }
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 12px;
+    padding: 16px;
+  }
+  .card {
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    padding: 15px;
+    background: color-mix(in srgb, var(--surface) 78%, transparent);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset;
+    transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+  }
+  .card:hover {
+    transform: translateY(-1px);
+    border-color: var(--vscode-focusBorder);
+    background: color-mix(in srgb, var(--surface) 88%, var(--vscode-editor-background) 12%);
+  }
+  .card .num { font-size: 28px; line-height: 32px; font-weight: 750; letter-spacing: 0; }
+  .card .lbl { color: var(--muted); font-size: 12px; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .meta {
+    margin: 0 16px 16px;
+    padding: 11px 12px;
+    color: var(--muted);
+    font-size: 12px;
+    word-break: break-word;
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--surface) 72%, transparent);
+  }
 </style>
 </head>
 <body>
