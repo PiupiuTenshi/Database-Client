@@ -150,6 +150,8 @@ gh auth status
 
 Quy trình release tối thiểu nằm trong `README.md` mục **Release Workflow**.
 
+Các tài liệu lập kế hoạch dài hạn không được publish trong source/release public. Nếu cần kiểm tra source archive công khai, dùng release mới nhất thay vì các tag/branch cũ đã được retire khỏi public refs.
+
 ### Gỡ cài đặt
 
 ```bash

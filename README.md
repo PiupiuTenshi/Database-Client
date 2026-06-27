@@ -245,6 +245,8 @@ gh release create v<version> .\open-db-nexus-<version>.vsix --title "Open DB Nex
 
 The public repo intentionally does not publish the long-form planning docs. Keep private planning notes outside tracked files and put user-facing setup, usage, development, and release instructions in this README, `INSTALL.md`, `CHANGELOG.md`, and `SECURITY.md`.
 
+Historical release branches and tags that still exposed the old `docs/` folder are retired from public refs as part of the public-docs cleanup. Use the latest release line for public source archives and VSIX assets.
+
 ## License
 
 [MIT](LICENSE)

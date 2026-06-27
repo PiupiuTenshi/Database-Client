@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Retired old public release branches/tags that still exposed the local-only `docs/` folder.
+- Clarified public documentation policy in README/INSTALL.
+
 ## [1.13.5] - 2026-06-27
 
 ### Fixed
