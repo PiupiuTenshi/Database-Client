@@ -65,7 +65,7 @@ export class MongoDbAdapter implements DatabaseAdapter {
   }
 
   async connect(profile: RuntimeConnectionProfile): Promise<DbSession> {
-    const client = await this.factory(toUri(profile), toOptions(profile)).connect();
+    const client = await connectWithFallback(this.factory, profile);
     const id = newId();
     this.sessions.set(id, { client, defaultDb: profile.database });
     return { id, dbType: this.dbType };
@@ -74,7 +74,7 @@ export class MongoDbAdapter implements DatabaseAdapter {
   async testConnection(profile: RuntimeConnectionProfile): Promise<TestConnectionResult> {
     let client: MongoClientLike | undefined;
     try {
-      client = await this.factory(toUri(profile), toOptions(profile)).connect();
+      client = await connectWithFallback(this.factory, profile);
       await client.db(profile.database).command({ ping: 1 });
       return { ok: true, message: "Connected to MongoDB successfully." };
     } catch (error) {
@@ -311,17 +311,66 @@ function isDocument(value: unknown): value is Document {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function toUri(profile: RuntimeConnectionProfile): string {
-  if (profile.host?.startsWith("mongodb://") || profile.host?.startsWith("mongodb+srv://")) {
-    return profile.host;
+async function connectWithFallback(
+  factory: MongoClientFactory,
+  profile: RuntimeConnectionProfile
+): Promise<MongoClientLike> {
+  const options = toOptions(profile);
+  let lastError: unknown;
+  for (const uri of toUriCandidates(profile)) {
+    let client: MongoClientLike | undefined;
+    try {
+      client = factory(uri, options);
+      return await client.connect();
+    } catch (error) {
+      lastError = error;
+      if (client) {
+        await safeClose(client);
+      }
+    }
   }
+  throw lastError instanceof Error ? lastError : new Error(String(lastError));
+}
+
+function toUriCandidates(profile: RuntimeConnectionProfile): string[] {
+  const host = profile.host?.trim();
+  if (host?.startsWith("mongodb://") || host?.startsWith("mongodb+srv://")) {
+    return [host];
+  }
+
+  const base = `mongodb://${toCredentials(profile)}${toHostList(profile)}`;
+  const candidates = [base];
+
+  // Some MongoDB users are created in the selected database instead of admin.
+  // Keep the legacy/admin-default URI first, then retry with the database path.
+  if (profile.username?.trim() && profile.database?.trim()) {
+    candidates.push(`${base}/${encodeURIComponent(profile.database.trim())}`);
+  }
+  return [...new Set(candidates)];
+}
+
+function toCredentials(profile: RuntimeConnectionProfile): string {
+  const username = profile.username?.trim();
+  if (!username) {
+    return "";
+  }
+  const password = profile.password ?? "";
+  return `${encodeURIComponent(username)}:${encodeURIComponent(password)}@`;
+}
+
+function toHostList(profile: RuntimeConnectionProfile): string {
   const host = profile.host?.trim() || "localhost";
-  const port = profile.port ?? 27017;
-  const credentials =
-    profile.username && profile.password
-      ? `${encodeURIComponent(profile.username)}:${encodeURIComponent(profile.password)}@`
-      : "";
-  return `mongodb://${credentials}${host}:${port}`;
+  if (hasExplicitMongoPort(host) || host.includes(",")) {
+    return host;
+  }
+  return `${host}:${profile.port ?? 27017}`;
+}
+
+function hasExplicitMongoPort(host: string): boolean {
+  if (/^\[[^\]]+\]:\d+$/.test(host)) {
+    return true;
+  }
+  return /^[^:]+:\d+$/.test(host);
 }
 
 function toOptions(profile: RuntimeConnectionProfile): MongoClientOptions {

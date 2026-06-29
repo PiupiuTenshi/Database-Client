@@ -129,7 +129,7 @@ Kiểm tra version đang chạy:
 
    ```powershell
    code --list-extensions --show-versions | Select-String open-db-nexus
-   # ví dụ: piupiutenshi.open-db-nexus@1.13.3
+   # ví dụ: piupiutenshi.open-db-nexus@1.14.0
    ```
 
    Hoặc xem ở tab Extensions, mục **Open DB Nexus** sẽ hiển thị số phiên bản.
@@ -164,7 +164,8 @@ code --uninstall-extension piupiutenshi.open-db-nexus
 
 1. Mở **Open DB Nexus** ở Activity Bar.
 2. **＋ Add Connection** → chọn SQLite, File Path trỏ tới một file `.sqlite` (hoặc `:memory:`).
-3. **Test Connection** → thấy "Connected".
+3. Chọn database type; port mặc định sẽ tự điền theo engine nhưng vẫn sửa được.
+4. **Test Connection** → thấy "Connected".
 4. Mở rộng connection để xem Tables/Columns; chuột phải bảng → **Open Table (Data & Properties)**.
 
 ### Nếu mở rộng database bị `Loading...` lâu

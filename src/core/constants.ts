@@ -65,6 +65,28 @@ export const DB_TYPE_OPTIONS: { value: DbType; label: string; fileBased: boolean
   { value: "redis", label: "Redis", fileBased: false }
 ];
 
+/** Port mặc định cho form connection. Người dùng vẫn có thể sửa trực tiếp. */
+export const DEFAULT_DB_PORTS: Partial<Record<DbType, number>> = {
+  postgresql: 5432,
+  mysql: 3306,
+  mariadb: 3306,
+  sqlserver: 1433,
+  mongodb: 27017,
+  redis: 6379,
+  oracle: 1521,
+  "cloudflare-d1": 443,
+  turso: 443,
+  azuresql: 1433,
+  cockroachdb: 26257,
+  gaussdb: 5432,
+  kingbase: 54321,
+  redshift: 5439,
+  doris: 9030,
+  clickhouse: 8123,
+  trino: 8080,
+  presto: 8080
+};
+
 export const ENVIRONMENT_OPTIONS: ConnectionEnvironment[] = [
   "local",
   "dev",

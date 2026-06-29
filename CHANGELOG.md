@@ -4,6 +4,27 @@
 
 _No unreleased changes._
 
+## [1.14.0] - 2026-06-29
+
+### Added
+
+- Added database-type coverage tests so every database shown in the connection form must have a registered adapter.
+- Added default-port coverage tests for every network database type.
+- Added MongoDB connection tests for full connection strings, host values that already include a port, and database-auth fallback.
+
+### Improved
+
+- Refreshed the Add/Edit Connection form with clearer sections, database badges, color accents, inline icons, and stronger endpoint layout.
+- Connection ports now default from the selected database type while staying fully editable.
+- The connection form's **Test Connection** action now runs the real adapter connectivity check after local field validation.
+- Adapter registration now uses a shared `registerDefaultAdapters` helper so runtime wiring and tests stay aligned.
+
+### Fixed
+
+- MongoDB connections no longer append `:27017` when the host already includes a port.
+- MongoDB full `mongodb://` and `mongodb+srv://` connection strings are preserved as entered.
+- MongoDB authentication now retries against the selected database path for users created outside the default auth database.
+
 ## [1.13.7] - 2026-06-28
 
 ### Fixed

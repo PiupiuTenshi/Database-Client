@@ -70,6 +70,95 @@ class FakeCollection implements CollectionLike {
 }
 
 describe("MongoDbAdapter", () => {
+  it("uses full MongoDB connection strings as-is", async () => {
+    const uris: string[] = [];
+    const fullUri = "mongodb+srv://user:pass@example.mongodb.net/app?retryWrites=true";
+    const adapter = new MongoDbAdapter((uri) => {
+      uris.push(uri);
+      return new FakeMongoClient();
+    });
+
+    await adapter.testConnection({
+      id: "p1",
+      name: "Mongo",
+      dbType: "mongodb",
+      host: fullUri,
+      database: "app",
+      environment: "local",
+      tags: [],
+      createdAt: "",
+      updatedAt: ""
+    });
+
+    expect(uris).toEqual([fullUri]);
+  });
+
+  it("does not append the default port when host already includes a port", async () => {
+    const uris: string[] = [];
+    const adapter = new MongoDbAdapter((uri) => {
+      uris.push(uri);
+      return new FakeMongoClient();
+    });
+
+    await adapter.testConnection({
+      id: "p1",
+      name: "Mongo",
+      dbType: "mongodb",
+      host: "127.0.0.1:27018",
+      port: 27017,
+      username: "root",
+      password: "secret",
+      database: "app",
+      environment: "local",
+      tags: [],
+      createdAt: "",
+      updatedAt: ""
+    });
+
+    expect(uris[0]).toBe("mongodb://root:secret@127.0.0.1:27018");
+  });
+
+  it("falls back to authenticating against the selected database", async () => {
+    const uris: string[] = [];
+    class AuthFallbackClient extends FakeMongoClient {
+      constructor(private readonly uri: string) {
+        super();
+      }
+
+      override async connect(): Promise<MongoClientLike> {
+        if (!this.uri.endsWith("/app")) {
+          throw new Error("Authentication failed.");
+        }
+        return this;
+      }
+    }
+
+    const adapter = new MongoDbAdapter((uri) => {
+      uris.push(uri);
+      return new AuthFallbackClient(uri);
+    });
+
+    const result = await adapter.testConnection({
+      id: "p1",
+      name: "Mongo",
+      dbType: "mongodb",
+      host: "localhost",
+      username: "app_user",
+      password: "secret",
+      database: "app",
+      environment: "local",
+      tags: [],
+      createdAt: "",
+      updatedAt: ""
+    });
+
+    expect(result.ok).toBe(true);
+    expect(uris).toEqual([
+      "mongodb://app_user:secret@localhost:27017",
+      "mongodb://app_user:secret@localhost:27017/app"
+    ]);
+  });
+
   it("lists collections and inferred document fields", async () => {
     const adapter = new MongoDbAdapter(() => new FakeMongoClient());
     const session = await adapter.connect({

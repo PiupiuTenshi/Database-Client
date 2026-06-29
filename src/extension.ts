@@ -1,28 +1,6 @@
 import * as vscode from "vscode";
 import { AdapterRegistry } from "./adapters/AdapterRegistry";
-import {
-  AzureSqlAdapter,
-  CockroachDbAdapter,
-  DorisAdapter,
-  GaussDbAdapter,
-  KingbaseAdapter,
-  RedshiftAdapter
-} from "./adapters/compat/CompatibilityAdapters";
-import { DuckDbAdapter } from "./adapters/duckdb/DuckDbAdapter";
-import {
-  ClickHouseAdapter,
-  CloudflareD1Adapter,
-  PrestoAdapter,
-  TrinoAdapter,
-  TursoAdapter
-} from "./adapters/httpSql/HttpSqlAdapter";
-import { MongoDbAdapter } from "./adapters/mongodb/MongoDbAdapter";
-import { MySqlAdapter } from "./adapters/mysql/MySqlAdapter";
-import { OracleAdapter } from "./adapters/oracle/OracleAdapter";
-import { PostgresAdapter } from "./adapters/postgresql/PostgresAdapter";
-import { RedisAdapter } from "./adapters/redis/RedisAdapter";
-import { SqlServerAdapter } from "./adapters/sqlserver/SqlServerAdapter";
-import { SqliteAdapter } from "./adapters/sqlite/SqliteAdapter";
+import { registerDefaultAdapters } from "./adapters/registerDefaultAdapters";
 import { registerCommands } from "./commands/registerCommands";
 import { EXTENSION_DISPLAY_NAME, VIEWS } from "./core/constants";
 import { ConnectionService } from "./services/ConnectionService";
@@ -58,26 +36,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(connectionService);
 
   const registry = new AdapterRegistry();
-  registry.register(new SqliteAdapter());
-  registry.register(new PostgresAdapter());
-  registry.register(new MySqlAdapter("mysql"));
-  registry.register(new MySqlAdapter("mariadb"));
-  registry.register(new SqlServerAdapter());
-  registry.register(new DuckDbAdapter());
-  registry.register(new MongoDbAdapter());
-  registry.register(new OracleAdapter());
-  registry.register(new CloudflareD1Adapter());
-  registry.register(new TursoAdapter());
-  registry.register(new AzureSqlAdapter());
-  registry.register(new CockroachDbAdapter());
-  registry.register(new GaussDbAdapter());
-  registry.register(new KingbaseAdapter());
-  registry.register(new RedshiftAdapter());
-  registry.register(new DorisAdapter());
-  registry.register(new ClickHouseAdapter());
-  registry.register(new TrinoAdapter());
-  registry.register(new PrestoAdapter());
-  registry.register(new RedisAdapter());
+  registerDefaultAdapters(registry);
 
   const sessionManager = new SessionManager(registry, secretStore, logService);
   context.subscriptions.push(sessionManager);

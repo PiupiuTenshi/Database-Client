@@ -42,7 +42,7 @@ export class ConnectionService implements vscode.Disposable {
   async createProfile(draft: ConnectionDraft, password?: string): Promise<ConnectionProfile> {
     const timestamp = this.now();
     const profile: ConnectionProfile = {
-      ...normalizeDraft(draft),
+      ...normalizeConnectionDraft(draft),
       id: newId(),
       createdAt: timestamp,
       updatedAt: timestamp
@@ -69,7 +69,7 @@ export class ConnectionService implements vscode.Disposable {
     }
     const profile: ConnectionProfile = {
       ...existing,
-      ...normalizeDraft(draft),
+      ...normalizeConnectionDraft(draft),
       id: existing.id,
       createdAt: existing.createdAt,
       updatedAt: this.now()
@@ -121,7 +121,7 @@ export class ConnectionService implements vscode.Disposable {
   }
 }
 
-function normalizeDraft(
+export function normalizeConnectionDraft(
   draft: ConnectionDraft
 ): Omit<ConnectionProfile, "id" | "createdAt" | "updatedAt"> {
   return {

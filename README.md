@@ -22,6 +22,7 @@ A VS Code multi-database client with a schema explorer, SQL query runner, result
 - **Import / export** — export the page or whole table to CSV / JSON / SQL Insert (and from the Query Result panel); import a CSV file with header auto-mapping.
 - **Mock data & code generators** — seeded, type-aware mock rows, plus TypeScript / C# / CRUD SQL generated from a table.
 - **Database manager** — logical SQL backup (DDL + data), a connection dashboard, and global schema search (tables / views / columns).
+- **Connection form polish** — database badges, inline icons, color accents, editable default ports per engine, and real adapter-backed test connection from the form.
 - **Safety** — production write/export confirmation, hard-block policies (`disableWriteOnProduction` / `disableExportOnProduction`), and a destructive-SQL warning (DROP / TRUNCATE / DELETE|UPDATE without WHERE).
 - **Query editor** — run the selection, the current statement (`Ctrl+Enter`) or the whole file (`Ctrl+Shift+Enter`); result grid with live filter and sortable columns; searchable, favorite-able query history.
 - **Dependency Graph** — visualize foreign-key relationships (inbound / outbound / both, depth 1/2/3/all), search nodes, open a table from the graph, export as JSON or SVG, plus circular-dependency detection and a Markdown impact report.
@@ -29,7 +30,7 @@ A VS Code multi-database client with a schema explorer, SQL query runner, result
 
 ## Update from VS Code UI
 
-Open the **Open DB Nexus** view and click **Check for Updates** (cloud download icon), or run **Open DB Nexus: Check for Updates** from the Command Palette. The extension checks GitHub Releases, downloads the newest `.vsix`, starts VS Code's install flow, and prompts for reload. If VS Code cannot start the automatic installer, Open DB Nexus keeps the downloaded VSIX and offers **Open VSIX**, **Reveal File**, **Copy Path**, or **Open Release**.
+Open the **Open DB Nexus** view and click **Check for Updates** (cloud download icon), or run **Open DB Nexus: Check for Updates** from the Command Palette. The extension checks GitHub Releases, downloads the newest `.vsix`, starts VS Code's install flow, and prompts for reload. If VS Code cannot start the automatic installer, Open DB Nexus keeps the downloaded VSIX and offers **Open VSIX**, **Reveal File**, **Copy Path**, or **Copy Command**.
 
 Settings:
 
@@ -39,26 +40,28 @@ Settings:
 
 ## Supported databases
 
-| Engine          | Driver/foundation  | Status                 |
-| --------------- | ------------------ | ---------------------- |
-| SQLite          | `better-sqlite3`   | stable                 |
-| PostgreSQL      | `pg`               | stable                 |
-| MySQL / MariaDB | `mysql2`           | stable                 |
-| SQL Server      | `mssql`            | stable                 |
-| Redis           | `redis`            | keys + command console |
-| DuckDB          | `@duckdb/node-api` | foundation             |
-| MongoDB         | `mongodb`          | foundation             |
-| Oracle          | `oracledb`         | foundation             |
-| D1 / Turso      | HTTP-SQL           | foundation             |
-| ClickHouse      | HTTP-SQL           | foundation             |
-| Trino / Presto  | HTTP-SQL           | foundation             |
+| Engine | Driver/foundation | Status |
+| --- | --- | --- |
+| SQLite | `better-sqlite3` | stable |
+| PostgreSQL | `pg` | stable |
+| MySQL / MariaDB | `mysql2` | stable |
+| SQL Server / Azure SQL | `mssql` | stable/foundation |
+| Redis | `redis` | keys + command console |
+| DuckDB | `@duckdb/node-api` | foundation |
+| MongoDB | `mongodb` | foundation |
+| Oracle | `oracledb` | foundation |
+| Cloudflare D1 / Turso | HTTP-SQL | foundation |
+| CockroachDB / GaussDB / Kingbase / Redshift | PostgreSQL-compatible | foundation |
+| Apache Doris | MySQL-compatible | foundation |
+| ClickHouse | HTTP-SQL | foundation |
+| Trino / Presto | HTTP-SQL | foundation |
 
 > **Redis** is a key-value store, not SQL: use the **Query Editor** to run commands (`SET`, `GET`, `KEYS *`, …); keys are listed under "Tables". SQL-only features (paginated table viewer, dependency graph) do not apply to Redis.
 
 ## Getting started
 
 1. Open the **Open DB Nexus** view from the Activity Bar.
-2. Click **＋ Add Connection**, fill in the form, and **Test Connection**.
+2. Click **＋ Add Connection**, choose a database type, confirm or edit the default port, and **Test Connection**.
 3. Expand the connection to browse the schema; right-click a table for **Open Table Data**, **Open Dependency Graph**, or **Open Dependency Report**.
 4. Right-click a connection → **Open Query Editor**, write SQL, and press `Ctrl+Enter`.
 

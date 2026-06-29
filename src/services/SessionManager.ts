@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import type {
+  ConnectionDraft,
   ConnectionProfile,
   RuntimeConnectionProfile,
   TestConnectionResult
@@ -7,7 +8,7 @@ import type {
 import type { AdapterRegistry } from "../adapters/AdapterRegistry";
 import type { DatabaseAdapter, DbSession } from "../adapters/DatabaseAdapter";
 import type { SecretStore } from "../storage/SecretStore";
-import type { Logger } from "./ConnectionService";
+import { normalizeConnectionDraft, type Logger } from "./ConnectionService";
 
 interface ActiveSession {
   adapter: DatabaseAdapter;
@@ -56,6 +57,28 @@ export class SessionManager implements vscode.Disposable {
     }
     try {
       const runtime = await this.toRuntime(profile);
+      return await adapter.testConnection(runtime);
+    } catch (error) {
+      return { ok: false, message: toErrorMessage(error) };
+    }
+  }
+
+  async testDraft(draft: ConnectionDraft, password?: string): Promise<TestConnectionResult> {
+    const adapter = this.registry.get(draft.dbType);
+    if (!adapter) {
+      return {
+        ok: false,
+        message: `No adapter for ${draft.dbType} yet (arrives in a later phase).`
+      };
+    }
+    try {
+      const runtime: RuntimeConnectionProfile = {
+        ...normalizeConnectionDraft(draft),
+        id: "draft",
+        createdAt: "",
+        updatedAt: "",
+        password
+      };
       return await adapter.testConnection(runtime);
     } catch (error) {
       return { ok: false, message: toErrorMessage(error) };
