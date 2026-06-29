@@ -19,7 +19,7 @@ export class QueryService {
     options?: QueryOptions
   ): Promise<QueryResult> {
     const { adapter, session } = await this.sessionManager.getOrConnect(profile);
-    return adapter.executeQuery(session, sql, options);
+    return withStatement(await adapter.executeQuery(session, sql, options), sql, options?.params);
   }
 
   /** Lấy một trang dữ liệu bảng (table viewer). */
@@ -31,12 +31,20 @@ export class QueryService {
   ): Promise<TablePage> {
     const { adapter, session } = await this.sessionManager.getOrConnect(profile);
     const quote = (id: string): string => adapter.quoteIdentifier(id);
-    const result = await adapter.executeQuery(
-      session,
-      buildSelectAll(ref, limit, offset, quote, adapter.paginationStyle)
-    );
-    const countResult = await adapter.executeQuery(session, buildCount(ref, quote));
+    const pageSql = buildSelectAll(ref, limit, offset, quote, adapter.paginationStyle);
+    const countSql = buildCount(ref, quote);
+    const result = await adapter.executeQuery(session, pageSql);
+    const countResult = await adapter.executeQuery(session, countSql);
     const total = Number((countResult.rows[0]?.count as number | undefined) ?? 0);
-    return { result, total, offset, limit };
+    return {
+      result: withStatement(result, pageSql),
+      total,
+      offset,
+      limit
+    };
   }
+}
+
+function withStatement(result: QueryResult, sql: string, params?: unknown[]): QueryResult {
+  return { ...result, sql, params };
 }

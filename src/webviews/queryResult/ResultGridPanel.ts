@@ -13,12 +13,16 @@ interface ResultPayload {
   durationMs: number;
   truncated: boolean;
   affectedRows?: number;
+  sql?: string;
+  params?: unknown[];
 }
 
 interface ErrorPayload {
   kind: "error";
   message: string;
   code?: string;
+  sql?: string;
+  params?: unknown[];
 }
 
 type GridPayload = ResultPayload | ErrorPayload;
@@ -40,16 +44,20 @@ export class ResultGridPanel {
       rowCount: result.rowCount,
       durationMs: result.durationMs,
       truncated: result.truncated ?? false,
-      affectedRows: result.affectedRows
+      affectedRows: result.affectedRows,
+      sql: result.sql,
+      params: result.params
     };
     ResultGridPanel.ensure().post(payload);
   }
 
-  static showError(error: DbError, durationMs: number): void {
+  static showError(error: DbError, durationMs: number, statement?: { sql: string; params?: unknown[] }): void {
     ResultGridPanel.ensure().post({
       kind: "error",
       message: `${error.message}${durationMs ? ` (${durationMs}ms)` : ""}`,
-      code: error.code
+      code: error.code,
+      sql: statement?.sql,
+      params: statement?.params
     });
   }
 
@@ -150,6 +158,13 @@ ${commonStyles(nonce)}
     </select>
     <button class="btn" id="exportBtn">⭳ Export</button>
   </div>
+  <div class="section" id="queryBox" style="display:none;margin:8px 10px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <h3 style="margin:0">Query</h3><span class="spacer"></span>
+      <button class="btn" id="copyQuery">Copy Query</button>
+    </div>
+    <pre class="sql-box" id="querySql"></pre>
+  </div>
   <div class="grid-wrap"><div id="grid" class="msg"></div></div>
 <script nonce="${nonce}">
   const vscode = acquireVsCodeApi();
@@ -161,6 +176,14 @@ ${commonStyles(nonce)}
     return "<td>" + esc(v) + "</td>";
   }
   $("exportBtn").addEventListener("click", () => vscode.postMessage({ type:"export", format: $("exportFmt").value }));
+  let queryText = "";
+  function renderQuery(p){
+    if(!p.sql) return;
+    queryText = p.sql + (p.params && p.params.length ? "\\n-- params: " + JSON.stringify(p.params) : "");
+    $("querySql").textContent = queryText;
+    $("queryBox").style.display = "block";
+  }
+  $("copyQuery").addEventListener("click", () => { if(queryText && navigator.clipboard) navigator.clipboard.writeText(queryText); });
 
   let current = null;        // last result payload
   let sortCol = null, sortDir = 1, filterText = "";
@@ -199,17 +222,20 @@ ${commonStyles(nonce)}
     const p = event.data;
     if (p.kind === "error") {
       current = null;
+      renderQuery(p);
       $("bar").textContent = "Error" + (p.code ? " [" + p.code + "]" : "");
       $("grid").outerHTML = '<div id="grid" class="err">' + esc(p.message) + "</div>";
       return;
     }
     if (!p.columns.length) {
       current = null;
+      renderQuery(p);
       $("bar").textContent = (p.affectedRows ?? 0) + " row(s) affected · " + p.durationMs + "ms";
       $("grid").outerHTML = '<div id="grid" class="msg">Query OK.</div>';
       return;
     }
     current = p; sortCol = null; sortDir = 1;
+    renderQuery(p);
     renderGrid();
   });
   vscode.postMessage({ type: "ready" });

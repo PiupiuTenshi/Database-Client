@@ -6,6 +6,7 @@ coverage/
 docs/
 *.vsix
 *.log
+release/
 .env
 .env.*
 

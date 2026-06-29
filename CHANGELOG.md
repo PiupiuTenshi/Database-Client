@@ -4,6 +4,24 @@
 
 _No unreleased changes._
 
+## [1.14.2] - 2026-06-29
+
+### Added
+
+- Query Result now shows the executed SQL for successful results, non-result write/DDL statements, and failed statements.
+- Table Data now shows the latest generated SQL for data loading, inserts, updates, deletes, undo restores, and DDL actions.
+- Added copy buttons for the displayed query text, including bound parameter values.
+
+### Fixed
+
+- MongoDB row deletes and undo restores now bridge generated SQL mutations into MongoDB collection operations.
+- Drop-column actions now block primary-key, indexed, foreign-key, and non-SQL column targets before running unsafe DDL.
+
+### Tests
+
+- Added QueryService coverage for returned SQL metadata.
+- Expanded data-edit and MongoDB mutation coverage.
+
 ## [1.14.1] - 2026-06-29
 
 ### Fixed

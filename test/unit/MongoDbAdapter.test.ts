@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { ObjectId } from "mongodb";
 import { MongoDbAdapter, type CollectionLike, type DbLike, type MongoClientLike } from "../../src/adapters/mongodb/MongoDbAdapter";
 
 class FakeMongoClient implements MongoClientLike {
@@ -39,6 +40,9 @@ class FakeMongoDb implements DbLike {
 }
 
 class FakeCollection implements CollectionLike {
+  readonly deletedFilters: Record<string, unknown>[] = [];
+  readonly insertedDocuments: Record<string, unknown>[] = [];
+
   find(): ReturnType<CollectionLike["find"]> {
     const docs = [{ _id: "1", name: "A" }];
     const terminal = { toArray: async () => docs };
@@ -65,7 +69,47 @@ class FakeCollection implements CollectionLike {
   }
 
   async insertOne(document: Record<string, unknown>): Promise<{ insertedId: unknown }> {
+    this.insertedDocuments.push(document);
     return { insertedId: document._id ?? "1" };
+  }
+
+  async deleteOne(filter: Record<string, unknown>): Promise<{ deletedCount: number }> {
+    this.deletedFilters.push(filter);
+    return { deletedCount: 1 };
+  }
+}
+
+class CapturingCollection extends FakeCollection {
+  constructor(private readonly deletedCountByAttempt: number[]) {
+    super();
+  }
+
+  override async deleteOne(filter: Record<string, unknown>): Promise<{ deletedCount: number }> {
+    this.deletedFilters.push(filter);
+    return { deletedCount: this.deletedCountByAttempt.shift() ?? 0 };
+  }
+}
+
+class CapturingMongoDb extends FakeMongoDb {
+  constructor(
+    databaseName: string,
+    readonly collectionRef: CapturingCollection
+  ) {
+    super(databaseName);
+  }
+
+  override collection(): CollectionLike {
+    return this.collectionRef;
+  }
+}
+
+class CapturingMongoClient extends FakeMongoClient {
+  constructor(private readonly collectionRef: CapturingCollection) {
+    super();
+  }
+
+  override db(name = "app"): DbLike {
+    return new CapturingMongoDb(name, this.collectionRef);
   }
 }
 
@@ -199,5 +243,84 @@ describe("MongoDbAdapter", () => {
 
     const count = await adapter.executeQuery(session, 'SELECT COUNT(*) AS count FROM "app"."users"');
     expect(count.rows).toEqual([{ count: 12 }]);
+  });
+
+  it("translates generated table viewer DELETE to deleteOne", async () => {
+    const collection = new CapturingCollection([1]);
+    const adapter = new MongoDbAdapter(() => new CapturingMongoClient(collection));
+    const session = await adapter.connect({
+      id: "p1",
+      name: "Mongo",
+      dbType: "mongodb",
+      host: "localhost",
+      database: "app",
+      environment: "local",
+      tags: [],
+      createdAt: "",
+      updatedAt: ""
+    });
+
+    const result = await adapter.executeQuery(
+      session,
+      'DELETE FROM "app"."users" WHERE "_id" = ?',
+      { params: ["abc123"] }
+    );
+
+    expect(collection.deletedFilters).toEqual([{ _id: "abc123" }]);
+    expect(result.affectedRows).toBe(1);
+  });
+
+  it("translates generated table viewer INSERT to insertOne for undo restore", async () => {
+    const collection = new CapturingCollection([]);
+    const adapter = new MongoDbAdapter(() => new CapturingMongoClient(collection));
+    const session = await adapter.connect({
+      id: "p1",
+      name: "Mongo",
+      dbType: "mongodb",
+      host: "localhost",
+      database: "app",
+      environment: "local",
+      tags: [],
+      createdAt: "",
+      updatedAt: ""
+    });
+
+    const result = await adapter.executeQuery(
+      session,
+      'INSERT INTO "app"."users" ("_id", "name") VALUES (?, ?)',
+      { params: ["507f1f77bcf86cd799439011", "A"] }
+    );
+
+    expect(collection.insertedDocuments).toHaveLength(1);
+    expect(collection.insertedDocuments[0]._id).toBeInstanceOf(ObjectId);
+    expect(collection.insertedDocuments[0].name).toBe("A");
+    expect(result.affectedRows).toBe(1);
+  });
+
+  it("tries ObjectId then string fallback for 24-hex MongoDB _id deletes", async () => {
+    const collection = new CapturingCollection([0, 1]);
+    const adapter = new MongoDbAdapter(() => new CapturingMongoClient(collection));
+    const session = await adapter.connect({
+      id: "p1",
+      name: "Mongo",
+      dbType: "mongodb",
+      host: "localhost",
+      database: "app",
+      environment: "local",
+      tags: [],
+      createdAt: "",
+      updatedAt: ""
+    });
+
+    const result = await adapter.executeQuery(
+      session,
+      'DELETE FROM "app"."users" WHERE "_id" = ?',
+      { params: ["507f1f77bcf86cd799439011"] }
+    );
+
+    expect(collection.deletedFilters).toHaveLength(2);
+    expect(collection.deletedFilters[0]._id).toBeInstanceOf(ObjectId);
+    expect(collection.deletedFilters[1]).toEqual({ _id: "507f1f77bcf86cd799439011" });
+    expect(result.affectedRows).toBe(1);
   });
 });

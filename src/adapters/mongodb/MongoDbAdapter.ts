@@ -45,6 +45,7 @@ export interface CollectionLike {
   countDocuments(filter?: Document): Promise<number>;
   indexes(): Promise<Document[]>;
   insertOne(document: Document): Promise<{ insertedId: unknown }>;
+  deleteOne(filter: Document): Promise<{ deletedCount?: number }>;
 }
 
 export type MongoClientFactory = (uri: string, options: MongoClientOptions) => MongoClientLike;
@@ -178,6 +179,43 @@ export class MongoDbAdapter implements DatabaseAdapter {
       throw new Error("Query cancelled.");
     }
     const started = Date.now();
+    const insertRequest = parseGeneratedInsert(sql, options?.params ?? []);
+    if (insertRequest) {
+      const result = await this
+        .db(session, insertRequest.schema)
+        .collection(insertRequest.collection)
+        .insertOne(insertRequest.document);
+      return {
+        queryId: newId(),
+        columns: [],
+        rows: [],
+        rowCount: 0,
+        affectedRows: result.insertedId === undefined ? 0 : 1,
+        durationMs: Date.now() - started
+      };
+    }
+
+    const deleteRequest = parseGeneratedDelete(sql, options?.params ?? []);
+    if (deleteRequest) {
+      const collection = this.db(session, deleteRequest.schema).collection(deleteRequest.collection);
+      let affectedRows = 0;
+      for (const filter of deleteRequest.filters) {
+        const result = await collection.deleteOne(filter);
+        affectedRows = result.deletedCount ?? 0;
+        if (affectedRows > 0) {
+          break;
+        }
+      }
+      return {
+        queryId: newId(),
+        columns: [],
+        rows: [],
+        rowCount: 0,
+        affectedRows,
+        durationMs: Date.now() - started
+      };
+    }
+
     const countRequest = parseGeneratedCount(sql);
     if (countRequest) {
       const total = await this
@@ -238,6 +276,18 @@ interface MongoFindRequest {
   skip?: number;
 }
 
+interface MongoDeleteRequest {
+  schema?: string;
+  collection: string;
+  filters: Document[];
+}
+
+interface MongoInsertRequest {
+  schema?: string;
+  collection: string;
+  document: Document;
+}
+
 async function findDocuments(db: DbLike, request: MongoFindRequest): Promise<Document[]> {
   const cursor = db.collection(request.collection).find(request.filter ?? {}, {
     projection: request.projection
@@ -277,14 +327,91 @@ function parseGeneratedCount(sql: string): MongoFindRequest | undefined {
   return { schema: target.schema, collection: target.collection };
 }
 
+function parseGeneratedInsert(sql: string, params: unknown[]): MongoInsertRequest | undefined {
+  const match =
+    /^\s*INSERT\s+INTO\s+(.+?)\s*\((.+?)\)\s+VALUES\s*\((.+?)\)\s*;?\s*$/i.exec(sql);
+  if (!match) {
+    return undefined;
+  }
+  const columns = splitSqlList(match[2]).map(parseIdentifier);
+  const placeholders = splitSqlList(match[3]);
+  if (
+    columns.length === 0 ||
+    columns.length !== placeholders.length ||
+    columns.length !== params.length ||
+    placeholders.some((placeholder) => placeholder.trim() !== "?")
+  ) {
+    return undefined;
+  }
+  const target = parseTarget(match[1]);
+  const document = Object.fromEntries(
+    columns.map((column, index) => [column, mongoInsertValue(column, params[index])])
+  );
+  return { schema: target.schema, collection: target.collection, document };
+}
+
+function splitSqlList(value: string): string[] {
+  const parts: string[] = [];
+  let current = "";
+  let quoted = false;
+  for (let index = 0; index < value.length; index += 1) {
+    const char = value[index];
+    if (char === '"') {
+      quoted = !quoted;
+      current += char;
+    } else if (char === "," && !quoted) {
+      parts.push(current.trim());
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  if (current.trim()) {
+    parts.push(current.trim());
+  }
+  return parts;
+}
+
+function parseGeneratedDelete(sql: string, params: unknown[]): MongoDeleteRequest | undefined {
+  const match = /^\s*DELETE\s+FROM\s+(.+?)\s+WHERE\s+(.+?)\s*;?\s*$/i.exec(sql);
+  if (!match) {
+    return undefined;
+  }
+  const conditions = match[2].split(/\s+AND\s+/i);
+  if (conditions.length === 0 || conditions.length !== params.length) {
+    return undefined;
+  }
+  const target = parseTarget(match[1]);
+  let filters: Document[] = [{}];
+  for (const [index, condition] of conditions.entries()) {
+    const columnMatch = /^\s*(.+?)\s*=\s*\?\s*$/i.exec(condition);
+    if (!columnMatch) {
+      return undefined;
+    }
+    const column = parseIdentifier(columnMatch[1]);
+    const values = mongoValueCandidates(column, params[index]);
+    filters = filters.flatMap((filter) =>
+      values.map((value) => ({
+        ...filter,
+        [column]: value
+      }))
+    );
+  }
+  return { schema: target.schema, collection: target.collection, filters };
+}
+
 function parseTarget(target: string): { schema?: string; collection: string } {
   const parts = target
     .split(".")
-    .map((part) => part.trim().replace(/^"|"$/g, "").replace(/""/g, '"'));
+    .map(parseIdentifier);
   if (parts.length >= 2) {
     return { schema: parts[0], collection: parts.slice(1).join(".") };
   }
   return { collection: parts[0] };
+}
+
+function parseIdentifier(identifier: string): string {
+  return identifier.trim().replace(/^"|"$/g, "").replace(/""/g, '"');
 }
 
 function parseJsonFind(sql: string): MongoFindRequest | undefined {
@@ -309,6 +436,24 @@ function parseJsonFind(sql: string): MongoFindRequest | undefined {
 
 function isDocument(value: unknown): value is Document {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function mongoValueCandidates(column: string, value: unknown): unknown[] {
+  if (
+    column === "_id" &&
+    typeof value === "string" &&
+    /^[0-9a-f]{24}$/i.test(value)
+  ) {
+    return [new ObjectId(value), value];
+  }
+  return [value];
+}
+
+function mongoInsertValue(column: string, value: unknown): unknown {
+  if (column === "_id" && typeof value === "string" && /^[0-9a-f]{24}$/i.test(value)) {
+    return new ObjectId(value);
+  }
+  return value;
 }
 
 async function connectWithFallback(

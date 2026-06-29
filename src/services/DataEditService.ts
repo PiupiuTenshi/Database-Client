@@ -1,4 +1,4 @@
-import type { ConnectionProfile, ObjectRef, QueryResult } from "../core/types";
+import type { ConnectionProfile, DbType, ObjectRef, QueryResult } from "../core/types";
 import {
   buildAddColumn,
   buildDeleteByKey,
@@ -32,7 +32,11 @@ export class DataEditService {
       (id) => adapter.quoteIdentifier(id),
       adapter.placeholderStyle
     );
-    return adapter.executeQuery(session, stmt.sql, { params: stmt.params });
+    return withStatement(
+      await adapter.executeQuery(session, stmt.sql, { params: stmt.params }),
+      stmt.sql,
+      stmt.params
+    );
   }
 
   async updateRow(
@@ -49,7 +53,11 @@ export class DataEditService {
       (id) => adapter.quoteIdentifier(id),
       adapter.placeholderStyle
     );
-    return adapter.executeQuery(session, stmt.sql, { params: stmt.params });
+    return withStatement(
+      await adapter.executeQuery(session, stmt.sql, { params: stmt.params }),
+      stmt.sql,
+      stmt.params
+    );
   }
 
   async deleteRow(
@@ -64,7 +72,11 @@ export class DataEditService {
       (id) => adapter.quoteIdentifier(id),
       adapter.placeholderStyle
     );
-    return adapter.executeQuery(session, stmt.sql, { params: stmt.params });
+    return withStatement(
+      await adapter.executeQuery(session, stmt.sql, { params: stmt.params }),
+      stmt.sql,
+      stmt.params
+    );
   }
 
   /** Sinh câu ALTER TABLE ADD COLUMN cho preview (chưa thực thi). */
@@ -84,13 +96,55 @@ export class DataEditService {
     ref: ObjectRef,
     column: string
   ): Promise<string> {
-    const { adapter } = await this.sessionManager.getOrConnect(profile);
+    const { adapter, session } = await this.sessionManager.getOrConnect(profile);
+    if (!supportsDropColumn(adapter.dbType)) {
+      throw new Error(`${adapter.dbType} does not support SQL column drops from this panel.`);
+    }
+    const [columns, indexes, foreignKeys] = await Promise.all([
+      adapter.listColumns(session, ref).catch(() => []),
+      adapter.listIndexes(session, ref).catch(() => []),
+      adapter.listForeignKeys(session, ref).catch(() => [])
+    ]);
+    const meta = columns.find((item) => equalsName(item.name, column));
+    if (meta?.isPrimaryKey) {
+      throw new Error(
+        `Cannot drop primary key column "${column}" from this panel. Drop or change the primary key constraint first.`
+      );
+    }
+    const index = indexes.find((item) =>
+      item.columns.some((indexColumn) => equalsName(indexColumn, column))
+    );
+    if (index) {
+      throw new Error(
+        `Cannot drop indexed column "${column}" while index "${index.name}" still uses it. Drop the index first.`
+      );
+    }
+    const foreignKey = foreignKeys.find((item) =>
+      item.source.columns.some((fkColumn) => equalsName(fkColumn, column))
+    );
+    if (foreignKey) {
+      throw new Error(
+        `Cannot drop foreign-key column "${column}" while constraint "${foreignKey.name}" still uses it. Drop the foreign key first.`
+      );
+    }
     return buildDropColumn(ref, column, (id) => adapter.quoteIdentifier(id));
   }
 
   /** Thực thi một câu DDL đã được preview/duyệt. */
   async runDdl(profile: ConnectionProfile, sql: string): Promise<QueryResult> {
     const { adapter, session } = await this.sessionManager.getOrConnect(profile);
-    return adapter.executeQuery(session, sql);
+    return withStatement(await adapter.executeQuery(session, sql), sql);
   }
+}
+
+function withStatement(result: QueryResult, sql: string, params?: unknown[]): QueryResult {
+  return { ...result, sql, params };
+}
+
+function supportsDropColumn(dbType: DbType): boolean {
+  return dbType !== "mongodb" && dbType !== "redis";
+}
+
+function equalsName(left: string, right: string): boolean {
+  return left.localeCompare(right, undefined, { sensitivity: "accent" }) === 0;
 }

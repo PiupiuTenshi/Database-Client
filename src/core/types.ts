@@ -195,6 +195,8 @@ export interface QueryResult {
   affectedRows?: number;
   durationMs: number;
   truncated?: boolean;
+  sql?: string;
+  params?: unknown[];
 }
 
 export interface QueryOptions {

@@ -37,6 +37,7 @@ interface IncomingMessage {
     | "updateRow"
     | "insertRow"
     | "deleteRow"
+    | "restoreDeletedRow"
     | "previewAddColumn"
     | "previewDropColumn"
     | "applyDdl"
@@ -128,8 +129,23 @@ export class TableDataPanel {
           );
           break;
         case "deleteRow":
-          await this.doWrite("delete", () =>
-            this.deps.dataEditService.deleteRow(this.profile, this.ref, message.keys ?? [])
+          await this.doWrite(
+            "delete",
+            () => this.deps.dataEditService.deleteRow(this.profile, this.ref, message.keys ?? []),
+            {
+              undoValues: message.values,
+              successMessage: "Deleted row."
+            }
+          );
+          break;
+        case "restoreDeletedRow":
+          await this.doWrite(
+            "insert",
+            () => this.deps.dataEditService.insertRow(this.profile, this.ref, message.values ?? []),
+            {
+              successMessage: "Restored deleted row.",
+              clearUndo: true
+            }
           );
           break;
         case "previewAddColumn":
@@ -175,8 +191,13 @@ export class TableDataPanel {
   /** Chạy một thao tác ghi với production guard (confirm modal nếu production). */
   private async doWrite(
     action: WriteAction,
-    run: () => Promise<{ affectedRows?: number }>,
-    options: { reloadProperties?: boolean } = {}
+    run: () => Promise<{ affectedRows?: number; sql?: string; params?: unknown[] }>,
+    options: {
+      clearUndo?: boolean;
+      reloadProperties?: boolean;
+      successMessage?: string;
+      undoValues?: ColumnValue[];
+    } = {}
   ): Promise<void> {
     if (this.deps.policyService.isWriteBlocked(this.profile)) {
       this.post({
@@ -197,9 +218,21 @@ export class TableDataPanel {
       }
     }
     const result = await run();
+    const affectedRows = result.affectedRows ?? 0;
+    const undo =
+      options.undoValues && affectedRows > 0
+        ? { type: "restoreDeletedRow", values: options.undoValues }
+        : undefined;
+    const statement = extractStatement(result);
     this.post({
       type: "writeResult",
-      payload: { ok: true, message: `Done. ${result.affectedRows ?? 0} row(s) affected.` }
+      payload: {
+        ok: true,
+        message: options.successMessage ?? `Done. ${affectedRows} row(s) affected.`,
+        clearUndo: options.clearUndo,
+        statement,
+        undo
+      }
     });
     if (options.reloadProperties) {
       await this.loadProperties();
@@ -222,7 +255,8 @@ export class TableDataPanel {
         total: page.total,
         offset: page.offset,
         pageSize: page.limit,
-        durationMs: page.result.durationMs
+        durationMs: page.result.durationMs,
+        statement: extractStatement(page.result)
       }
     });
   }
@@ -433,6 +467,14 @@ ${commonStyles(nonce)}
   </section>
 
   <div class="toast" id="toast"></div>
+  <div class="toolbar" id="undoBar" style="display:none;margin:8px 10px;border:1px solid var(--vscode-inputValidation-infoBorder);background:var(--vscode-inputValidation-infoBackground);border-radius:6px"></div>
+  <div class="section" id="lastQueryBox" style="display:none;margin:8px 10px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <h3 style="margin:0">Last query</h3><span class="spacer"></span>
+      <button class="btn" id="copyLastQuery">Copy Query</button>
+    </div>
+    <pre class="sql-box" id="lastQuerySql"></pre>
+  </div>
 
 <script nonce="${nonce}">
 ${this.clientScript()}
@@ -448,6 +490,28 @@ ${this.clientScript()}
   const $ = (id) => document.getElementById(id);
   function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
   function toast(text, isErr){ const t=$("toast"); t.textContent=text; t.className="toast show"+(isErr?" error":""); setTimeout(()=>{t.className="toast";}, 2600); }
+  let lastQueryText = "";
+  function formatStatement(statement){
+    if(!statement || !statement.sql) return "";
+    const params = statement.params && statement.params.length ? "\\n-- params: " + JSON.stringify(statement.params) : "";
+    return statement.sql + params;
+  }
+  function showLastQuery(statement){
+    const text = formatStatement(statement);
+    if(!text) return;
+    lastQueryText = text;
+    $("lastQuerySql").textContent = text;
+    $("lastQueryBox").style.display = "block";
+  }
+  $("copyLastQuery").addEventListener("click", ()=>{ if(lastQueryText && navigator.clipboard){ navigator.clipboard.writeText(lastQueryText); toast("Query copied"); } });
+  function hideUndo(){ const bar=$("undoBar"); bar.style.display="none"; bar.innerHTML=""; }
+  function showUndo(message, undo){
+    const bar=$("undoBar");
+    bar.style.display="flex";
+    bar.innerHTML='<span class="title">'+esc(message)+'</span><span class="spacer"></span><button class="btn primary" id="undoDelete">Undo</button><button class="btn" id="dismissUndo">Dismiss</button>';
+    $("undoDelete").addEventListener("click", ()=>{ vscode.postMessage({ type: undo.type, values: undo.values }); hideUndo(); });
+    $("dismissUndo").addEventListener("click", hideUndo);
+  }
 
   let state = { columns: [], pkColumns: [], rows: [], total: 0, offset: 0, pageSize: 100 };
   let propsLoaded = false;
@@ -487,6 +551,7 @@ ${this.clientScript()}
     const to = p.offset + p.rows.length;
     const editNote = p.pkColumns.length ? "double-click a cell to edit" : "no primary key — read only";
     $("dataInfo").textContent = from + "–" + to + " of " + p.total + " · " + p.durationMs + "ms · " + editNote;
+    showLastQuery(p.statement);
     $("prev").disabled = p.offset <= 0;
     $("next").disabled = p.offset + p.pageSize >= p.total;
     if (!p.columns.length){ $("dataGrid").className="msg"; $("dataGrid").textContent="No columns."; return; }
@@ -519,6 +584,10 @@ ${this.clientScript()}
     const row = state.rows[rowIndex];
     return state.pkColumns.map((c)=>({ column: c, value: row[c] === undefined ? null : row[c] }));
   }
+  function rowValues(rowIndex){
+    const row = state.rows[rowIndex];
+    return state.columns.map((c)=>({ column: c, value: row[c] === undefined ? null : row[c] }));
+  }
 
   function beginEdit(td){
     if (td.querySelector("input")) return;
@@ -549,7 +618,7 @@ ${this.clientScript()}
     if (td) beginEdit(td);
   }
 
-  function deleteRow(rowIndex){ vscode.postMessage({ type:"deleteRow", keys: rowKeys(rowIndex) }); }
+  function deleteRow(rowIndex){ vscode.postMessage({ type:"deleteRow", keys: rowKeys(rowIndex), values: rowValues(rowIndex) }); }
 
   function showAddRow(){
     if (!state.columns.length) return;
@@ -586,12 +655,18 @@ ${this.clientScript()}
 
   function renderProps(p){
     propsLoaded = true;
+    const protectedColumns = new Map();
+    p.columns.forEach((c)=>{ if(c.isPrimaryKey) protectedColumns.set(c.name, "Primary key column. Drop/change the primary key constraint first."); });
+    p.indexes.forEach((i)=>i.columns.forEach((col)=>{ if(!protectedColumns.has(col)) protectedColumns.set(col, "Indexed by "+i.name+". Drop the index first."); }));
+    p.foreignKeys.forEach((f)=>f.source.columns.forEach((col)=>{ if(!protectedColumns.has(col)) protectedColumns.set(col, "Used by foreign key "+f.name+". Drop the foreign key first."); }));
     $("columnsGrid").innerHTML = table(["#","Name","Type","Nullable","Default","Key",""],
       p.columns.map((c)=>[ String(c.ordinal), esc(c.name), esc(c.dataType),
         c.nullable?pill("NULL","yes"):pill("NOT NULL","no"),
         c.defaultValue?esc(c.defaultValue):'<span class="null">—</span>',
         c.isPrimaryKey?pill("PK","pk"):"",
-        "<button class='icon-btn' data-dropcol='"+esc(c.name)+"' title='Drop column'>🗑</button>" ]));
+        protectedColumns.has(c.name)
+          ? "<button class='icon-btn' disabled title='"+esc(protectedColumns.get(c.name))+"'>🔒</button>"
+          : "<button class='icon-btn' data-dropcol='"+esc(c.name)+"' title='Drop column'>🗑</button>" ]));
     document.querySelectorAll("[data-dropcol]").forEach((b)=>b.addEventListener("click",()=>vscode.postMessage({type:"previewDropColumn", column:b.dataset.dropcol})));
 
     $("indexesGrid").innerHTML = table(["Name","Unique","Columns"],
@@ -633,7 +708,13 @@ ${this.clientScript()}
       document.querySelector('.tab[data-tab="columns"]').classList.add("active");
       $("panel-columns").classList.add("active");
     }
-    else if (msg.type === "writeResult") { toast(msg.payload.message, !msg.payload.ok); if(msg.payload.ok){ $("ddlPreview").style.display="none"; $("ddlActions").style.display="none"; pendingDdl=null; } }
+    else if (msg.type === "writeResult") {
+      showLastQuery(msg.payload.statement);
+      if (msg.payload.undo) showUndo(msg.payload.message, msg.payload.undo);
+      else toast(msg.payload.message, !msg.payload.ok);
+      if (msg.payload.clearUndo) hideUndo();
+      if(msg.payload.ok){ $("ddlPreview").style.display="none"; $("ddlActions").style.display="none"; pendingDdl=null; }
+    }
     else if (msg.type === "error") {
       const g=$("dataGrid"); if(g){ g.className="err"; g.textContent=msg.payload.message; }
       toast(msg.payload.message, true);
@@ -662,4 +743,11 @@ function esc(value: string): string {
 
 function toMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+function extractStatement(result: {
+  sql?: string;
+  params?: unknown[];
+}): { sql: string; params?: unknown[] } | undefined {
+  return result.sql ? { sql: result.sql, params: result.params } : undefined;
 }

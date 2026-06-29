@@ -44,6 +44,7 @@ export class QueryRunner {
       .get<number>("query.maxRows", 1000);
     const controller = new AbortController();
     const started = Date.now();
+    let runningStatement = statements[0];
 
     try {
       const last = await vscode.window.withProgress(
@@ -56,6 +57,7 @@ export class QueryRunner {
           token.onCancellationRequested(() => controller.abort());
           let result: QueryResult | undefined;
           for (const statement of statements) {
+            runningStatement = statement;
             result = await this.queryService.execute(profile, statement, {
               maxRows,
               signal: controller.signal
@@ -76,7 +78,7 @@ export class QueryRunner {
       const cancelled = controller.signal.aborted;
       const dbError = normalizeError(error);
       this.logger.error(`Query failed on "${profile.name}": ${dbError.message}`);
-      ResultGridPanel.showError(dbError, Date.now() - started);
+      ResultGridPanel.showError(dbError, Date.now() - started, { sql: runningStatement });
       await this.record(profile, sqlText, cancelled ? "cancelled" : "error", {
         errorMessage: dbError.message
       });
