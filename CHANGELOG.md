@@ -4,6 +4,13 @@
 
 _No unreleased changes._
 
+## [1.14.1] - 2026-06-29
+
+### Fixed
+
+- Update installer fallback now tries the VS Code CLI (`code.cmd` / `code`) before `process.execPath`, matching the command that installs VSIX files successfully on Windows.
+- The copyable manual install command now uses `code --install-extension <vsix> --force` so it works from PowerShell without exposing VS Code's internal executable path.
+
 ## [1.14.0] - 2026-06-29
 
 ### Added

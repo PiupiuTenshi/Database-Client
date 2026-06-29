@@ -147,18 +147,27 @@ export class UpdateService {
   }
 
   private async installDownloadedVsixWithCli(file: vscode.Uri): Promise<void> {
-    const codeExecutable = process.execPath;
-    const { stderr } = await execFileAsync(
-      codeExecutable,
-      ["--install-extension", file.fsPath, "--force"],
-      {
-        timeout: 120_000,
-        windowsHide: true
+    const errors: string[] = [];
+    for (const candidate of buildCliInstallCandidates(process.platform, process.execPath)) {
+      try {
+        const { stderr } = await execFileAsync(
+          candidate,
+          ["--install-extension", file.fsPath, "--force"],
+          {
+            timeout: 120_000,
+            windowsHide: true,
+            shell: isShellCommand(candidate)
+          }
+        );
+        if (stderr.trim()) {
+          this.logger.info(`VSIX CLI install stderr (${candidate}): ${stderr.trim()}`);
+        }
+        return;
+      } catch (error) {
+        errors.push(`${candidate}: ${toErrorMessage(error)}`);
       }
-    );
-    if (stderr.trim()) {
-      this.logger.info(`VSIX CLI install stderr: ${stderr.trim()}`);
     }
+    throw new Error(errors.join("; "));
   }
 
   private async showDownloadedVsixFallback(
@@ -167,7 +176,7 @@ export class UpdateService {
     cliError: unknown
   ): Promise<void> {
     const path = file.fsPath;
-    const command = buildInstallCommand(process.execPath, path);
+    const command = buildInstallCommand(path);
     const choice = await vscode.window.showWarningMessage(
       `VS Code could not start the automatic installer (${toErrorMessage(commandError)}), and CLI fallback also failed (${toErrorMessage(cliError)}). The update was downloaded to: ${path}`,
       OPEN_VSIX,
@@ -250,8 +259,20 @@ function toErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-function buildInstallCommand(codeExecutable: string, vsixPath: string): string {
-  return `& ${quotePowerShellArg(codeExecutable)} --install-extension ${quotePowerShellArg(vsixPath)} --force`;
+export function buildCliInstallCandidates(platform = process.platform, execPath = process.execPath): string[] {
+  const candidates =
+    platform === "win32"
+      ? ["code.cmd", "code", execPath]
+      : ["code", execPath];
+  return [...new Set(candidates.filter(Boolean))];
+}
+
+function isShellCommand(command: string): boolean {
+  return /\.cmd$/i.test(command) || /\.bat$/i.test(command);
+}
+
+export function buildInstallCommand(vsixPath: string): string {
+  return `code --install-extension ${quotePowerShellArg(vsixPath)} --force`;
 }
 
 function quotePowerShellArg(value: string): string {
