@@ -4,6 +4,24 @@
 
 _No unreleased changes._
 
+## [1.14.3] - 2026-06-30
+
+### Added
+
+- Connection context menu now exposes **Export Full Database SQL** for full logical SQL dumps.
+- Database Explorer connection labels now show a compact server/database version when available.
+- Table and view names can be clicked directly to open the Data & Properties panel.
+
+### Improved
+
+- Logical SQL export now scans all schemas, includes view DDL, and no longer treats the profile database name as a schema.
+- Database Explorer icons now use theme-aware colors for tables, views, schemas, columns, indexes, keys, and foreign keys.
+
+### Tests
+
+- Added full-database backup coverage across schemas and views.
+- Added compact database-version formatting coverage.
+
 ## [1.14.2] - 2026-06-29
 
 ### Added

@@ -67,7 +67,12 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(queryDocs);
   const queryRunner = new QueryRunner(queryService, historyStore, logService);
 
-  const treeProvider = new DatabaseTreeProvider(connectionService, schemaService, sessionManager);
+  const treeProvider = new DatabaseTreeProvider(
+    connectionService,
+    schemaService,
+    sessionManager,
+    dashboardService
+  );
   context.subscriptions.push(treeProvider);
 
   const treeView = vscode.window.createTreeView(VIEWS.connections, {
@@ -80,6 +85,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     connectionService.onDidChangeProfiles(() => {
       sessionManager.disconnectAll();
+      treeProvider.clearMetadataCache();
       treeProvider.refresh();
     })
   );

@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { CONTEXT_VALUES } from "../../../core/constants";
+import { COMMANDS, CONTEXT_VALUES } from "../../../core/constants";
 import type { ConnectionProfile, ObjectRef, TableInfo } from "../../../core/types";
 import { DbTreeNode, type TreeContext } from "./DbTreeNode";
 import { ColumnNode, ForeignKeyNode, IndexNode } from "./leafNodes";
@@ -21,8 +21,24 @@ export class TableNode extends DbTreeNode {
     const item = new vscode.TreeItem(this.table.name, vscode.TreeItemCollapsibleState.Collapsed);
     item.id = `${this.profile.id}:table:${this.ref.schema ?? "default"}:${this.ref.name}`;
     item.contextValue = CONTEXT_VALUES.table;
-    item.iconPath = new vscode.ThemeIcon(this.table.type === "view" ? "eye" : "table");
+    item.iconPath =
+      this.table.type === "view"
+        ? new vscode.ThemeIcon("eye", new vscode.ThemeColor("charts.purple"))
+        : new vscode.ThemeIcon("table", new vscode.ThemeColor("charts.green"));
+    item.command = {
+      command: COMMANDS.openTableData,
+      title: "Open Table",
+      arguments: [this]
+    };
+    item.tooltip =
+      this.table.type === "view"
+        ? `Open view ${this.qualifiedName()}`
+        : `Open table ${this.qualifiedName()}`;
     return item;
+  }
+
+  private qualifiedName(): string {
+    return this.ref.schema ? `${this.ref.schema}.${this.ref.name}` : this.ref.name;
   }
 
   cacheKey(): string {
@@ -49,7 +65,7 @@ class ColumnsFolderNode extends DbTreeNode {
   toTreeItem(): vscode.TreeItem {
     const item = new vscode.TreeItem("Columns", vscode.TreeItemCollapsibleState.Collapsed);
     item.id = `${this.profile.id}:columns:${this.ref.schema ?? "default"}:${this.ref.name}`;
-    item.iconPath = new vscode.ThemeIcon("symbol-field");
+    item.iconPath = new vscode.ThemeIcon("symbol-field", new vscode.ThemeColor("charts.blue"));
     return item;
   }
 
@@ -76,7 +92,7 @@ class IndexesFolderNode extends DbTreeNode {
   toTreeItem(): vscode.TreeItem {
     const item = new vscode.TreeItem("Indexes", vscode.TreeItemCollapsibleState.Collapsed);
     item.id = `${this.profile.id}:indexes:${this.ref.schema ?? "default"}:${this.ref.name}`;
-    item.iconPath = new vscode.ThemeIcon("list-ordered");
+    item.iconPath = new vscode.ThemeIcon("list-ordered", new vscode.ThemeColor("charts.yellow"));
     return item;
   }
 
@@ -103,7 +119,7 @@ class ForeignKeysFolderNode extends DbTreeNode {
   toTreeItem(): vscode.TreeItem {
     const item = new vscode.TreeItem("Foreign Keys", vscode.TreeItemCollapsibleState.Collapsed);
     item.id = `${this.profile.id}:foreignKeys:${this.ref.schema ?? "default"}:${this.ref.name}`;
-    item.iconPath = new vscode.ThemeIcon("references");
+    item.iconPath = new vscode.ThemeIcon("references", new vscode.ThemeColor("charts.orange"));
     return item;
   }
 

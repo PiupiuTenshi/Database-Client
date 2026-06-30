@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import type { ConnectionService } from "../../services/ConnectionService";
+import type { DashboardService } from "../../services/DashboardService";
 import type { SchemaService } from "../../services/SchemaService";
 import type { SessionManager } from "../../services/SessionManager";
 import { withTimeout } from "../../utils/asyncTimeout";
@@ -27,8 +28,12 @@ export class DatabaseTreeProvider
   constructor(
     private readonly connectionService: ConnectionService,
     private readonly schemaService: SchemaService,
-    private readonly sessionManager: SessionManager
+    private readonly sessionManager: SessionManager,
+    private readonly dashboardService: DashboardService
   ) {}
+
+  private readonly versionCache = new Map<string, string | undefined>();
+  private readonly loadingVersions = new Set<string>();
 
   /** Refresh toàn bộ cây (node = undefined) hoặc chỉ một nhánh. */
   refresh(node?: DbTreeNode): void {
@@ -41,13 +46,23 @@ export class DatabaseTreeProvider
     this.changeEmitter.fire(node);
   }
 
+  clearMetadataCache(): void {
+    this.versionCache.clear();
+    this.loadingVersions.clear();
+    this.childCache.clear();
+  }
+
   getTreeItem(element: DbTreeNode): vscode.TreeItem {
     return element.toTreeItem();
   }
 
   getChildren(element?: DbTreeNode): DbTreeNode[] | Promise<DbTreeNode[]> {
     if (!element) {
-      return this.connectionService.listProfiles().map((profile) => new ConnectionNode(profile));
+      const profiles = this.connectionService.listProfiles();
+      profiles.forEach((profile) => this.loadVersion(profile));
+      return profiles.map(
+        (profile) => new ConnectionNode(profile, this.versionCache.get(profile.id))
+      );
     }
     const key = element.cacheKey();
     if (!key) {
@@ -105,5 +120,30 @@ export class DatabaseTreeProvider
         .getConfiguration("openDbNexus")
         .get<number>("metadata.loadTimeoutSeconds", DEFAULT_TREE_LOAD_TIMEOUT_SECONDS)
     );
+  }
+
+  private loadVersion(profile: ConnectionNode["profile"]): void {
+    if (
+      this.versionCache.has(profile.id) ||
+      this.loadingVersions.has(profile.id) ||
+      !this.sessionManager.supports(profile)
+    ) {
+      return;
+    }
+    this.loadingVersions.add(profile.id);
+    void this.dashboardService
+      .getVersion(profile)
+      .then((version) => {
+        this.versionCache.set(profile.id, version);
+      })
+      .catch(() => {
+        this.versionCache.set(profile.id, undefined);
+      })
+      .finally(() => {
+        this.loadingVersions.delete(profile.id);
+        if (!this.disposed) {
+          this.changeEmitter.fire(undefined);
+        }
+      });
   }
 }

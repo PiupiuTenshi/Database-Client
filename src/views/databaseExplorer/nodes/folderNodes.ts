@@ -16,7 +16,7 @@ export class SchemaNode extends DbTreeNode {
   toTreeItem(): vscode.TreeItem {
     const item = new vscode.TreeItem(this.schema, vscode.TreeItemCollapsibleState.Collapsed);
     item.id = `${this.profile.id}:schema:${this.schema}`;
-    item.iconPath = new vscode.ThemeIcon("symbol-namespace");
+    item.iconPath = new vscode.ThemeIcon("symbol-namespace", new vscode.ThemeColor("charts.blue"));
     return item;
   }
 
@@ -43,7 +43,7 @@ export class TablesFolderNode extends DbTreeNode {
   toTreeItem(): vscode.TreeItem {
     const item = new vscode.TreeItem("Tables", vscode.TreeItemCollapsibleState.Collapsed);
     item.id = `${this.profile.id}:${this.schema ?? "default"}:tables`;
-    item.iconPath = new vscode.ThemeIcon("list-flat");
+    item.iconPath = new vscode.ThemeIcon("list-flat", new vscode.ThemeColor("charts.green"));
     return item;
   }
 
@@ -70,7 +70,7 @@ export class ViewsFolderNode extends DbTreeNode {
   toTreeItem(): vscode.TreeItem {
     const item = new vscode.TreeItem("Views", vscode.TreeItemCollapsibleState.Collapsed);
     item.id = `${this.profile.id}:${this.schema ?? "default"}:views`;
-    item.iconPath = new vscode.ThemeIcon("eye");
+    item.iconPath = new vscode.ThemeIcon("eye", new vscode.ThemeColor("charts.purple"));
     return item;
   }
 

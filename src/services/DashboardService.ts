@@ -20,6 +20,27 @@ const VERSION_SQL: Partial<Record<DbType, string>> = {
   sqlite: "SELECT sqlite_version() AS v"
 };
 
+export function formatDatabaseVersion(value: string, dbType: DbType): string {
+  const trimmed = value.trim();
+  const numeric = trimmed.match(/\d+(?:\.\d+){1,3}/)?.[0];
+  switch (dbType) {
+    case "postgresql":
+      return numeric ? `PostgreSQL ${numeric}` : trimmed;
+    case "mysql":
+      return numeric ? `MySQL ${numeric}` : trimmed;
+    case "mariadb":
+      return numeric ? `MariaDB ${numeric}` : trimmed;
+    case "sqlserver": {
+      const named = trimmed.match(/SQL Server\s+(\d{4})/i)?.[1];
+      return named ? `SQL Server ${named}` : numeric ? `SQL Server ${numeric}` : trimmed;
+    }
+    case "sqlite":
+      return numeric ? `SQLite ${numeric}` : trimmed;
+    default:
+      return numeric ? `v${numeric}` : trimmed;
+  }
+}
+
 /** Thu thập số liệu tổng quan cho một connection (dashboard). */
 export class DashboardService {
   constructor(
@@ -38,16 +59,26 @@ export class DashboardService {
       tableCount: tables.length,
       viewCount: views.length
     };
-    const versionSql = VERSION_SQL[profile.dbType];
-    if (versionSql) {
-      try {
-        const result = await this.queryService.execute(profile, versionSql);
-        const value = result.rows[0]?.v;
-        metrics.version = typeof value === "string" ? value : undefined;
-      } catch {
-        // version là best-effort; bỏ qua nếu không lấy được.
-      }
-    }
+    metrics.version = await this.getVersion(profile);
     return metrics;
+  }
+
+  async getVersion(profile: ConnectionProfile): Promise<string | undefined> {
+    const versionSql = VERSION_SQL[profile.dbType];
+    if (!versionSql) {
+      return undefined;
+    }
+    try {
+      const result = await this.queryService.execute(profile, versionSql);
+      const firstRow = result.rows[0];
+      const value =
+        typeof firstRow?.v === "string"
+          ? firstRow.v
+          : Object.values(firstRow ?? {}).find((entry): entry is string => typeof entry === "string");
+      return value ? formatDatabaseVersion(value, profile.dbType) : undefined;
+    } catch {
+      // version là best-effort; bỏ qua nếu không lấy được.
+      return undefined;
+    }
   }
 }

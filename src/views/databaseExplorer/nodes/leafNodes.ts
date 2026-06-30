@@ -16,8 +16,10 @@ export class ColumnNode extends DbTreeNode {
     if (!this.column.nullable) {
       flags.push("NOT NULL");
     }
-    item.description = flags.filter(Boolean).join(" · ");
-    item.iconPath = new vscode.ThemeIcon(this.column.isPrimaryKey ? "key" : "symbol-field");
+    item.description = flags.filter(Boolean).join(" | ");
+    item.iconPath = this.column.isPrimaryKey
+      ? new vscode.ThemeIcon("key", new vscode.ThemeColor("charts.yellow"))
+      : new vscode.ThemeIcon("symbol-field", new vscode.ThemeColor("charts.blue"));
     return item;
   }
 }
@@ -30,7 +32,7 @@ export class IndexNode extends DbTreeNode {
   toTreeItem(): vscode.TreeItem {
     const item = new vscode.TreeItem(this.index.name, vscode.TreeItemCollapsibleState.None);
     item.description = `${this.index.unique ? "UNIQUE " : ""}(${this.index.columns.join(", ")})`;
-    item.iconPath = new vscode.ThemeIcon("list-ordered");
+    item.iconPath = new vscode.ThemeIcon("list-ordered", new vscode.ThemeColor("charts.yellow"));
     return item;
   }
 }
@@ -41,9 +43,9 @@ export class ForeignKeyNode extends DbTreeNode {
   }
 
   toTreeItem(): vscode.TreeItem {
-    const label = `${this.fk.source.columns.join(", ")} → ${this.fk.target.table}(${this.fk.target.columns.join(", ")})`;
+    const label = `${this.fk.source.columns.join(", ")} -> ${this.fk.target.table}(${this.fk.target.columns.join(", ")})`;
     const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
-    item.iconPath = new vscode.ThemeIcon("references");
+    item.iconPath = new vscode.ThemeIcon("references", new vscode.ThemeColor("charts.orange"));
     item.tooltip = this.fk.name;
     return item;
   }

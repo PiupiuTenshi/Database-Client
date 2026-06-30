@@ -8,7 +8,10 @@ import { safeChildren } from "./treeHelpers";
 
 /** Node gốc đại diện cho một connection profile. */
 export class ConnectionNode extends DbTreeNode {
-  constructor(public readonly profile: ConnectionProfile) {
+  constructor(
+    public readonly profile: ConnectionProfile,
+    private readonly version?: string
+  ) {
     super();
   }
 
@@ -30,10 +33,13 @@ export class ConnectionNode extends DbTreeNode {
 
   private describe(): string {
     const parts: string[] = [this.profile.dbType];
+    if (this.version) {
+      parts.push(this.version);
+    }
     if (this.profile.environment !== "local") {
       parts.push(this.profile.environment);
     }
-    return parts.join(" · ");
+    return parts.join(" | ");
   }
 
   private buildTooltip(): string {
@@ -46,6 +52,9 @@ export class ConnectionNode extends DbTreeNode {
     }
     if (this.profile.database) {
       lines.push(`Database: ${this.profile.database}`);
+    }
+    if (this.version) {
+      lines.push(`Version: ${this.version}`);
     }
     lines.push(`Environment: ${this.profile.environment}`);
     if (this.profile.tags.length > 0) {

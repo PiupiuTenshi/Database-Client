@@ -136,8 +136,8 @@ export function registerSchemaCommands(
       }
       const target = await vscode.window.showSaveDialog({
         filters: { SQL: ["sql"] },
-        saveLabel: "Backup",
-        defaultUri: vscode.Uri.file(`${profile.name}-backup.sql`)
+        saveLabel: "Export SQL",
+        defaultUri: vscode.Uri.file(`${safeFileName(profile.name)}-database.sql`)
       });
       if (!target) {
         return;
@@ -145,16 +145,16 @@ export function registerSchemaCommands(
       await vscode.window.withProgress(
         { location: vscode.ProgressLocation.Notification, title: `Backing up ${profile.name}…` },
         async (progress) => {
-          const sql = await deps.backupService.backup(profile, profile.database, (p) => {
+          const sql = await deps.backupService.backup(profile, undefined, (p) => {
             progress.report({
-              message: `${p.current}/${p.total} · ${p.table}`,
+              message: `${p.current}/${p.total} | ${p.table}`,
               increment: 100 / Math.max(1, p.total)
             });
           });
           await vscode.workspace.fs.writeFile(target, Buffer.from(sql, "utf8"));
         }
       );
-      void vscode.window.showInformationMessage(`Backup written to ${target.fsPath}.`);
+      void vscode.window.showInformationMessage(`Database SQL exported to ${target.fsPath}.`);
     }),
 
     vscode.commands.registerCommand(COMMANDS.searchSchema, async (node?: ConnectionNode) => {
@@ -218,4 +218,14 @@ export function registerSchemaCommands(
       await vscode.window.showTextDocument(doc);
     })
   );
+}
+
+function safeFileName(value: string): string {
+  const cleaned = [...value.trim()]
+    .map((char) => {
+      const code = char.charCodeAt(0);
+      return code < 32 || '<>:"/\\|?*'.includes(char) ? "_" : char;
+    })
+    .join("");
+  return cleaned || "database";
 }
