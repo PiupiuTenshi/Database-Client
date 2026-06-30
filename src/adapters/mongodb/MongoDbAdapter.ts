@@ -97,11 +97,17 @@ export class MongoDbAdapter implements DatabaseAdapter {
 
   async listSchemas(session: DbSession): Promise<SchemaInfo[]> {
     const entry = this.entry(session);
-    const result = await entry.client.db(entry.defaultDb).admin().listDatabases();
-    return result.databases.map((db) => ({
-      name: db.name,
-      isDefault: db.name === entry.defaultDb
-    }));
+    try {
+      const result = await entry.client.db(entry.defaultDb).admin().listDatabases();
+      return result.databases.map((db) => ({
+        name: db.name,
+        isDefault: db.name === entry.defaultDb
+      }));
+    } catch {
+      // Many hosted MongoDB users cannot run listDatabases. Fall back to the selected DB
+      // so the explorer can still load collections instead of getting stuck on schemas.
+      return [];
+    }
   }
 
   async listTables(session: DbSession, schema?: string): Promise<TableInfo[]> {

@@ -32,10 +32,7 @@ export class ConnectionNode extends DbTreeNode {
   }
 
   private describe(): string {
-    const parts: string[] = [this.profile.dbType];
-    if (this.version) {
-      parts.push(this.version);
-    }
+    const parts: string[] = [this.version ?? this.profile.dbType];
     if (this.profile.environment !== "local") {
       parts.push(this.profile.environment);
     }

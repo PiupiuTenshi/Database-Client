@@ -177,7 +177,7 @@ export class TableDataPanel {
           }
           break;
         case "export":
-          await this.exportData(message.format ?? "csv", message.all ?? false);
+          await this.exportData(message.format ?? "csv", message.all ?? true);
           break;
         case "import":
           await this.importCsv();
@@ -408,7 +408,7 @@ ${commonStyles(nonce)}
         <option value="json">JSON</option>
         <option value="sql">SQL Insert</option>
       </select>
-      <label class="subtle"><input type="checkbox" id="exportAll" /> all rows</label>
+      <label class="subtle"><input type="checkbox" id="exportAll" checked /> all rows</label>
       <button class="btn" id="exportBtn" title="Export to file">⭳ Export</button>
       <button class="btn" id="importBtn" title="Import CSV">⭱ Import CSV</button>
       <span class="subtle" id="dataInfo"></span>

@@ -39,6 +39,22 @@ class FakeMongoDb implements DbLike {
   }
 }
 
+class NoListDatabasesMongoDb extends FakeMongoDb {
+  override admin(): { listDatabases(): Promise<{ databases: { name: string }[] }> } {
+    return {
+      listDatabases: async () => {
+        throw new Error("not authorized on admin to execute command");
+      }
+    };
+  }
+}
+
+class NoListDatabasesClient extends FakeMongoClient {
+  override db(name = "app"): DbLike {
+    return new NoListDatabasesMongoDb(name);
+  }
+}
+
 class FakeCollection implements CollectionLike {
   readonly deletedFilters: Record<string, unknown>[] = [];
   readonly insertedDocuments: Record<string, unknown>[] = [];
@@ -222,6 +238,26 @@ describe("MongoDbAdapter", () => {
     ]);
     const columns = await adapter.listColumns(session, { schema: "app", name: "users" });
     expect(columns.map((column) => column.name)).toEqual(["_id", "name", "age"]);
+  });
+
+  it("falls back to default database when listDatabases is not authorized", async () => {
+    const adapter = new MongoDbAdapter(() => new NoListDatabasesClient());
+    const session = await adapter.connect({
+      id: "p1",
+      name: "Mongo",
+      dbType: "mongodb",
+      host: "localhost",
+      database: "app",
+      environment: "local",
+      tags: [],
+      createdAt: "",
+      updatedAt: ""
+    });
+
+    await expect(adapter.listSchemas(session)).resolves.toEqual([]);
+    await expect(adapter.listTables(session)).resolves.toEqual([
+      { name: "users", schema: "app", type: "base_table" }
+    ]);
   });
 
   it("translates generated table viewer SQL to find/count", async () => {

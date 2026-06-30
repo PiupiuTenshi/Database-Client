@@ -4,6 +4,18 @@
 
 _No unreleased changes._
 
+## [1.14.4] - 2026-07-01
+
+### Fixed
+
+- MongoDB schema loading now falls back to the selected database when the user cannot run `listDatabases`.
+- Database Explorer connection descriptions no longer duplicate the database type when a compact version label is available.
+- Table export defaults to all rows so the exported file represents the whole table instead of only the current page.
+
+### Tests
+
+- Added MongoDB coverage for `listDatabases` permission fallback.
+
 ## [1.14.3] - 2026-06-30
 
 ### Added
