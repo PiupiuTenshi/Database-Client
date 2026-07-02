@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { CONTEXT_VALUES } from "../../../core/constants";
+import { CONTEXT_VALUES, getDbTypeLabel } from "../../../core/constants";
 import type { ConnectionProfile } from "../../../core/types";
 import { DbTreeNode, type TreeContext } from "./DbTreeNode";
 import { SchemaNode, TablesFolderNode, ViewsFolderNode } from "./folderNodes";
@@ -32,7 +32,7 @@ export class ConnectionNode extends DbTreeNode {
   }
 
   private describe(): string {
-    const parts: string[] = [this.version ?? this.profile.dbType];
+    const parts: string[] = [this.version ?? getDbTypeLabel(this.profile.dbType)];
     if (this.profile.environment !== "local") {
       parts.push(this.profile.environment);
     }
@@ -40,7 +40,7 @@ export class ConnectionNode extends DbTreeNode {
   }
 
   private buildTooltip(): string {
-    const lines = [`${this.profile.name} (${this.profile.dbType})`];
+    const lines = [`${this.profile.name} (${getDbTypeLabel(this.profile.dbType)})`];
     if (this.profile.filePath) {
       lines.push(`File: ${this.profile.filePath}`);
     }

@@ -26,3 +26,32 @@ export class EventEmitter<T> {
     this.listeners.clear();
   }
 }
+
+export enum TreeItemCollapsibleState {
+  None = 0,
+  Collapsed = 1,
+  Expanded = 2
+}
+
+export class ThemeIcon {
+  constructor(readonly id: string) {}
+}
+
+export class TreeItem {
+  id?: string;
+  contextValue?: string;
+  description?: string;
+  tooltip?: string;
+  iconPath?: ThemeIcon;
+
+  constructor(
+    readonly label: string,
+    readonly collapsibleState: TreeItemCollapsibleState = TreeItemCollapsibleState.None
+  ) {}
+}
+
+export const workspace = {
+  getConfiguration: () => ({
+    get: <T>(_key: string, defaultValue: T): T => defaultValue
+  })
+};

@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import type { ConnectionProfile } from "../../src/core/types";
-import { DashboardService, formatDatabaseVersion } from "../../src/services/DashboardService";
+import {
+  DashboardService,
+  formatDatabaseVersion,
+  supportsDatabaseVersion
+} from "../../src/services/DashboardService";
 import type { QueryService } from "../../src/services/QueryService";
 import type { SchemaService } from "../../src/services/SchemaService";
 
@@ -16,6 +20,13 @@ describe("formatDatabaseVersion", () => {
   });
 });
 
+describe("supportsDatabaseVersion", () => {
+  it("reports only engines with a version query", () => {
+    expect(supportsDatabaseVersion("mysql")).toBe(true);
+    expect(supportsDatabaseVersion("mongodb")).toBe(false);
+  });
+});
+
 describe("DashboardService", () => {
   it("returns a formatted best-effort version", async () => {
     const profile = { dbType: "mysql" } as ConnectionProfile;
@@ -26,5 +37,17 @@ describe("DashboardService", () => {
     } as unknown as QueryService);
 
     await expect(service.getVersion(profile)).resolves.toBe("MySQL 8.4.2");
+  });
+
+  it("reads version values from alternate column names and numeric values", async () => {
+    const service = new DashboardService({} as SchemaService, {
+      execute: vi.fn().mockResolvedValue({
+        rows: [{ VERSION: 8.4 }]
+      })
+    } as unknown as QueryService);
+
+    await expect(service.getVersion({ dbType: "mysql" } as ConnectionProfile)).resolves.toBe(
+      "MySQL 8.4"
+    );
   });
 });

@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import type { ConnectionService } from "../../services/ConnectionService";
-import type { DashboardService } from "../../services/DashboardService";
+import { supportsDatabaseVersion, type DashboardService } from "../../services/DashboardService";
 import type { SchemaService } from "../../services/SchemaService";
 import type { SessionManager } from "../../services/SessionManager";
 import { withTimeout } from "../../utils/asyncTimeout";
@@ -32,16 +32,25 @@ export class DatabaseTreeProvider
     private readonly dashboardService: DashboardService
   ) {}
 
-  private readonly versionCache = new Map<string, string | undefined>();
+  private readonly versionCache = new Map<string, string>();
   private readonly loadingVersions = new Set<string>();
+  private readonly failedVersionLoads = new Set<string>();
 
   /** Refresh toàn bộ cây (node = undefined) hoặc chỉ một nhánh. */
   refresh(node?: DbTreeNode): void {
     const key = node?.cacheKey();
     if (key) {
       this.childCache.delete(key);
+      if (node instanceof ConnectionNode) {
+        this.versionCache.delete(node.profile.id);
+        this.failedVersionLoads.delete(node.profile.id);
+        this.loadingVersions.delete(node.profile.id);
+      }
     } else {
       this.childCache.clear();
+      this.versionCache.clear();
+      this.failedVersionLoads.clear();
+      this.loadingVersions.clear();
     }
     this.changeEmitter.fire(node);
   }
@@ -49,6 +58,7 @@ export class DatabaseTreeProvider
   clearMetadataCache(): void {
     this.versionCache.clear();
     this.loadingVersions.clear();
+    this.failedVersionLoads.clear();
     this.childCache.clear();
   }
 
@@ -126,6 +136,8 @@ export class DatabaseTreeProvider
     if (
       this.versionCache.has(profile.id) ||
       this.loadingVersions.has(profile.id) ||
+      this.failedVersionLoads.has(profile.id) ||
+      !supportsDatabaseVersion(profile.dbType) ||
       !this.sessionManager.supports(profile)
     ) {
       return;
@@ -134,10 +146,17 @@ export class DatabaseTreeProvider
     void this.dashboardService
       .getVersion(profile)
       .then((version) => {
-        this.versionCache.set(profile.id, version);
+        if (version) {
+          this.versionCache.set(profile.id, version);
+          this.failedVersionLoads.delete(profile.id);
+        } else {
+          this.versionCache.delete(profile.id);
+          this.failedVersionLoads.add(profile.id);
+        }
       })
       .catch(() => {
-        this.versionCache.set(profile.id, undefined);
+        this.versionCache.delete(profile.id);
+        this.failedVersionLoads.add(profile.id);
       })
       .finally(() => {
         this.loadingVersions.delete(profile.id);

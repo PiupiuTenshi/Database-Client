@@ -20,6 +20,10 @@ const VERSION_SQL: Partial<Record<DbType, string>> = {
   sqlite: "SELECT sqlite_version() AS v"
 };
 
+export function supportsDatabaseVersion(dbType: DbType): boolean {
+  return Boolean(VERSION_SQL[dbType]);
+}
+
 export function formatDatabaseVersion(value: string, dbType: DbType): string {
   const trimmed = value.trim();
   const numeric = trimmed.match(/\d+(?:\.\d+){1,3}/)?.[0];
@@ -71,14 +75,27 @@ export class DashboardService {
     try {
       const result = await this.queryService.execute(profile, versionSql);
       const firstRow = result.rows[0];
-      const value =
-        typeof firstRow?.v === "string"
-          ? firstRow.v
-          : Object.values(firstRow ?? {}).find((entry): entry is string => typeof entry === "string");
+      const value = findVersionValue(firstRow);
       return value ? formatDatabaseVersion(value, profile.dbType) : undefined;
     } catch {
       // version là best-effort; bỏ qua nếu không lấy được.
       return undefined;
     }
   }
+}
+
+function findVersionValue(row: Record<string, unknown> | undefined): string | undefined {
+  if (!row) {
+    return undefined;
+  }
+  const direct = row.v ?? row.V ?? row.version ?? row.VERSION;
+  if (isVersionValue(direct)) {
+    return String(direct);
+  }
+  const value = Object.values(row).find(isVersionValue);
+  return value === undefined ? undefined : String(value);
+}
+
+function isVersionValue(value: unknown): value is string | number | bigint {
+  return typeof value === "string" || typeof value === "number" || typeof value === "bigint";
 }

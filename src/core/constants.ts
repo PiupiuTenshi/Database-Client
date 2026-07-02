@@ -65,6 +65,10 @@ export const DB_TYPE_OPTIONS: { value: DbType; label: string; fileBased: boolean
   { value: "redis", label: "Redis", fileBased: false }
 ];
 
+export function getDbTypeLabel(dbType: DbType): string {
+  return DB_TYPE_OPTIONS.find((option) => option.value === dbType)?.label ?? dbType;
+}
+
 /** Port mặc định cho form connection. Người dùng vẫn có thể sửa trực tiếp. */
 export const DEFAULT_DB_PORTS: Partial<Record<DbType, number>> = {
   postgresql: 5432,

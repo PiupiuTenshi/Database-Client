@@ -4,6 +4,18 @@
 
 _No unreleased changes._
 
+## [1.14.6] - 2026-07-03
+
+### Fixed
+
+- Database Explorer connection descriptions now retry version loading after Refresh instead of caching a temporary failure forever.
+- Connection descriptions now fall back to friendly labels such as `MySQL` instead of raw ids such as `mysql` while the version is loading.
+- Version parsing now accepts alternate column names and numeric values from adapters.
+
+### Tests
+
+- Added Database Explorer coverage for async version labels and refresh retry behavior.
+
 ## [1.14.5] - 2026-07-03
 
 ### Added
