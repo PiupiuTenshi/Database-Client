@@ -3,6 +3,46 @@
 Các DB này chỉ dùng để **thử adapter thủ công** trong Extension Development Host.
 CI không cần chúng — adapter test mock driver.
 
+## All-in-one adapter lab
+
+Start all container-backed databases:
+
+```bash
+docker compose -f test/docker/docker-compose.all.yml up -d
+```
+
+Stop and clean volumes:
+
+```bash
+docker compose -f test/docker/docker-compose.all.yml down -v
+```
+
+SQL Server needs a manual seed after the container is healthy:
+
+```bash
+docker exec -i open-db-nexus-mssql /opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U sa -P 'Strong!Passw0rd' -C -No < test/docker/seed-sqlserver.sql
+```
+
+Connection matrix:
+
+| Adapter | Host / file | Port | Username | Password | Database |
+| ------- | ----------- | ---- | -------- | -------- | -------- |
+| PostgreSQL | localhost | 5432 | postgres | postgres | app_db |
+| MySQL | localhost | 3306 | root | mysql | app_db |
+| MariaDB | localhost | 3307 | root | mariadb | app_db |
+| SQL Server | localhost | 1433 | sa | Strong!Passw0rd | app_db |
+| MongoDB | localhost | 27017 | root | mongo | app_db |
+| Redis | localhost | 6379 | | | |
+| SQLite | local `.sqlite` file | | | | |
+| DuckDB | local `.duckdb` file | | | | |
+
+Notes:
+
+- Oracle is not included in the all-in-one lab because the official container image is large and usually requires Oracle registry/license setup.
+- Cloud/HTTP-compatible adapters need real service endpoints, so they are not started by this local Docker lab.
+- If a tree stays on loading, first check container health with `docker ps`, then run **Test Connection** from the connection context menu.
+
 ## PostgreSQL
 
 ```bash

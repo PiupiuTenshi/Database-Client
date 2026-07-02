@@ -70,7 +70,7 @@ export class MySqlAdapter implements DatabaseAdapter {
   readonly paginationStyle: PaginationStyle = "limit-offset";
   readonly placeholderStyle: PlaceholderStyle = "qmark";
 
-  private readonly sessions = new Map<string, MySqlClient>();
+  private readonly sessions = new Map<string, { client: MySqlClient; defaultSchema?: string }>();
 
   constructor(
     readonly dbType: DbType = "mysql",
@@ -84,7 +84,7 @@ export class MySqlAdapter implements DatabaseAdapter {
   async connect(profile: RuntimeConnectionProfile): Promise<DbSession> {
     const client = await this.factory(toConfig(profile));
     const id = newId();
-    this.sessions.set(id, client);
+    this.sessions.set(id, { client, defaultSchema: profile.database });
     return { id, dbType: this.dbType };
   }
 
@@ -104,20 +104,30 @@ export class MySqlAdapter implements DatabaseAdapter {
   }
 
   async disconnect(session: DbSession): Promise<void> {
-    const client = this.sessions.get(session.id);
-    if (client) {
+    const entry = this.sessions.get(session.id);
+    if (entry) {
       this.sessions.delete(session.id);
-      await safeEnd(client);
+      await safeEnd(entry.client);
     }
   }
 
   async listSchemas(session: DbSession): Promise<SchemaInfo[]> {
-    const result = await this.client(session).query(Q.LIST_SCHEMAS);
-    return result.rows.map((row) => ({ name: String(row.schema_name) }));
+    const entry = this.entry(session);
+    try {
+      const result = await entry.client.query(Q.LIST_SCHEMAS);
+      const schemas = result.rows.map((row) => ({ name: String(row.schema_name) }));
+      if (schemas.length > 0) {
+        return schemas;
+      }
+    } catch {
+      // Some MySQL-compatible providers restrict information_schema.schemata.
+      // Fall back to the selected database so the tree can still load tables.
+    }
+    return entry.defaultSchema ? [{ name: entry.defaultSchema, isDefault: true }] : [];
   }
 
   async listTables(session: DbSession, schema?: string): Promise<TableInfo[]> {
-    const target = this.requireSchema(schema);
+    const target = this.requireSchema(session, schema);
     const result = await this.client(session).query(Q.LIST_TABLES, [target]);
     return result.rows.map((row) => ({
       name: String(row.table_name),
@@ -127,7 +137,7 @@ export class MySqlAdapter implements DatabaseAdapter {
   }
 
   async listViews(session: DbSession, schema?: string): Promise<TableInfo[]> {
-    const target = this.requireSchema(schema);
+    const target = this.requireSchema(session, schema);
     const result = await this.client(session).query(Q.LIST_VIEWS, [target]);
     return result.rows.map((row) => ({
       name: String(row.table_name),
@@ -138,7 +148,7 @@ export class MySqlAdapter implements DatabaseAdapter {
 
   async listColumns(session: DbSession, ref: ObjectRef): Promise<ColumnInfo[]> {
     const result = await this.client(session).query(Q.LIST_COLUMNS, [
-      this.requireSchema(ref.schema),
+      this.requireSchema(session, ref.schema),
       ref.name
     ]);
     return result.rows.map((row) => ({
@@ -153,7 +163,7 @@ export class MySqlAdapter implements DatabaseAdapter {
 
   async listIndexes(session: DbSession, ref: ObjectRef): Promise<IndexInfo[]> {
     const result = await this.client(session).query(Q.LIST_INDEXES, [
-      this.requireSchema(ref.schema),
+      this.requireSchema(session, ref.schema),
       ref.name
     ]);
     const byName = new Map<string, IndexInfo>();
@@ -170,7 +180,7 @@ export class MySqlAdapter implements DatabaseAdapter {
   }
 
   async listForeignKeys(session: DbSession, ref: ObjectRef): Promise<ForeignKeyInfo[]> {
-    const schema = this.requireSchema(ref.schema);
+    const schema = this.requireSchema(session, ref.schema);
     const result = await this.client(session).query(Q.LIST_FOREIGN_KEYS, [schema, ref.name]);
     const byName = new Map<string, ForeignKeyInfo>();
     for (const row of result.rows) {
@@ -194,7 +204,7 @@ export class MySqlAdapter implements DatabaseAdapter {
 
   async listTriggers(session: DbSession, ref: ObjectRef): Promise<TriggerInfo[]> {
     const result = await this.client(session).query(Q.LIST_TRIGGERS, [
-      this.requireSchema(ref.schema),
+      this.requireSchema(session, ref.schema),
       ref.name
     ]);
     return result.rows.map((row) => ({
@@ -207,7 +217,7 @@ export class MySqlAdapter implements DatabaseAdapter {
 
   async listCheckConstraints(session: DbSession, ref: ObjectRef): Promise<CheckConstraintInfo[]> {
     const result = await this.client(session).query(Q.LIST_CHECKS, [
-      this.requireSchema(ref.schema),
+      this.requireSchema(session, ref.schema),
       ref.name
     ]);
     return result.rows.map((row) => ({
@@ -222,7 +232,7 @@ export class MySqlAdapter implements DatabaseAdapter {
   }
 
   async getObjectDDL(session: DbSession, ref: ObjectRef): Promise<string> {
-    const qualified = `${quoteBacktick(this.requireSchema(ref.schema))}.${quoteBacktick(ref.name)}`;
+    const qualified = `${quoteBacktick(this.requireSchema(session, ref.schema))}.${quoteBacktick(ref.name)}`;
     const result = await this.client(session).query(`SHOW CREATE TABLE ${qualified}`);
     const row = result.rows[0] ?? {};
     return (
@@ -263,19 +273,24 @@ export class MySqlAdapter implements DatabaseAdapter {
     };
   }
 
-  private requireSchema(schema?: string): string {
-    if (!schema) {
+  private requireSchema(session: DbSession, schema?: string): string {
+    const target = schema ?? this.entry(session).defaultSchema;
+    if (!target) {
       throw new Error("MySQL requires a schema/database name.");
     }
-    return schema;
+    return target;
   }
 
   private client(session: DbSession): MySqlClient {
-    const client = this.sessions.get(session.id);
-    if (!client) {
+    return this.entry(session).client;
+  }
+
+  private entry(session: DbSession): { client: MySqlClient; defaultSchema?: string } {
+    const entry = this.sessions.get(session.id);
+    if (!entry) {
       throw new Error("MySQL session is not connected.");
     }
-    return client;
+    return entry;
   }
 }
 

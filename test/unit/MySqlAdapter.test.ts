@@ -68,6 +68,36 @@ describe("MySqlAdapter (mocked driver)", () => {
     expect(schemas.map((s) => s.name)).toEqual(["app_db", "shop"]);
   });
 
+  it("falls back to the selected database when schemas cannot be listed", async () => {
+    const { adapter, session } = await connect((text, values) => {
+      if (text === Q.LIST_SCHEMAS) {
+        throw new Error("SELECT command denied to user for table schemata");
+      }
+      if (text === Q.LIST_TABLES) {
+        expect(values).toEqual(["app_db"]);
+        return result([{ table_name: "users" }]);
+      }
+      return result([]);
+    });
+
+    await expect(adapter.listSchemas(session)).resolves.toEqual([
+      { name: "app_db", isDefault: true }
+    ]);
+    await expect(adapter.listTables(session)).resolves.toEqual([
+      { name: "users", schema: "app_db", type: "base_table" }
+    ]);
+  });
+
+  it("falls back to the selected database when schema list is empty", async () => {
+    const { adapter, session } = await connect((text) =>
+      text === Q.LIST_SCHEMAS ? result([]) : result([])
+    );
+
+    await expect(adapter.listSchemas(session)).resolves.toEqual([
+      { name: "app_db", isDefault: true }
+    ]);
+  });
+
   it("lists tables for a schema", async () => {
     const { adapter, session } = await connect((text, values) => {
       if (text === Q.LIST_TABLES) {
@@ -169,8 +199,12 @@ describe("MySqlAdapter (mocked driver)", () => {
     expect(writeResult.affectedRows).toBe(4);
   });
 
-  it("requires a schema for table operations", async () => {
-    const { adapter, session } = await connect(() => result([]));
+  it("requires a schema for table operations when no default database exists", async () => {
+    const adapter = new MySqlAdapter(
+      "mysql",
+      fakeFactory(() => result([]))
+    );
+    const session = await adapter.connect({ ...profile, database: undefined });
     await expect(adapter.listColumns(session, { name: "users" })).rejects.toThrow(/schema/i);
   });
 });

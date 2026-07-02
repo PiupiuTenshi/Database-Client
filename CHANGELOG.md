@@ -4,6 +4,22 @@
 
 _No unreleased changes._
 
+## [1.14.5] - 2026-07-03
+
+### Added
+
+- Added an all-in-one local Docker adapter lab for PostgreSQL, MySQL, MariaDB, SQL Server, MongoDB, and Redis.
+- Added MongoDB seed data for local adapter checks.
+
+### Fixed
+
+- MySQL/MariaDB schema loading now falls back to the selected database when schema listing is empty or blocked.
+- MySQL/MariaDB table metadata calls can use the selected database when the tree has no explicit schema node.
+
+### Tests
+
+- Added MySQL coverage for denied/empty schema listing fallback.
+
 ## [1.14.4] - 2026-07-01
 
 ### Fixed
